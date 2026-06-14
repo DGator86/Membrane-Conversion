@@ -7,215 +7,62 @@
   <title>Penetron vs Membrane Waterproofing Converter</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --blue-dark:  #0a2540;
-      --blue-mid:   #1a4b8c;
-      --blue-light: #2d7dd2;
-      --teal:       #00b4b4;
-      --teal-light: #e6f9f9;
-      --gray-bg:    #f4f6f9;
-      --gray-card:  #ffffff;
-      --gray-border:#d0d7e2;
-      --text:       #1a2535;
-      --text-muted: #5a6780;
-      --green:      #1a8a50;
-      --green-bg:   #e6f5ec;
-      --amber:      #b45309;
-      --amber-bg:   #fef3c7;
-      --radius:     10px;
-      --shadow:     0 2px 12px rgba(0,0,0,.08);
+      --blue-dark:  #0a2540; --blue-mid: #1a4b8c; --blue-light: #2d7dd2;
+      --teal: #00b4b4; --teal-light: #e6f9f9;
+      --gray-bg: #f4f6f9; --gray-card: #ffffff; --gray-border: #d0d7e2;
+      --text: #1a2535; --text-muted: #5a6780;
+      --green: #1a8a50; --green-bg: #e6f5ec;
+      --amber: #b45309; --amber-bg: #fef3c7;
+      --radius: 10px; --shadow: 0 2px 12px rgba(0,0,0,.08);
     }
-
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--gray-bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    header {
-      background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
-      color: #fff;
-      padding: 28px 32px 24px;
-    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-bg); color: var(--text); min-height: 100vh; }
+    header { background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid)); color: #fff; padding: 28px 32px 24px; }
     header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.3px; }
     header p  { margin-top: 4px; font-size: .875rem; color: rgba(255,255,255,.75); }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      max-width: 1200px;
-      margin: 28px auto 0;
-      padding: 0 24px 48px;
-    }
+    .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1200px; margin: 28px auto 0; padding: 0 24px 48px; }
     .full { grid-column: 1 / -1; }
-
-    @media (max-width: 800px) {
-      .layout { grid-template-columns: 1fr; }
-      .full { grid-column: 1; }
-    }
-
-    /* Step labels */
-    .step-label {
-      font-size: .7rem;
-      font-weight: 800;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-
-    .card {
-      background: var(--gray-card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--gray-border);
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 15px 20px;
-      font-weight: 700;
-      font-size: .95rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .card-header .badge {
-      font-size: .68rem;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 99px;
-      letter-spacing: .4px;
-      text-transform: uppercase;
-      margin-left: auto;
-    }
-
+    @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } .full { grid-column: 1; } }
+    .step-label { font-size: .7rem; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .card { background: var(--gray-card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--gray-border); overflow: hidden; }
+    .card-header { padding: 15px 20px; font-weight: 700; font-size: .95rem; display: flex; align-items: center; gap: 10px; }
+    .card-header .badge { font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; letter-spacing: .4px; text-transform: uppercase; margin-left: auto; }
     .project-header  { background: #f0f4fb; border-bottom: 2px solid var(--blue-light); color: var(--blue-dark); }
     .penetron-header { background: var(--teal-light); border-bottom: 2px solid var(--teal); color: var(--blue-dark); }
     .membrane-header { background: #e8edf8; border-bottom: 2px solid var(--blue-light); color: var(--blue-dark); }
     .results-header  { background: var(--blue-dark); color: #fff; border-radius: var(--radius) var(--radius) 0 0; }
-
     .penetron-header .badge { background: var(--teal); color: #fff; }
     .membrane-header .badge { background: var(--blue-light); color: #fff; }
-
     .card-body { padding: 20px; }
-
-    /* Type selector */
-    .type-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
+    .type-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     @media (max-width: 600px) { .type-grid { grid-template-columns: 1fr; } }
-
-    .type-btn {
-      padding: 14px 10px;
-      border: 2px solid var(--gray-border);
-      border-radius: 9px;
-      background: #fafbfd;
-      cursor: pointer;
-      text-align: center;
-      transition: all .15s;
-    }
+    .type-btn { padding: 14px 10px; border: 2px solid var(--gray-border); border-radius: 9px; background: #fafbfd; cursor: pointer; text-align: center; transition: all .15s; }
     .type-btn:hover { border-color: var(--blue-light); background: #f0f4fb; }
     .type-btn.active { border-color: var(--blue-light); background: #e8edf8; }
     .type-btn .type-icon { font-size: 1.6rem; margin-bottom: 6px; }
     .type-btn .type-name { font-size: .8rem; font-weight: 700; color: var(--blue-dark); }
     .type-btn .type-desc { font-size: .7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
-
-    /* Dimension form */
     .dim-section { display: none; }
     .dim-section.visible { display: block; }
-
     .field { margin-bottom: 14px; }
-    label {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      font-size: .78rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 5px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-    }
+    label { display: flex; justify-content: space-between; align-items: baseline; font-size: .78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
     label .hint { font-size: .68rem; font-weight: 400; color: #94a3b8; text-transform: none; letter-spacing: 0; }
-
     .input-wrap { position: relative; }
-    .input-wrap .unit {
-      position: absolute;
-      right: 10px; top: 50%;
-      transform: translateY(-50%);
-      font-size: .78rem;
-      color: var(--text-muted);
-      pointer-events: none;
-    }
-
-    input[type="number"] {
-      width: 100%;
-      padding: 9px 44px 9px 12px;
-      border: 1.5px solid var(--gray-border);
-      border-radius: 7px;
-      font-size: .95rem;
-      color: var(--text);
-      background: #fafbfd;
-      transition: border-color .15s;
-    }
+    .input-wrap .unit { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: .78rem; color: var(--text-muted); pointer-events: none; }
+    input[type="number"] { width: 100%; padding: 9px 44px 9px 12px; border: 1.5px solid var(--gray-border); border-radius: 7px; font-size: .95rem; color: var(--text); background: #fafbfd; transition: border-color .15s; }
     input[type="number"]:focus { outline: none; border-color: var(--blue-light); background: #fff; }
     input[type="number"]::placeholder { color: #b0bac8; }
-
-    .fields-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+    .fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 500px) { .fields-row { grid-template-columns: 1fr; } }
-
-    .section-label {
-      font-size: .75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      color: var(--blue-mid);
-      margin: 16px 0 10px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--gray-border);
-    }
-
-    /* Derived summary strip */
-    .derived-strip {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 0;
-      border: 1.5px solid var(--teal);
-      border-radius: 9px;
-      overflow: hidden;
-      margin-top: 18px;
-      background: var(--teal-light);
-    }
-    .derived-cell {
-      padding: 12px 14px;
-      text-align: center;
-    }
+    .section-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--blue-mid); margin: 16px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--gray-border); }
+    .perimeter-note { display: none; font-size: .78rem; color: #007a7a; background: var(--teal-light); border: 1px solid var(--teal); border-radius: 7px; padding: 8px 12px; margin-bottom: 12px; }
+    .derived-strip { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1.5px solid var(--teal); border-radius: 9px; overflow: hidden; margin-top: 18px; background: var(--teal-light); }
+    .derived-cell { padding: 12px 14px; text-align: center; }
     .derived-cell:not(:last-child) { border-right: 1px solid rgba(0,180,180,.25); }
     .derived-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #007a7a; margin-bottom: 4px; }
     .derived-value { font-size: 1.15rem; font-weight: 800; color: var(--blue-dark); }
-    .derived-sub   { font-size: .65rem; color: var(--text-muted); margin-top: 2px; }
-
-    /* Toggle */
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 18px;
-      padding: 11px 14px;
-      background: #f0f4fb;
-      border-radius: 8px;
-    }
+    .derived-sub { font-size: .65rem; color: var(--text-muted); margin-top: 2px; }
+    .toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding: 11px 14px; background: #f0f4fb; border-radius: 8px; }
     .toggle-row span { font-size: .83rem; font-weight: 600; color: var(--text-muted); }
     .toggle-row span.active { color: var(--blue-dark); }
     .switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
@@ -224,44 +71,13 @@
     .slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
     input:checked + .slider { background: var(--teal); }
     input:checked + .slider::before { transform: translateX(20px); }
-
-    /* Read-only computed field */
-    .computed-field {
-      padding: 9px 12px;
-      border: 1.5px solid var(--teal);
-      border-radius: 7px;
-      background: var(--teal-light);
-      font-size: .95rem;
-      font-weight: 700;
-      color: #007a7a;
-    }
-
-    /* Results */
+    .computed-field { padding: 9px 12px; border: 1.5px solid var(--teal); border-radius: 7px; background: var(--teal-light); font-size: .95rem; font-weight: 700; color: #007a7a; }
     .results-body { padding: 24px 20px; }
-
-    .comparison-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 1fr 1fr;
-      gap: 0;
-      border: 1.5px solid var(--gray-border);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 24px;
-    }
+    .comparison-grid { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 0; border: 1.5px solid var(--gray-border); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
     @media (max-width: 600px) { .comparison-grid { grid-template-columns: 1fr; } }
-
-    .col-header {
-      text-align: center; padding: 12px;
-      font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
-      color: var(--text-muted); background: #f4f6f9;
-      border-bottom: 1.5px solid var(--gray-border);
-    }
+    .col-header { text-align: center; padding: 12px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); background: #f4f6f9; border-bottom: 1.5px solid var(--gray-border); }
     .col-header:not(:last-child) { border-right: 1px solid var(--gray-border); }
-
-    .metric-cell {
-      padding: 16px 12px; text-align: center;
-      border-bottom: 1px solid var(--gray-border);
-    }
+    .metric-cell { padding: 16px 12px; text-align: center; border-bottom: 1px solid var(--gray-border); }
     .metric-cell:not(:last-child) { border-right: 1px solid var(--gray-border); }
     .metric-cell.last-row { border-bottom: none; }
     .metric-label { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 5px; }
@@ -271,12 +87,8 @@
     .metric-value.diff.savings { color: var(--green); }
     .metric-value.diff.cost    { color: #c0392b; }
     .metric-sub { font-size: .7rem; color: var(--text-muted); margin-top: 3px; }
-
-    .schedule-comparison {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px;
-    }
+    .schedule-comparison { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px; }
     @media (max-width: 600px) { .schedule-comparison { grid-template-columns: 1fr; } }
-
     .sched-card { border-radius: 8px; padding: 16px; text-align: center; }
     .sched-card.penetron  { background: var(--teal-light); border: 1.5px solid var(--teal); }
     .sched-card.membrane  { background: #e8edf8; border: 1.5px solid var(--blue-light); }
@@ -286,17 +98,12 @@
     .sched-card.penetron .sched-days { color: #007a7a; }
     .sched-card.membrane .sched-days { color: var(--blue-mid); }
     .sched-card .sched-unit  { font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
-
-    .verdict {
-      border-radius: 9px; padding: 16px 20px;
-      font-size: .92rem; font-weight: 600; line-height: 1.55;
-    }
+    .sched-note { margin-top: 6px; font-size: .78rem; font-weight: 700; }
+    .verdict { border-radius: 9px; padding: 16px 20px; font-size: .92rem; font-weight: 600; line-height: 1.55; }
     .verdict.penetron-wins { background: var(--green-bg); border-left: 4px solid var(--green); color: var(--green); }
     .verdict.membrane-wins { background: var(--amber-bg); border-left: 4px solid var(--amber); color: var(--amber); }
     .verdict.tie           { background: #f0f4fb; border-left: 4px solid var(--blue-light); color: var(--blue-mid); }
-
     .placeholder-msg { text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: .9rem; }
-
     @media print {
       body { background: #fff; }
       header { background: #0a2540 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -315,13 +122,10 @@
 
 <div class="layout">
 
-  <!-- ── STEP 1: PROJECT DETAILS ── -->
+  <!-- STEP 1 -->
   <div class="card full">
     <div class="card-header project-header">
-      <div>
-        <div class="step-label">Step 1</div>
-        Project Details
-      </div>
+      <div><div class="step-label">Step 1</div>Project Details</div>
     </div>
     <div class="card-body">
 
@@ -379,8 +183,8 @@
           </div>
         </div>
         <div class="section-label">Perimeter Walls (if any)</div>
-        <div id="slab-perimeter-note" style="display:none;font-size:.78rem;color:#007a7a;background:var(--teal-light);border:1px solid var(--teal);border-radius:7px;padding:8px 12px;margin-bottom:12px;">
-          Perimeter: <strong id="slab-perimeter-val">—</strong> ft &nbsp;·&nbsp; Wall SF = perimeter × height
+        <div id="slab-perimeter-note" class="perimeter-note">
+          Perimeter: <strong id="slab-perimeter-val">—</strong> ft &nbsp;·&nbsp; Wall SF = perimeter &times; height
         </div>
         <div class="fields-row">
           <div class="field">
@@ -445,11 +249,11 @@
             </div>
           </div>
           <div class="field">
-            <label>Sides Exposed? <span class="hint">cap soffit submerged</span></label>
+            <label>Include cap sides? <span class="hint">if soffit submerged</span></label>
             <div class="input-wrap" style="padding-top:6px">
               <label style="flex-direction:row;gap:8px;text-transform:none;letter-spacing:0;font-size:.9rem;font-weight:600;color:var(--text)">
                 <input type="checkbox" id="cap_sides" onchange="compute()" style="width:auto;padding:0;border:none;background:none;" />
-                Include cap sides in membrane area
+                Include sides in area
               </label>
             </div>
           </div>
@@ -477,7 +281,7 @@
         </div>
         <div class="fields-row">
           <div class="field">
-            <label>Pit Depth <span class="hint">below finished floor, typ. 12–18 ft</span></label>
+            <label>Pit Depth <span class="hint">below finished floor</span></label>
             <div class="input-wrap">
               <input type="number" id="pit_depth" min="0" step="0.5" placeholder="e.g. 14" oninput="compute()" />
               <span class="unit">ft</span>
@@ -526,8 +330,7 @@
         </div>
       </div>
 
-      <!-- Derived summary -->
-      <div class="derived-strip" id="derived-strip">
+      <div class="derived-strip">
         <div class="derived-cell">
           <div class="derived-label">Concrete Volume</div>
           <div class="derived-value" id="d-cy">—</div>
@@ -548,36 +351,33 @@
     </div>
   </div>
 
-  <!-- ── STEP 2: PENETRON ── -->
+  <!-- STEP 2 -->
   <div class="card">
     <div class="card-header penetron-header">
-      <div>
-        <div class="step-label">Step 2</div>
-        Penetron Crystalline Admixture
-      </div>
+      <div><div class="step-label">Step 2</div>Penetron Crystalline Admixture</div>
       <span class="badge">Admixture</span>
     </div>
     <div class="card-body">
       <div class="field">
-        <label>Concrete Volume (CY) <span class="hint">auto-filled from Step 1</span></label>
+        <label>Concrete Volume <span class="hint">auto-filled from Step 1</span></label>
         <div class="computed-field" id="p_volume_display">— CY</div>
       </div>
       <div class="field">
-        <label>Cost of Penetron per CY ($) <span class="hint">admixture only</span></label>
+        <label>Penetron Cost per CY <span class="hint">admixture only</span></label>
         <div class="input-wrap">
           <input type="number" id="p_cost_per_cy" min="0" step="0.01" placeholder="e.g. 18.00" oninput="compute()" />
           <span class="unit">$/CY</span>
         </div>
       </div>
       <div class="field">
-        <label>Base Concrete Cost per CY ($) <span class="hint">for reference</span></label>
+        <label>Base Concrete Cost per CY <span class="hint">reference</span></label>
         <div class="input-wrap">
           <input type="number" id="p_concrete_per_cy" min="0" step="0.01" placeholder="e.g. 165.00" oninput="compute()" />
           <span class="unit">$/CY</span>
         </div>
       </div>
       <div class="field">
-        <label>Critical Path Time Added <span class="hint">0 = no schedule impact</span></label>
+        <label>Critical Path Time Added <span class="hint">0 = no impact</span></label>
         <div class="input-wrap">
           <input type="number" id="p_schedule" min="0" step="0.5" placeholder="e.g. 0" oninput="compute()" />
           <span class="unit">days</span>
@@ -586,17 +386,13 @@
     </div>
   </div>
 
-  <!-- ── STEP 3: MEMBRANE ── -->
+  <!-- STEP 3 -->
   <div class="card">
     <div class="card-header membrane-header">
-      <div>
-        <div class="step-label">Step 3</div>
-        Hydrostatic Membrane System
-      </div>
+      <div><div class="step-label">Step 3</div>Hydrostatic Membrane System</div>
       <span class="badge">Membrane</span>
     </div>
     <div class="card-body">
-
       <div class="toggle-row">
         <span id="lbl-line" class="active">Line Item</span>
         <label class="switch">
@@ -606,28 +402,27 @@
         <span id="lbl-pkg">Packaged</span>
       </div>
 
-      <!-- LINE ITEM -->
       <div id="section-line">
         <div class="field">
-          <label>Total Waterproofed Area (SF) <span class="hint">auto-filled from Step 1</span></label>
+          <label>Waterproofed Area <span class="hint">auto-filled from Step 1</span></label>
           <div class="computed-field" id="m_sf_display">— SF</div>
         </div>
         <div class="field">
-          <label>Membrane Material Cost <span class="hint">$/SF</span></label>
+          <label>Membrane Material Cost</label>
           <div class="input-wrap">
             <input type="number" id="m_membrane_cost_sf" min="0" step="0.01" placeholder="e.g. 3.50" oninput="compute()" />
             <span class="unit">$/SF</span>
           </div>
         </div>
         <div class="field">
-          <label>Installation Labor Cost <span class="hint">$/SF</span></label>
+          <label>Installation Labor Cost</label>
           <div class="input-wrap">
             <input type="number" id="m_install_cost_sf" min="0" step="0.01" placeholder="e.g. 2.00" oninput="compute()" />
             <span class="unit">$/SF</span>
           </div>
         </div>
         <div class="field">
-          <label>Inspection Costs <span class="hint">total $</span></label>
+          <label>Inspection Costs <span class="hint">total</span></label>
           <div class="input-wrap">
             <input type="number" id="m_inspect" min="0" step="1" placeholder="e.g. 1500" oninput="compute()" />
             <span class="unit">$</span>
@@ -652,10 +447,9 @@
         </div>
       </div>
 
-      <!-- PACKAGED -->
       <div id="section-pkg" style="display:none">
         <div class="field">
-          <label>Total Waterproofed Area (SF) <span class="hint">auto-filled from Step 1</span></label>
+          <label>Waterproofed Area <span class="hint">auto-filled from Step 1</span></label>
           <div class="computed-field" id="m_sf_display_pkg">— SF</div>
         </div>
         <div class="field">
@@ -673,11 +467,10 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- ── RESULTS ── -->
+  <!-- RESULTS -->
   <div class="card full">
     <div class="card-header results-header">Cost &amp; Schedule Comparison</div>
     <div class="results-body" id="results-body">
@@ -710,12 +503,14 @@
   }
 
   function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
-  function checked(id) { return document.getElementById(id).checked; }
+  function chk(id) { return document.getElementById(id).checked; }
 
   function fmt$(n) {
     return n.toLocaleString('en-US', { style:'currency', currency:'USD', minimumFractionDigits:2, maximumFractionDigits:2 });
   }
-  function fmtN(n, dec=0) { return n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }); }
+  function fmtN(n, dec) {
+    return n.toLocaleString('en-US', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 });
+  }
 
   function calcDerived() {
     let cy = 0, bottomSF = 0, wallSF = 0;
@@ -723,38 +518,32 @@
     if (currentType === 'slab') {
       const l = v('slab_l'), w = v('slab_w'), t = v('slab_t') / 12;
       const wh = v('slab_wall_h');
-      // wall thickness defaults to slab thickness if left blank
       const wt = (v('slab_wall_t') || v('slab_t')) / 12;
       const perimeter = 2 * (l + w);
       cy = (l * w * t) / 27;
       if (wh > 0 && wt > 0) cy += (perimeter * wh * wt) / 27;
       bottomSF = l * w;
-      wallSF   = wh > 0 ? perimeter * wh : 0;
-      // show perimeter note when L and W are filled
-      const perimNote = document.getElementById('slab-perimeter-note');
+      wallSF = wh > 0 ? perimeter * wh : 0;
+      const note = document.getElementById('slab-perimeter-note');
       if (l > 0 && w > 0) {
-        perimNote.style.display = 'block';
+        note.style.display = 'block';
         document.getElementById('slab-perimeter-val').textContent = fmtN(perimeter);
       } else {
-        perimNote.style.display = 'none';
+        note.style.display = 'none';
       }
 
     } else if (currentType === 'pilecap') {
       const l = v('cap_l'), w = v('cap_w'), d = v('cap_d'), qty = v('cap_qty') || 1;
       cy = (l * w * d / 27) * qty;
       bottomSF = l * w * qty;
-      wallSF   = checked('cap_sides') ? 2 * (l + w) * d * qty : 0;
+      wallSF = chk('cap_sides') ? 2 * (l + w) * d * qty : 0;
 
     } else if (currentType === 'elevator') {
       const l = v('pit_l'), w = v('pit_w'), depth = v('pit_depth');
       const wt = v('pit_wall_t') / 12, st = v('pit_slab_t') / 12;
-      const wTable = v('pit_wt');
-      // wall concrete: perimeter × depth × wall thickness
       cy = (2 * (l + w) * depth * wt + l * w * st) / 27;
       bottomSF = l * w;
-      // walls exposed below water table
-      const exposedH = Math.max(0, depth - wTable);
-      wallSF   = 2 * (l + w) * exposedH;
+      wallSF = 2 * (l + w) * Math.max(0, depth - v('pit_wt'));
     }
 
     return { cy: Math.round(cy * 10) / 10, bottomSF: Math.round(bottomSF), wallSF: Math.round(wallSF) };
@@ -765,24 +554,22 @@
     derivedCY = d.cy;
     derivedSF = d.bottomSF + d.wallSF;
 
-    // Update derived strip
-    document.getElementById('d-cy').textContent     = d.cy > 0 ? fmtN(d.cy, 1) : '—';
-    document.getElementById('d-bottom').textContent  = d.bottomSF > 0 ? fmtN(d.bottomSF) : '—';
-    document.getElementById('d-walls').textContent   = d.wallSF > 0 ? fmtN(d.wallSF) : (d.bottomSF > 0 ? '0' : '—');
+    document.getElementById('d-cy').textContent     = d.cy > 0     ? fmtN(d.cy, 1)    : '—';
+    document.getElementById('d-bottom').textContent = d.bottomSF > 0 ? fmtN(d.bottomSF) : '—';
+    document.getElementById('d-walls').textContent  = d.wallSF > 0  ? fmtN(d.wallSF)  : (d.bottomSF > 0 ? '0' : '—');
 
-    // Update computed display fields
-    const cyText = d.cy > 0 ? fmtN(d.cy, 1) + ' CY' : '— (fill Step 1 dimensions)';
-    const sfText = derivedSF > 0 ? fmtN(derivedSF) + ' SF' : '— (fill Step 1 dimensions)';
-    document.getElementById('p_volume_display').textContent  = cyText;
-    document.getElementById('m_sf_display').textContent      = sfText;
-    document.getElementById('m_sf_display_pkg').textContent  = sfText;
+    const cyText = d.cy > 0     ? fmtN(d.cy, 1)    + ' CY' : '— (fill Step 1 dimensions)';
+    const sfText = derivedSF > 0 ? fmtN(derivedSF)  + ' SF' : '— (fill Step 1 dimensions)';
+    document.getElementById('p_volume_display').textContent   = cyText;
+    document.getElementById('m_sf_display').textContent       = sfText;
+    document.getElementById('m_sf_display_pkg').textContent   = sfText;
 
-    // ── Cost calcs ──
     const volume  = derivedCY;
     const totalSF = derivedSF;
     const pCostCY = v('p_cost_per_cy');
     const pSched  = v('p_schedule');
     const isPkg   = document.getElementById('mem_toggle').checked;
+    const cpd     = v('cost_per_day');
 
     let memTotalCost = 0, memSched = 0;
     if (!isPkg) {
@@ -793,7 +580,6 @@
       memSched     = v('m_pkg_sched');
     }
 
-    const cpd        = v('cost_per_day');
     const pAdmixTotal = volume * pCostCY;
     const hasPenetron = pAdmixTotal > 0;
     const hasMembrane = memTotalCost > 0;
@@ -805,24 +591,19 @@
       return;
     }
 
-    // Schedule costs
-    const pSchedCost = pSched * cpd;
-    const mSchedCost = memSched * cpd;
-
-    // True total = direct cost + schedule cost
-    const pTrueTotal = pAdmixTotal + pSchedCost;
-    const mTrueTotal = memTotalCost + mSchedCost;
-
-    const pCostPerCY = volume > 0 ? pAdmixTotal / volume : 0;
-    const mCostPerCY = volume > 0 ? memTotalCost / volume : 0;
-    const pCostPerSF = totalSF > 0 ? pAdmixTotal / totalSF : 0;
-    const mCostPerSF = totalSF > 0 ? memTotalCost / totalSF : 0;
-
-    const directDiff = memTotalCost - pAdmixTotal;
-    const schedDiff  = memSched - pSched;
-    const trueDiff   = mTrueTotal - pTrueTotal;  // positive = Penetron is cheaper true-total
-    const perCYdiff  = mCostPerCY - pCostPerCY;
-    const perSFdiff  = mCostPerSF - pCostPerSF;
+    const pSchedCost  = pSched * cpd;
+    const mSchedCost  = memSched * cpd;
+    const pTrueTotal  = pAdmixTotal + pSchedCost;
+    const mTrueTotal  = memTotalCost + mSchedCost;
+    const pCostPerCY  = volume > 0  ? pAdmixTotal  / volume  : 0;
+    const mCostPerCY  = volume > 0  ? memTotalCost / volume  : 0;
+    const pCostPerSF  = totalSF > 0 ? pAdmixTotal  / totalSF : 0;
+    const mCostPerSF  = totalSF > 0 ? memTotalCost / totalSF : 0;
+    const directDiff  = memTotalCost - pAdmixTotal;
+    const schedDiff   = memSched - pSched;
+    const trueDiff    = mTrueTotal - pTrueTotal;
+    const perCYdiff   = mCostPerCY - pCostPerCY;
+    const perSFdiff   = mCostPerSF - pCostPerSF;
 
     function dc(n) { return n > 0 ? 'savings' : (n < 0 ? 'cost' : ''); }
     function dl(n) {
@@ -834,20 +615,19 @@
       return (n >= 0 ? '+' : '') + n.toFixed(1) + ' days';
     }
 
-    // Verdict uses true total when CPD is entered, otherwise direct cost
     const effectiveDiff = hasCPD ? trueDiff : directDiff;
+    const costLabel = hasCPD ? 'true total cost (including critical path value)' : 'direct waterproofing cost';
+    const saveAmt = fmt$(Math.abs(effectiveDiff));
     let verdict = '';
     if (hasPenetron && hasMembrane) {
-      const saveAmt = fmt$(Math.abs(effectiveDiff));
-      const costLabel = hasCPD ? 'true total cost (including critical path value)' : 'direct waterproofing cost';
       if (effectiveDiff > 0 && schedDiff >= 0)
-        verdict = `<div class="verdict penetron-wins">✅ Penetron saves ${saveAmt} in ${costLabel} and reduces critical path by ${schedDiff.toFixed(1)} day(s).</div>`;
+        verdict = `<div class="verdict penetron-wins">&#x2705; Penetron saves ${saveAmt} in ${costLabel} and reduces critical path by ${schedDiff.toFixed(1)} day(s).</div>`;
       else if (effectiveDiff < 0 && schedDiff <= 0)
-        verdict = `<div class="verdict membrane-wins">⚠️ The membrane system is ${saveAmt} less expensive in ${costLabel} and ${Math.abs(schedDiff).toFixed(1)} day(s) faster. Review inputs — this is unusual for hydrostatic conditions.</div>`;
+        verdict = `<div class="verdict membrane-wins">&#x26A0;&#xFE0F; The membrane system is ${saveAmt} less expensive in ${costLabel} and ${Math.abs(schedDiff).toFixed(1)} day(s) faster. Review inputs — unusual for hydrostatic conditions.</div>`;
       else if (effectiveDiff > 0 && schedDiff < 0)
-        verdict = `<div class="verdict penetron-wins">✅ Penetron saves ${saveAmt} in ${costLabel}. Membrane is faster by ${Math.abs(schedDiff).toFixed(1)} day(s) — weigh schedule premium against savings.</div>`;
+        verdict = `<div class="verdict penetron-wins">&#x2705; Penetron saves ${saveAmt} in ${costLabel}. Membrane is faster by ${Math.abs(schedDiff).toFixed(1)} day(s) — weigh schedule premium against savings.</div>`;
       else if (effectiveDiff < 0 && schedDiff > 0)
-        verdict = `<div class="verdict membrane-wins">⚠️ Membrane is ${saveAmt} cheaper in ${costLabel} but adds ${schedDiff.toFixed(1)} day(s) to the critical path.</div>`;
+        verdict = `<div class="verdict membrane-wins">&#x26A0;&#xFE0F; Membrane is ${saveAmt} cheaper in ${costLabel} but adds ${schedDiff.toFixed(1)} day(s) to the critical path.</div>`;
       else
         verdict = `<div class="verdict tie">Systems are equivalent at current inputs.</div>`;
     }
@@ -856,31 +636,33 @@
       ? '<br><small style="color:var(--text-muted);font-size:.65rem">Enter dimensions in Step 1</small>' : '';
 
     const trueTotalRows = hasCPD ? `
-        <div class="metric-cell" style="background:#f0f7ff"><div class="metric-label">Schedule Cost</div></div>
-        <div class="metric-cell" style="background:#f0f7ff">
-          <div class="metric-value penetron">${fmt$(pSchedCost)}</div>
-          <div class="metric-sub">${pSched.toFixed(1)} days \xd7 ${fmt$(cpd)}/day</div>
-        </div>
-        <div class="metric-cell" style="background:#f0f7ff">
-          <div class="metric-value membrane">${fmt$(mSchedCost)}</div>
-          <div class="metric-sub">${memSched.toFixed(1)} days \xd7 ${fmt$(cpd)}/day</div>
-        </div>
+      <div class="metric-cell" style="background:#f0f7ff"><div class="metric-label">Schedule Cost</div></div>
+      <div class="metric-cell" style="background:#f0f7ff">
+        <div class="metric-value penetron">${fmt$(pSchedCost)}</div>
+        <div class="metric-sub">${pSched.toFixed(1)} days &times; ${fmt$(cpd)}/day</div>
+      </div>
+      <div class="metric-cell" style="background:#f0f7ff">
+        <div class="metric-value membrane">${fmt$(mSchedCost)}</div>
+        <div class="metric-sub">${memSched.toFixed(1)} days &times; ${fmt$(cpd)}/day</div>
+      </div>
+      <div class="metric-cell last-row" style="background:#e8f5e9"><div class="metric-label" style="font-size:.8rem;color:#1a5c35">True Total Cost</div></div>
+      <div class="metric-cell last-row" style="background:#e8f5e9">
+        <div class="metric-value penetron" style="font-size:1.4rem">${fmt$(pTrueTotal)}</div>
+        <div class="metric-sub">direct + schedule</div>
+      </div>
+      <div class="metric-cell last-row" style="background:#e8f5e9">
+        <div class="metric-value membrane" style="font-size:1.4rem">${fmt$(mTrueTotal)}</div>
+        <div class="metric-sub">direct + schedule</div>
+      </div>
+      <div class="metric-cell last-row"><div class="metric-label">True Total Savings</div></div>
+      <div class="metric-cell last-row" style="grid-column:2/4">
+        <div class="metric-value diff ${dc(trueDiff)}" style="font-size:1.35rem">${(hasPenetron && hasMembrane) ? (trueDiff >= 0 ? 'Penetron saves ' : 'Membrane saves ') + fmt$(Math.abs(trueDiff)) : '—'}</div>
+      </div>` : '';
 
-        <div class="metric-cell last-row" style="background:#e8f5e9;font-weight:700"><div class="metric-label" style="font-size:.8rem;color:#1a5c35">True Total Cost</div></div>
-        <div class="metric-cell last-row" style="background:#e8f5e9">
-          <div class="metric-value penetron" style="font-size:1.4rem">${fmt$(pTrueTotal)}</div>
-          <div class="metric-sub">direct + schedule</div>
-        </div>
-        <div class="metric-cell last-row" style="background:#e8f5e9">
-          <div class="metric-value membrane" style="font-size:1.4rem">${fmt$(mTrueTotal)}</div>
-          <div class="metric-sub">direct + schedule</div>
-        </div>
-
-        <div class="metric-cell last-row"><div class="metric-label">True Total Savings</div></div>
-        <div class="metric-cell last-row" style="grid-column:2/4">
-          <div class="metric-value diff ${dc(trueDiff)}" style="font-size:1.35rem">${(hasPenetron && hasMembrane) ? (trueDiff >= 0 ? 'Penetron saves ' : 'Membrane saves ') + fmt$(Math.abs(trueDiff)) : '—'}</div>
-        </div>
-    ` : '';
+    const schedNoteColor = schedDiff > 0 ? 'var(--green)' : (schedDiff < 0 ? '#c0392b' : 'var(--text-muted)');
+    const schedNoteText  = hasCPD && schedDiff !== 0
+      ? '<div class="sched-note" style="color:' + schedNoteColor + '">' + (schedDiff > 0 ? 'Saves ' : 'Costs ') + fmt$(Math.abs(schedDiff * cpd)) + '</div>'
+      : '';
 
     document.getElementById('results-body').innerHTML = `
       <div class="comparison-grid">
@@ -913,7 +695,7 @@
           <div class="metric-sub">membrane / CY</div>
         </div>
 
-        <div class="metric-cell"><div class="metric-label">Δ per CY</div></div>
+        <div class="metric-cell"><div class="metric-label">&Delta; per CY</div></div>
         <div class="metric-cell" style="grid-column:2/4">
           <div class="metric-value diff ${dc(perCYdiff)}">${(hasPenetron && hasMembrane && volume > 0) ? dl(perCYdiff) : '—'}</div>
         </div>
@@ -928,7 +710,7 @@
           <div class="metric-sub">membrane / SF</div>
         </div>
 
-        <div class="metric-cell ${hasCPD ? '' : 'last-row'}"><div class="metric-label">Δ per SF</div></div>
+        <div class="metric-cell ${hasCPD ? '' : 'last-row'}"><div class="metric-label">&Delta; per SF</div></div>
         <div class="metric-cell ${hasCPD ? '' : 'last-row'}" style="grid-column:2/4">
           <div class="metric-value diff ${dc(perSFdiff)}">${(hasPenetron && hasMembrane && totalSF > 0) ? dl(perSFdiff) : '—'}</div>
         </div>
@@ -941,19 +723,19 @@
           <div class="sched-title">Penetron Schedule Impact</div>
           <div class="sched-days">${pSched.toFixed(1)}</div>
           <div class="sched-unit">critical path days added</div>
-          ${hasCPD ? `<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:#007a7a">${fmt$(pSchedCost)} schedule cost</div>` : ''}
+          ${hasCPD ? '<div class="sched-note" style="color:#007a7a">' + fmt$(pSchedCost) + ' schedule cost</div>' : ''}
         </div>
         <div class="sched-card membrane">
           <div class="sched-title">Membrane Schedule Impact</div>
           <div class="sched-days">${memSched.toFixed(1)}</div>
           <div class="sched-unit">critical path days added</div>
-          ${hasCPD ? `<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:var(--blue-mid)">${fmt$(mSchedCost)} schedule cost</div>` : ''}
+          ${hasCPD ? '<div class="sched-note" style="color:var(--blue-mid)">' + fmt$(mSchedCost) + ' schedule cost</div>' : ''}
         </div>
         <div class="sched-card diff-card">
           <div class="sched-title">Schedule Difference</div>
-          <div class="sched-days" style="font-size:1.4rem;color:${schedDiff>0?'var(--green)':(schedDiff<0?'#c0392b':'var(--text-muted)')}">${(hasPenetron||hasMembrane) ? dld(schedDiff) : '—'}</div>
+          <div class="sched-days" style="font-size:1.4rem;color:${schedNoteColor}">${(hasPenetron || hasMembrane) ? dld(schedDiff) : '—'}</div>
           <div class="sched-unit">${schedDiff > 0 ? 'Penetron faster' : (schedDiff < 0 ? 'Membrane faster' : 'Equal')}</div>
-          ${hasCPD ? '<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:' + (schedDiff>0?'var(--green)':schedDiff<0?'#c0392b':'var(--text-muted)') + '">' + (schedDiff !== 0 ? (schedDiff > 0 ? 'Saves ' : 'Costs ') + fmt$(Math.abs(schedDiff * cpd)) : '') + '</div>' : ''}
+          ${schedNoteText}
         </div>
       </div>
 
