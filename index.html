@@ -379,18 +379,21 @@
           </div>
         </div>
         <div class="section-label">Perimeter Walls (if any)</div>
+        <div id="slab-perimeter-note" style="display:none;font-size:.78rem;color:#007a7a;background:var(--teal-light);border:1px solid var(--teal);border-radius:7px;padding:8px 12px;margin-bottom:12px;">
+          Perimeter: <strong id="slab-perimeter-val">—</strong> ft &nbsp;·&nbsp; Wall SF = perimeter × height
+        </div>
         <div class="fields-row">
           <div class="field">
-            <label>Wall Height Below Grade <span class="hint">0 if slab only</span></label>
+            <label>Wall Height <span class="hint">below grade</span></label>
             <div class="input-wrap">
               <input type="number" id="slab_wall_h" min="0" step="0.5" placeholder="e.g. 8" oninput="compute()" />
               <span class="unit">ft</span>
             </div>
           </div>
           <div class="field">
-            <label>Wall Thickness <span class="hint">typical 8–16 in</span></label>
+            <label>Wall Thickness <span class="hint">defaults to slab thickness</span></label>
             <div class="input-wrap">
-              <input type="number" id="slab_wall_t" min="0" step="0.5" placeholder="e.g. 12" oninput="compute()" />
+              <input type="number" id="slab_wall_t" min="0" step="0.5" placeholder="same as slab" oninput="compute()" />
               <span class="unit">in</span>
             </div>
           </div>
@@ -719,12 +722,22 @@
 
     if (currentType === 'slab') {
       const l = v('slab_l'), w = v('slab_w'), t = v('slab_t') / 12;
-      const wh = v('slab_wall_h'), wt = v('slab_wall_t') / 12;
+      const wh = v('slab_wall_h');
+      // wall thickness defaults to slab thickness if left blank
+      const wt = (v('slab_wall_t') || v('slab_t')) / 12;
+      const perimeter = 2 * (l + w);
       cy = (l * w * t) / 27;
-      // walls: perimeter × height × thickness
-      if (wh > 0 && wt > 0) cy += (2 * (l + w) * wh * wt) / 27;
+      if (wh > 0 && wt > 0) cy += (perimeter * wh * wt) / 27;
       bottomSF = l * w;
-      wallSF   = wh > 0 ? 2 * (l + w) * wh : 0;
+      wallSF   = wh > 0 ? perimeter * wh : 0;
+      // show perimeter note when L and W are filled
+      const perimNote = document.getElementById('slab-perimeter-note');
+      if (l > 0 && w > 0) {
+        perimNote.style.display = 'block';
+        document.getElementById('slab-perimeter-val').textContent = fmtN(perimeter);
+      } else {
+        perimNote.style.display = 'none';
+      }
 
     } else if (currentType === 'pilecap') {
       const l = v('cap_l'), w = v('cap_w'), d = v('cap_d'), qty = v('cap_qty') || 1;
