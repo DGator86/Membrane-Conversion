@@ -57,6 +57,7 @@
       .full { grid-column: 1; }
     }
 
+    /* Step labels */
     .step-label {
       font-size: .7rem;
       font-weight: 800;
@@ -102,6 +103,7 @@
 
     .card-body { padding: 20px; }
 
+    /* Type selector */
     .type-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -125,6 +127,7 @@
     .type-btn .type-name { font-size: .8rem; font-weight: 700; color: var(--blue-dark); }
     .type-btn .type-desc { font-size: .7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
 
+    /* Dimension form */
     .dim-section { display: none; }
     .dim-section.visible { display: block; }
 
@@ -183,6 +186,7 @@
       border-bottom: 1px solid var(--gray-border);
     }
 
+    /* Derived summary strip */
     .derived-strip {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -202,6 +206,7 @@
     .derived-value { font-size: 1.15rem; font-weight: 800; color: var(--blue-dark); }
     .derived-sub   { font-size: .65rem; color: var(--text-muted); margin-top: 2px; }
 
+    /* Toggle */
     .toggle-row {
       display: flex;
       align-items: center;
@@ -220,6 +225,7 @@
     input:checked + .slider { background: var(--teal); }
     input:checked + .slider::before { transform: translateX(20px); }
 
+    /* Read-only computed field */
     .computed-field {
       padding: 9px 12px;
       border: 1.5px solid var(--teal);
@@ -230,6 +236,7 @@
       color: #007a7a;
     }
 
+    /* Results */
     .results-body { padding: 24px 20px; }
 
     .comparison-grid {
@@ -308,7 +315,7 @@
 
 <div class="layout">
 
-  <!-- STEP 1 -->
+  <!-- ── STEP 1: PROJECT DETAILS ── -->
   <div class="card full">
     <div class="card-header project-header">
       <div>
@@ -435,11 +442,11 @@
             </div>
           </div>
           <div class="field">
-            <label>Include cap sides? <span class="hint">if soffit submerged</span></label>
+            <label>Sides Exposed? <span class="hint">cap soffit submerged</span></label>
             <div class="input-wrap" style="padding-top:6px">
               <label style="flex-direction:row;gap:8px;text-transform:none;letter-spacing:0;font-size:.9rem;font-weight:600;color:var(--text)">
                 <input type="checkbox" id="cap_sides" onchange="compute()" style="width:auto;padding:0;border:none;background:none;" />
-                Include sides in area
+                Include cap sides in membrane area
               </label>
             </div>
           </div>
@@ -467,7 +474,7 @@
         </div>
         <div class="fields-row">
           <div class="field">
-            <label>Pit Depth <span class="hint">below finished floor</span></label>
+            <label>Pit Depth <span class="hint">below finished floor, typ. 12–18 ft</span></label>
             <div class="input-wrap">
               <input type="number" id="pit_depth" min="0" step="0.5" placeholder="e.g. 14" oninput="compute()" />
               <span class="unit">ft</span>
@@ -500,7 +507,24 @@
         </div>
       </div>
 
-      <div class="derived-strip">
+      <div class="section-label">Project Economics</div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Cost per Critical Path Day <span class="hint">gen. conditions, overhead</span></label>
+          <div class="input-wrap">
+            <input type="number" id="cost_per_day" min="0" step="100" placeholder="e.g. 5000" oninput="compute()" />
+            <span class="unit">$/day</span>
+          </div>
+        </div>
+        <div class="field" style="display:flex;align-items:flex-end;padding-bottom:2px">
+          <div style="font-size:.78rem;color:var(--text-muted);line-height:1.5;">
+            Monetizes the schedule difference to show <strong>true total cost</strong> including critical path time impact.
+          </div>
+        </div>
+      </div>
+
+      <!-- Derived summary -->
+      <div class="derived-strip" id="derived-strip">
         <div class="derived-cell">
           <div class="derived-label">Concrete Volume</div>
           <div class="derived-value" id="d-cy">—</div>
@@ -521,7 +545,7 @@
     </div>
   </div>
 
-  <!-- STEP 2: PENETRON -->
+  <!-- ── STEP 2: PENETRON ── -->
   <div class="card">
     <div class="card-header penetron-header">
       <div>
@@ -532,25 +556,25 @@
     </div>
     <div class="card-body">
       <div class="field">
-        <label>Concrete Volume <span class="hint">auto-filled from Step 1</span></label>
+        <label>Concrete Volume (CY) <span class="hint">auto-filled from Step 1</span></label>
         <div class="computed-field" id="p_volume_display">— CY</div>
       </div>
       <div class="field">
-        <label>Penetron Cost per CY <span class="hint">admixture only</span></label>
+        <label>Cost of Penetron per CY ($) <span class="hint">admixture only</span></label>
         <div class="input-wrap">
           <input type="number" id="p_cost_per_cy" min="0" step="0.01" placeholder="e.g. 18.00" oninput="compute()" />
           <span class="unit">$/CY</span>
         </div>
       </div>
       <div class="field">
-        <label>Base Concrete Cost per CY <span class="hint">reference</span></label>
+        <label>Base Concrete Cost per CY ($) <span class="hint">for reference</span></label>
         <div class="input-wrap">
           <input type="number" id="p_concrete_per_cy" min="0" step="0.01" placeholder="e.g. 165.00" oninput="compute()" />
           <span class="unit">$/CY</span>
         </div>
       </div>
       <div class="field">
-        <label>Critical Path Time Added <span class="hint">0 = no impact</span></label>
+        <label>Critical Path Time Added <span class="hint">0 = no schedule impact</span></label>
         <div class="input-wrap">
           <input type="number" id="p_schedule" min="0" step="0.5" placeholder="e.g. 0" oninput="compute()" />
           <span class="unit">days</span>
@@ -559,7 +583,7 @@
     </div>
   </div>
 
-  <!-- STEP 3: MEMBRANE -->
+  <!-- ── STEP 3: MEMBRANE ── -->
   <div class="card">
     <div class="card-header membrane-header">
       <div>
@@ -579,27 +603,28 @@
         <span id="lbl-pkg">Packaged</span>
       </div>
 
+      <!-- LINE ITEM -->
       <div id="section-line">
         <div class="field">
-          <label>Waterproofed Area <span class="hint">auto-filled from Step 1</span></label>
+          <label>Total Waterproofed Area (SF) <span class="hint">auto-filled from Step 1</span></label>
           <div class="computed-field" id="m_sf_display">— SF</div>
         </div>
         <div class="field">
-          <label>Membrane Material Cost</label>
+          <label>Membrane Material Cost <span class="hint">$/SF</span></label>
           <div class="input-wrap">
             <input type="number" id="m_membrane_cost_sf" min="0" step="0.01" placeholder="e.g. 3.50" oninput="compute()" />
             <span class="unit">$/SF</span>
           </div>
         </div>
         <div class="field">
-          <label>Installation Labor Cost</label>
+          <label>Installation Labor Cost <span class="hint">$/SF</span></label>
           <div class="input-wrap">
             <input type="number" id="m_install_cost_sf" min="0" step="0.01" placeholder="e.g. 2.00" oninput="compute()" />
             <span class="unit">$/SF</span>
           </div>
         </div>
         <div class="field">
-          <label>Inspection Costs <span class="hint">total</span></label>
+          <label>Inspection Costs <span class="hint">total $</span></label>
           <div class="input-wrap">
             <input type="number" id="m_inspect" min="0" step="1" placeholder="e.g. 1500" oninput="compute()" />
             <span class="unit">$</span>
@@ -624,9 +649,10 @@
         </div>
       </div>
 
+      <!-- PACKAGED -->
       <div id="section-pkg" style="display:none">
         <div class="field">
-          <label>Waterproofed Area <span class="hint">auto-filled from Step 1</span></label>
+          <label>Total Waterproofed Area (SF) <span class="hint">auto-filled from Step 1</span></label>
           <div class="computed-field" id="m_sf_display_pkg">— SF</div>
         </div>
         <div class="field">
@@ -648,7 +674,7 @@
     </div>
   </div>
 
-  <!-- RESULTS -->
+  <!-- ── RESULTS ── -->
   <div class="card full">
     <div class="card-header results-header">Cost &amp; Schedule Comparison</div>
     <div class="results-body" id="results-body">
@@ -695,6 +721,7 @@
       const l = v('slab_l'), w = v('slab_w'), t = v('slab_t') / 12;
       const wh = v('slab_wall_h'), wt = v('slab_wall_t') / 12;
       cy = (l * w * t) / 27;
+      // walls: perimeter × height × thickness
       if (wh > 0 && wt > 0) cy += (2 * (l + w) * wh * wt) / 27;
       bottomSF = l * w;
       wallSF   = wh > 0 ? 2 * (l + w) * wh : 0;
@@ -709,8 +736,10 @@
       const l = v('pit_l'), w = v('pit_w'), depth = v('pit_depth');
       const wt = v('pit_wall_t') / 12, st = v('pit_slab_t') / 12;
       const wTable = v('pit_wt');
+      // wall concrete: perimeter × depth × wall thickness
       cy = (2 * (l + w) * depth * wt + l * w * st) / 27;
       bottomSF = l * w;
+      // walls exposed below water table
       const exposedH = Math.max(0, depth - wTable);
       wallSF   = 2 * (l + w) * exposedH;
     }
@@ -723,16 +752,19 @@
     derivedCY = d.cy;
     derivedSF = d.bottomSF + d.wallSF;
 
-    document.getElementById('d-cy').textContent    = d.cy > 0 ? fmtN(d.cy, 1) : '—';
-    document.getElementById('d-bottom').textContent = d.bottomSF > 0 ? fmtN(d.bottomSF) : '—';
-    document.getElementById('d-walls').textContent  = d.wallSF > 0 ? fmtN(d.wallSF) : (d.bottomSF > 0 ? '0' : '—');
+    // Update derived strip
+    document.getElementById('d-cy').textContent     = d.cy > 0 ? fmtN(d.cy, 1) : '—';
+    document.getElementById('d-bottom').textContent  = d.bottomSF > 0 ? fmtN(d.bottomSF) : '—';
+    document.getElementById('d-walls').textContent   = d.wallSF > 0 ? fmtN(d.wallSF) : (d.bottomSF > 0 ? '0' : '—');
 
+    // Update computed display fields
     const cyText = d.cy > 0 ? fmtN(d.cy, 1) + ' CY' : '— (fill Step 1 dimensions)';
     const sfText = derivedSF > 0 ? fmtN(derivedSF) + ' SF' : '— (fill Step 1 dimensions)';
-    document.getElementById('p_volume_display').textContent    = cyText;
-    document.getElementById('m_sf_display').textContent        = sfText;
-    document.getElementById('m_sf_display_pkg').textContent    = sfText;
+    document.getElementById('p_volume_display').textContent  = cyText;
+    document.getElementById('m_sf_display').textContent      = sfText;
+    document.getElementById('m_sf_display_pkg').textContent  = sfText;
 
+    // ── Cost calcs ──
     const volume  = derivedCY;
     const totalSF = derivedSF;
     const pCostCY = v('p_cost_per_cy');
@@ -748,9 +780,11 @@
       memSched     = v('m_pkg_sched');
     }
 
+    const cpd        = v('cost_per_day');
     const pAdmixTotal = volume * pCostCY;
     const hasPenetron = pAdmixTotal > 0;
     const hasMembrane = memTotalCost > 0;
+    const hasCPD      = cpd > 0;
 
     if (!hasPenetron && !hasMembrane) {
       document.getElementById('results-body').innerHTML =
@@ -758,15 +792,24 @@
       return;
     }
 
+    // Schedule costs
+    const pSchedCost = pSched * cpd;
+    const mSchedCost = memSched * cpd;
+
+    // True total = direct cost + schedule cost
+    const pTrueTotal = pAdmixTotal + pSchedCost;
+    const mTrueTotal = memTotalCost + mSchedCost;
+
     const pCostPerCY = volume > 0 ? pAdmixTotal / volume : 0;
     const mCostPerCY = volume > 0 ? memTotalCost / volume : 0;
     const pCostPerSF = totalSF > 0 ? pAdmixTotal / totalSF : 0;
     const mCostPerSF = totalSF > 0 ? memTotalCost / totalSF : 0;
 
-    const costDiff  = memTotalCost - pAdmixTotal;
-    const schedDiff = memSched - pSched;
-    const perCYdiff = mCostPerCY - pCostPerCY;
-    const perSFdiff = mCostPerSF - pCostPerSF;
+    const directDiff = memTotalCost - pAdmixTotal;
+    const schedDiff  = memSched - pSched;
+    const trueDiff   = mTrueTotal - pTrueTotal;  // positive = Penetron is cheaper true-total
+    const perCYdiff  = mCostPerCY - pCostPerCY;
+    const perSFdiff  = mCostPerSF - pCostPerSF;
 
     function dc(n) { return n > 0 ? 'savings' : (n < 0 ? 'cost' : ''); }
     function dl(n) {
@@ -778,22 +821,53 @@
       return (n >= 0 ? '+' : '') + n.toFixed(1) + ' days';
     }
 
+    // Verdict uses true total when CPD is entered, otherwise direct cost
+    const effectiveDiff = hasCPD ? trueDiff : directDiff;
     let verdict = '';
     if (hasPenetron && hasMembrane) {
-      if (costDiff > 0 && schedDiff >= 0)
-        verdict = `<div class="verdict penetron-wins">✅ Penetron saves ${fmt$(costDiff)} in total cost and reduces critical path by ${schedDiff.toFixed(1)} day(s) compared to the membrane system.</div>`;
-      else if (costDiff < 0 && schedDiff <= 0)
-        verdict = `<div class="verdict membrane-wins">⚠️ The membrane system is ${fmt$(Math.abs(costDiff))} less expensive and ${Math.abs(schedDiff).toFixed(1)} day(s) faster. Review inputs — this is unusual for hydrostatic conditions.</div>`;
-      else if (costDiff > 0 && schedDiff < 0)
-        verdict = `<div class="verdict penetron-wins">✅ Penetron saves ${fmt$(costDiff)} in cost. The membrane is faster by ${Math.abs(schedDiff).toFixed(1)} day(s) — weigh the schedule premium against the cost savings.</div>`;
-      else if (costDiff < 0 && schedDiff > 0)
-        verdict = `<div class="verdict membrane-wins">⚠️ Membrane is ${fmt$(Math.abs(costDiff))} cheaper but adds ${schedDiff.toFixed(1)} day(s) to the critical path. Evaluate schedule impact vs. cost savings.</div>`;
+      const saveAmt = fmt$(Math.abs(effectiveDiff));
+      const costLabel = hasCPD ? 'true total cost (including critical path value)' : 'direct waterproofing cost';
+      if (effectiveDiff > 0 && schedDiff >= 0)
+        verdict = `<div class="verdict penetron-wins">✅ Penetron saves ${saveAmt} in ${costLabel} and reduces critical path by ${schedDiff.toFixed(1)} day(s).</div>`;
+      else if (effectiveDiff < 0 && schedDiff <= 0)
+        verdict = `<div class="verdict membrane-wins">⚠️ The membrane system is ${saveAmt} less expensive in ${costLabel} and ${Math.abs(schedDiff).toFixed(1)} day(s) faster. Review inputs — this is unusual for hydrostatic conditions.</div>`;
+      else if (effectiveDiff > 0 && schedDiff < 0)
+        verdict = `<div class="verdict penetron-wins">✅ Penetron saves ${saveAmt} in ${costLabel}. Membrane is faster by ${Math.abs(schedDiff).toFixed(1)} day(s) — weigh schedule premium against savings.</div>`;
+      else if (effectiveDiff < 0 && schedDiff > 0)
+        verdict = `<div class="verdict membrane-wins">⚠️ Membrane is ${saveAmt} cheaper in ${costLabel} but adds ${schedDiff.toFixed(1)} day(s) to the critical path.</div>`;
       else
-        verdict = `<div class="verdict tie">Systems are equivalent in cost and schedule at current inputs.</div>`;
+        verdict = `<div class="verdict tie">Systems are equivalent at current inputs.</div>`;
     }
 
     const sfNote = totalSF === 0
       ? '<br><small style="color:var(--text-muted);font-size:.65rem">Enter dimensions in Step 1</small>' : '';
+
+    const trueTotalRows = hasCPD ? `
+        <div class="metric-cell" style="background:#f0f7ff"><div class="metric-label">Schedule Cost</div></div>
+        <div class="metric-cell" style="background:#f0f7ff">
+          <div class="metric-value penetron">${fmt$(pSchedCost)}</div>
+          <div class="metric-sub">${pSched.toFixed(1)} days \xd7 ${fmt$(cpd)}/day</div>
+        </div>
+        <div class="metric-cell" style="background:#f0f7ff">
+          <div class="metric-value membrane">${fmt$(mSchedCost)}</div>
+          <div class="metric-sub">${memSched.toFixed(1)} days \xd7 ${fmt$(cpd)}/day</div>
+        </div>
+
+        <div class="metric-cell last-row" style="background:#e8f5e9;font-weight:700"><div class="metric-label" style="font-size:.8rem;color:#1a5c35">True Total Cost</div></div>
+        <div class="metric-cell last-row" style="background:#e8f5e9">
+          <div class="metric-value penetron" style="font-size:1.4rem">${fmt$(pTrueTotal)}</div>
+          <div class="metric-sub">direct + schedule</div>
+        </div>
+        <div class="metric-cell last-row" style="background:#e8f5e9">
+          <div class="metric-value membrane" style="font-size:1.4rem">${fmt$(mTrueTotal)}</div>
+          <div class="metric-sub">direct + schedule</div>
+        </div>
+
+        <div class="metric-cell last-row"><div class="metric-label">True Total Savings</div></div>
+        <div class="metric-cell last-row" style="grid-column:2/4">
+          <div class="metric-value diff ${dc(trueDiff)}" style="font-size:1.35rem">${(hasPenetron && hasMembrane) ? (trueDiff >= 0 ? 'Penetron saves ' : 'Membrane saves ') + fmt$(Math.abs(trueDiff)) : '—'}</div>
+        </div>
+    ` : '';
 
     document.getElementById('results-body').innerHTML = `
       <div class="comparison-grid">
@@ -801,7 +875,7 @@
         <div class="col-header" style="color:#007a7a">Penetron Admixture</div>
         <div class="col-header" style="color:var(--blue-mid)">Membrane System</div>
 
-        <div class="metric-cell"><div class="metric-label">Total Add'l Cost</div></div>
+        <div class="metric-cell"><div class="metric-label">Direct Cost</div></div>
         <div class="metric-cell">
           <div class="metric-value penetron">${hasPenetron ? fmt$(pAdmixTotal) : '—'}</div>
           <div class="metric-sub">admixture add-cost</div>
@@ -811,9 +885,9 @@
           <div class="metric-sub">total membrane cost</div>
         </div>
 
-        <div class="metric-cell"><div class="metric-label">Savings</div></div>
+        <div class="metric-cell"><div class="metric-label">Direct Savings</div></div>
         <div class="metric-cell" style="grid-column:2/4">
-          <div class="metric-value diff ${dc(costDiff)}">${(hasPenetron && hasMembrane) ? (costDiff >= 0 ? 'Penetron saves ' : 'Membrane saves ') + fmt$(Math.abs(costDiff)) : '—'}</div>
+          <div class="metric-value diff ${dc(directDiff)}">${(hasPenetron && hasMembrane) ? (directDiff >= 0 ? 'Penetron saves ' : 'Membrane saves ') + fmt$(Math.abs(directDiff)) : '—'}</div>
         </div>
 
         <div class="metric-cell"><div class="metric-label">Cost / CY</div></div>
@@ -841,10 +915,12 @@
           <div class="metric-sub">membrane / SF</div>
         </div>
 
-        <div class="metric-cell last-row"><div class="metric-label">Δ per SF</div></div>
-        <div class="metric-cell last-row" style="grid-column:2/4">
+        <div class="metric-cell ${hasCPD ? '' : 'last-row'}"><div class="metric-label">Δ per SF</div></div>
+        <div class="metric-cell ${hasCPD ? '' : 'last-row'}" style="grid-column:2/4">
           <div class="metric-value diff ${dc(perSFdiff)}">${(hasPenetron && hasMembrane && totalSF > 0) ? dl(perSFdiff) : '—'}</div>
         </div>
+
+        ${trueTotalRows}
       </div>
 
       <div class="schedule-comparison">
@@ -852,16 +928,19 @@
           <div class="sched-title">Penetron Schedule Impact</div>
           <div class="sched-days">${pSched.toFixed(1)}</div>
           <div class="sched-unit">critical path days added</div>
+          ${hasCPD ? `<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:#007a7a">${fmt$(pSchedCost)} schedule cost</div>` : ''}
         </div>
         <div class="sched-card membrane">
           <div class="sched-title">Membrane Schedule Impact</div>
           <div class="sched-days">${memSched.toFixed(1)}</div>
           <div class="sched-unit">critical path days added</div>
+          ${hasCPD ? `<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:var(--blue-mid)">${fmt$(mSchedCost)} schedule cost</div>` : ''}
         </div>
         <div class="sched-card diff-card">
           <div class="sched-title">Schedule Difference</div>
           <div class="sched-days" style="font-size:1.4rem;color:${schedDiff>0?'var(--green)':(schedDiff<0?'#c0392b':'var(--text-muted)')}">${(hasPenetron||hasMembrane) ? dld(schedDiff) : '—'}</div>
           <div class="sched-unit">${schedDiff > 0 ? 'Penetron faster' : (schedDiff < 0 ? 'Membrane faster' : 'Equal')}</div>
+          ${hasCPD ? `<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:${schedDiff>0?'var(--green)':(schedDiff<0?'#c0392b':'var(--text-muted)'})">${schedDiff !== 0 ? (schedDiff > 0 ? 'Saves ' : 'Costs ') + fmt$(Math.abs(schedDiff * cpd)) : ''}</div>` : ''}
         </div>
       </div>
 
