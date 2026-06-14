@@ -940,7 +940,7 @@
           <div class="sched-title">Schedule Difference</div>
           <div class="sched-days" style="font-size:1.4rem;color:${schedDiff>0?'var(--green)':(schedDiff<0?'#c0392b':'var(--text-muted)')}">${(hasPenetron||hasMembrane) ? dld(schedDiff) : '—'}</div>
           <div class="sched-unit">${schedDiff > 0 ? 'Penetron faster' : (schedDiff < 0 ? 'Membrane faster' : 'Equal')}</div>
-          ${hasCPD ? `<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:${schedDiff>0?'var(--green)':(schedDiff<0?'#c0392b':'var(--text-muted)'})">${schedDiff !== 0 ? (schedDiff > 0 ? 'Saves ' : 'Costs ') + fmt$(Math.abs(schedDiff * cpd)) : ''}</div>` : ''}
+          ${hasCPD ? '<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:' + (schedDiff>0?'var(--green)':schedDiff<0?'#c0392b':'var(--text-muted)') + '">' + (schedDiff !== 0 ? (schedDiff > 0 ? 'Saves ' : 'Costs ') + fmt$(Math.abs(schedDiff * cpd)) : '') + '</div>' : ''}
         </div>
       </div>
 
