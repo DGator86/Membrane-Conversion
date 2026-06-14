@@ -151,7 +151,6 @@
       border-bottom: 1px solid var(--gray-border);
     }
 
-    /* Results */
     .results-wrap {
       grid-column: 1 / -1;
     }
@@ -267,8 +266,6 @@
       color: var(--text-muted);
       font-size: .9rem;
     }
-
-    .row-divider { grid-column: 1 / -1; height: 1px; background: var(--gray-border); }
   </style>
 </head>
 <body>
@@ -421,7 +418,6 @@
 
     const isPkg = toggle.checked;
 
-    // Total SF
     let totalSF, memTotalCost, memSched;
 
     if (!isPkg) {
@@ -436,19 +432,12 @@
     } else {
       memTotalCost   = val('m_pkg_total');
       memSched       = val('m_pkg_sched');
-      // derive SF from slab fields if user filled them, else unknown
       totalSF        = val('m_slab_sf') + val('m_wall_sf');
     }
 
-    // Penetron costs
-    const pAdmixTotal  = volume * pCostCY;          // admixture add-cost
-    const pTotalCost   = pAdmixTotal;                // additional cost vs base concrete
-
-    // For per-CY: admixture cost per CY
+    const pAdmixTotal  = volume * pCostCY;
     const pCostPerCY   = volume > 0 ? pAdmixTotal / volume : 0;
     const mCostPerCY   = volume > 0 ? memTotalCost / volume : 0;
-
-    // For per-SF
     const pCostPerSF   = totalSF > 0 ? pAdmixTotal / totalSF : 0;
     const mCostPerSF   = totalSF > 0 ? memTotalCost / totalSF : 0;
 
@@ -461,17 +450,16 @@
       return;
     }
 
-    const costDiff   = memTotalCost - pAdmixTotal;   // positive = membrane costs more
+    const costDiff   = memTotalCost - pAdmixTotal;
     const schedDiff  = memSched - pSched;
-
     const perCYdiff  = mCostPerCY - pCostPerCY;
     const perSFdiff  = mCostPerSF - pCostPerSF;
 
     function diffClass(n) { return n > 0 ? 'savings' : (n < 0 ? 'cost' : ''); }
-    function diffLabel(n, unit='') {
+    function diffLabel(n) {
       if (!hasPenetron || !hasMembrane) return '—';
       const sign = n >= 0 ? '+' : '';
-      return sign + fmt$(n) + (unit ? ' ' + unit : '');
+      return sign + fmt$(n);
     }
     function diffLabelDays(n) {
       if (!hasPenetron || !hasMembrane) return '—';
@@ -479,25 +467,16 @@
       return sign + n.toFixed(1) + ' days';
     }
 
-    // Verdict
     let verdictHtml = '';
     if (hasPenetron && hasMembrane) {
       if (costDiff > 0 && schedDiff >= 0) {
-        verdictHtml = `<div class="verdict penetron-wins">
-          ✅ Penetron saves ${fmt$(costDiff)} in total cost and reduces critical path by ${schedDiff.toFixed(1)} day(s) compared to the membrane system.
-        </div>`;
+        verdictHtml = `<div class="verdict penetron-wins">✅ Penetron saves ${fmt$(costDiff)} in total cost and reduces critical path by ${schedDiff.toFixed(1)} day(s) compared to the membrane system.</div>`;
       } else if (costDiff < 0 && schedDiff <= 0) {
-        verdictHtml = `<div class="verdict membrane-wins">
-          ⚠️ The membrane system is ${fmt$(Math.abs(costDiff))} less expensive and ${Math.abs(schedDiff).toFixed(1)} day(s) faster than Penetron in this scenario. Review inputs.
-        </div>`;
+        verdictHtml = `<div class="verdict membrane-wins">⚠️ The membrane system is ${fmt$(Math.abs(costDiff))} less expensive and ${Math.abs(schedDiff).toFixed(1)} day(s) faster than Penetron in this scenario. Review inputs.</div>`;
       } else if (costDiff > 0 && schedDiff < 0) {
-        verdictHtml = `<div class="verdict penetron-wins">
-          ✅ Penetron saves ${fmt$(costDiff)} in cost. The membrane is faster by ${Math.abs(schedDiff).toFixed(1)} day(s) — weigh the schedule premium against the cost savings.
-        </div>`;
+        verdictHtml = `<div class="verdict penetron-wins">✅ Penetron saves ${fmt$(costDiff)} in cost. The membrane is faster by ${Math.abs(schedDiff).toFixed(1)} day(s) — weigh the schedule premium against the cost savings.</div>`;
       } else if (costDiff < 0 && schedDiff > 0) {
-        verdictHtml = `<div class="verdict membrane-wins">
-          ⚠️ Membrane is ${fmt$(Math.abs(costDiff))} cheaper but adds ${schedDiff.toFixed(1)} day(s) to the critical path. Evaluate schedule impact vs. cost savings.
-        </div>`;
+        verdictHtml = `<div class="verdict membrane-wins">⚠️ Membrane is ${fmt$(Math.abs(costDiff))} cheaper but adds ${schedDiff.toFixed(1)} day(s) to the critical path. Evaluate schedule impact vs. cost savings.</div>`;
       } else {
         verdictHtml = `<div class="verdict tie">Systems are equivalent in both cost and schedule at current inputs.</div>`;
       }
@@ -511,7 +490,6 @@
         <div class="col-header" style="color:#007a7a">Penetron Admixture</div>
         <div class="col-header" style="color:var(--blue-mid)">Membrane System</div>
 
-        <!-- Total Cost row -->
         <div class="metric-cell"><div class="metric-label">Total Add'l Cost</div></div>
         <div class="metric-cell">
           <div class="metric-value penetron">${hasPenetron ? fmt$(pAdmixTotal) : '—'}</div>
@@ -522,13 +500,11 @@
           <div class="metric-sub">total membrane cost</div>
         </div>
 
-        <!-- Savings row -->
         <div class="metric-cell"><div class="metric-label">Difference</div></div>
         <div class="metric-cell" style="grid-column:2/4">
           <div class="metric-value diff ${diffClass(costDiff)}">${(hasPenetron && hasMembrane) ? (costDiff >= 0 ? 'Penetron saves ' : 'Membrane saves ') + fmt$(Math.abs(costDiff)) : '—'}</div>
         </div>
 
-        <!-- Per CY -->
         <div class="metric-cell"><div class="metric-label">Cost per CY</div></div>
         <div class="metric-cell">
           <div class="metric-value penetron">${(hasPenetron && volume > 0) ? fmt$(pCostPerCY) : '—'}</div>
@@ -539,13 +515,11 @@
           <div class="metric-sub">membrane cost / CY</div>
         </div>
 
-        <!-- Per CY diff -->
         <div class="metric-cell"><div class="metric-label">Δ per CY</div></div>
         <div class="metric-cell" style="grid-column:2/4">
           <div class="metric-value diff ${diffClass(perCYdiff)}">${(hasPenetron && hasMembrane && volume > 0) ? diffLabel(perCYdiff) : '—'}</div>
         </div>
 
-        <!-- Per SF -->
         <div class="metric-cell"><div class="metric-label">Cost per SF${sfNote}</div></div>
         <div class="metric-cell">
           <div class="metric-value penetron">${(hasPenetron && totalSF > 0) ? fmt$(pCostPerSF) : '—'}</div>
@@ -556,7 +530,6 @@
           <div class="metric-sub">membrane cost / SF</div>
         </div>
 
-        <!-- Per SF diff -->
         <div class="metric-cell" style="border-bottom:none"><div class="metric-label">Δ per SF</div></div>
         <div class="metric-cell" style="grid-column:2/4;border-bottom:none">
           <div class="metric-value diff ${diffClass(perSFdiff)}">${(hasPenetron && hasMembrane && totalSF > 0) ? diffLabel(perSFdiff) : '—'}</div>
