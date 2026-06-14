@@ -8,14 +8,14 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      /* Penetron brand palette */
-      --p-navy:   #003087;
-      --p-navy2:  #001f5b;
-      --p-red:    #C8102E;
-      --p-red-lt: #fde8ec;
+      /* Penetron brand palette — matches official documents */
+      --p-navy:    #1A4B8C;  /* medium royal navy — headers, section bars */
+      --p-navy-dk: #0D2F5E;  /* darker navy — main header bg */
+      --p-orange:  #F5901E;  /* vivid orange — logo block, accents */
+      --p-orange-lt: #FEF0E0; /* light orange tint */
+      --p-blue-link: #2471A3; /* body link / highlight blue */
       /* UI palette */
-      --blue-mid: #1a4b8c; --blue-light: #2d7dd2;
-      --teal: #00b4b4; --teal-light: #e6f9f9;
+      --blue-light: #2d7dd2;
       --gray-bg: #f0f3f8; --gray-card: #ffffff; --gray-border: #d0d7e2;
       --text: #1a2535; --text-muted: #5a6780;
       --green: #1a8a50; --green-bg: #e6f5ec;
@@ -26,15 +26,15 @@
 
     /* ── Header / brand bar ── */
     header {
-      background: var(--p-navy);
-      border-bottom: 4px solid var(--p-red);
+      background: var(--p-navy-dk);
+      border-bottom: 4px solid var(--p-orange);
       color: #fff;
       padding: 0;
     }
     .header-inner {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 22px 32px 20px;
+      padding: 20px 32px 18px;
       display: flex;
       align-items: center;
       gap: 28px;
@@ -42,37 +42,35 @@
     .brand-logo {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 13px;
       flex-shrink: 0;
+      text-decoration: none;
     }
-    .brand-globe {
-      width: 54px; height: 54px;
-      background: radial-gradient(circle at 38% 38%, #2a6bcf 0%, #003087 60%, #001840 100%);
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,.25);
+    /* Orange block — matches the square in the Penetron logo */
+    .brand-block {
+      width: 46px; height: 46px;
+      background: var(--p-orange);
+      border-radius: 5px;
+      flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
     }
-    .brand-globe svg { width: 38px; height: 38px; opacity: .85; }
+    .brand-block svg { width: 30px; height: 30px; }
     .brand-wordmark { line-height: 1; }
     .brand-wordmark .name {
-      font-size: 1.85rem;
+      font-size: 1.75rem;
       font-weight: 900;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       text-transform: uppercase;
       color: #fff;
       line-height: 1;
     }
-    .brand-wordmark .name span { color: var(--p-red); }
     .brand-wordmark .tagline {
-      font-size: .62rem;
+      font-size: .58rem;
       font-weight: 600;
-      letter-spacing: 1.8px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
-      color: rgba(255,255,255,.6);
-      margin-top: 3px;
+      color: rgba(255,255,255,.55);
+      margin-top: 4px;
     }
     .header-divider {
       width: 1px; height: 48px;
@@ -103,19 +101,23 @@
     .card { background: var(--gray-card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--gray-border); overflow: hidden; }
     .card-header { padding: 15px 20px; font-weight: 700; font-size: .95rem; display: flex; align-items: center; gap: 10px; }
     .card-header .badge { font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; letter-spacing: .4px; text-transform: uppercase; margin-left: auto; }
-    .project-header  { background: #edf1fa; border-bottom: 2px solid var(--p-navy); color: var(--p-navy2); }
-    .penetron-header { background: #e6edf8; border-bottom: 3px solid var(--p-red); color: var(--p-navy2); }
-    .membrane-header { background: #e8edf8; border-bottom: 2px solid var(--blue-light); color: var(--p-navy2); }
-    .results-header  { background: var(--p-navy); color: #fff; border-radius: var(--radius) var(--radius) 0 0; border-bottom: 3px solid var(--p-red); }
-    .penetron-header .badge { background: var(--p-red); color: #fff; }
+    .project-header  { background: var(--p-navy); color: #fff; }
+    .penetron-header { background: var(--p-navy); color: #fff; border-bottom: 3px solid var(--p-orange); }
+    .membrane-header { background: #1a3f6e; color: #fff; border-bottom: 2px solid var(--blue-light); }
+    .results-header  { background: var(--p-navy-dk); color: #fff; border-radius: var(--radius) var(--radius) 0 0; border-bottom: 3px solid var(--p-orange); }
+    .penetron-header .badge { background: var(--p-orange); color: #fff; }
     .membrane-header .badge { background: var(--blue-light); color: #fff; }
+    .project-header .step-label { color: rgba(255,255,255,.55); }
+    .penetron-header .step-label { color: rgba(255,255,255,.55); }
+    .membrane-header .step-label { color: rgba(255,255,255,.55); }
     .card-body { padding: 20px; }
     .type-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     @media (max-width: 600px) { .type-grid { grid-template-columns: 1fr; } }
     .type-btn { padding: 14px 10px; border: 2px solid var(--gray-border); border-radius: 9px; background: #fafbfd; cursor: pointer; text-align: center; transition: all .15s; }
     .type-btn:hover { border-color: var(--p-navy); background: #edf1fa; }
-    .type-btn.active { border-color: var(--p-navy); background: #e0e9f7; box-shadow: 0 0 0 2px rgba(0,48,135,.15); }
+    .type-btn.active { border-color: var(--p-orange); background: #fef5ec; box-shadow: 0 0 0 2px rgba(245,144,30,.18); }
     .type-btn .type-icon { font-size: 1.6rem; margin-bottom: 6px; }
+    .type-btn.active .type-name { color: var(--p-orange); }
     .type-btn .type-name { font-size: .8rem; font-weight: 700; color: var(--p-navy); }
     .type-btn .type-desc { font-size: .7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
     .dim-section { display: none; }
@@ -126,17 +128,17 @@
     .input-wrap { position: relative; }
     .input-wrap .unit { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: .78rem; color: var(--text-muted); pointer-events: none; }
     input[type="number"] { width: 100%; padding: 9px 44px 9px 12px; border: 1.5px solid var(--gray-border); border-radius: 7px; font-size: .95rem; color: var(--text); background: #fafbfd; transition: border-color .15s; }
-    input[type="number"]:focus { outline: none; border-color: var(--p-navy); background: #fff; box-shadow: 0 0 0 3px rgba(0,48,135,.1); }
+    input[type="number"]:focus { outline: none; border-color: var(--p-orange); background: #fff; box-shadow: 0 0 0 3px rgba(245,144,30,.15); }
     input[type="number"]::placeholder { color: #b0bac8; }
     .fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 500px) { .fields-row { grid-template-columns: 1fr; } }
-    .section-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--p-navy); margin: 16px 0 10px; padding-bottom: 4px; border-bottom: 2px solid rgba(0,48,135,.15); }
-    .perimeter-note { display: none; font-size: .78rem; color: #007a7a; background: var(--teal-light); border: 1px solid var(--teal); border-radius: 7px; padding: 8px 12px; margin-bottom: 12px; }
-    .derived-strip { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 2px solid var(--p-navy); border-radius: 9px; overflow: hidden; margin-top: 18px; background: linear-gradient(135deg, #e8edf8 0%, #edf1fa 100%); }
+    .section-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--p-navy); margin: 16px 0 10px; padding-bottom: 4px; border-bottom: 2px solid rgba(26,75,140,.18); }
+    .perimeter-note { display: none; font-size: .78rem; color: #7a4400; background: var(--p-orange-lt); border: 1px solid var(--p-orange); border-radius: 7px; padding: 8px 12px; margin-bottom: 12px; }
+    .derived-strip { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 2px solid var(--p-orange); border-radius: 9px; overflow: hidden; margin-top: 18px; background: var(--p-orange-lt); }
     .derived-cell { padding: 12px 14px; text-align: center; }
-    .derived-cell:not(:last-child) { border-right: 1px solid rgba(0,48,135,.18); }
-    .derived-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--p-navy); margin-bottom: 4px; }
-    .derived-value { font-size: 1.15rem; font-weight: 800; color: var(--p-navy2); }
+    .derived-cell:not(:last-child) { border-right: 1px solid rgba(245,144,30,.3); }
+    .derived-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #a05c0a; margin-bottom: 4px; }
+    .derived-value { font-size: 1.15rem; font-weight: 800; color: var(--p-navy-dk); }
     .derived-sub { font-size: .65rem; color: var(--text-muted); margin-top: 2px; }
     .toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding: 11px 14px; background: #f0f4fb; border-radius: 8px; }
     .toggle-row span { font-size: .83rem; font-weight: 600; color: var(--text-muted); }
@@ -147,7 +149,7 @@
     .slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
     input:checked + .slider { background: var(--teal); }
     input:checked + .slider::before { transform: translateX(20px); }
-    .computed-field { padding: 9px 12px; border: 1.5px solid var(--p-navy); border-radius: 7px; background: #edf1fa; font-size: .95rem; font-weight: 700; color: var(--p-navy); }
+    .computed-field { padding: 9px 12px; border: 1.5px solid var(--p-orange); border-radius: 7px; background: var(--p-orange-lt); font-size: .95rem; font-weight: 700; color: #a05c0a; }
     .results-body { padding: 24px 20px; }
     .comparison-grid { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 0; border: 1.5px solid var(--gray-border); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
     @media (max-width: 600px) { .comparison-grid { grid-template-columns: 1fr; } }
@@ -158,7 +160,7 @@
     .metric-cell.last-row { border-bottom: none; }
     .metric-label { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 5px; }
     .metric-value { font-size: 1.25rem; font-weight: 700; color: var(--text); }
-    .metric-value.penetron { color: var(--p-red); }
+    .metric-value.penetron { color: var(--p-orange); }
     .metric-value.membrane { color: var(--p-navy); }
     .metric-value.diff.savings { color: var(--green); }
     .metric-value.diff.cost    { color: #c0392b; }
@@ -166,19 +168,19 @@
     .schedule-comparison { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px; }
     @media (max-width: 600px) { .schedule-comparison { grid-template-columns: 1fr; } }
     .sched-card { border-radius: 8px; padding: 16px; text-align: center; }
-    .sched-card.penetron  { background: var(--p-red-lt); border: 2px solid var(--p-red); }
+    .sched-card.penetron  { background: var(--p-orange-lt); border: 2px solid var(--p-orange); }
     .sched-card.membrane  { background: #e8edf8; border: 1.5px solid var(--p-navy); }
     .sched-card.diff-card { background: #f4f6f9; border: 1.5px solid var(--gray-border); }
     .sched-card .sched-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; color: var(--text-muted); }
     .sched-card .sched-days  { font-size: 2rem; font-weight: 800; }
-    .sched-card.penetron .sched-days { color: var(--p-red); }
+    .sched-card.penetron .sched-days { color: var(--p-orange); }
     .sched-card.membrane .sched-days { color: var(--p-navy); }
     .sched-card .sched-unit  { font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
     .sched-note { margin-top: 6px; font-size: .78rem; font-weight: 700; }
     .verdict { border-radius: 9px; padding: 16px 20px; font-size: .92rem; font-weight: 600; line-height: 1.55; }
     .verdict.penetron-wins { background: var(--green-bg); border-left: 4px solid var(--green); color: var(--green); }
     .verdict.membrane-wins { background: var(--amber-bg); border-left: 4px solid var(--amber); color: var(--amber); }
-    .verdict.tie           { background: #edf1fa; border-left: 4px solid var(--p-navy); color: var(--p-navy); }
+    .verdict.tie           { background: #edf1fa; border-left: 4px solid var(--p-navy); color: var(--p-navy-dk); }
     .placeholder-msg { text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: .9rem; }
     footer {
       text-align: center;
@@ -188,10 +190,10 @@
       border-top: 1px solid var(--gray-border);
       margin-top: 12px;
     }
-    footer strong { color: var(--p-navy); }
+    footer strong { color: var(--p-orange); }
     @media print {
       body { background: #fff; }
-      header { background: var(--p-navy) !important; border-bottom: 4px solid var(--p-red) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      header { background: var(--p-navy-dk) !important; border-bottom: 4px solid var(--p-orange) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .card { box-shadow: none; border: 1px solid #ccc; }
       .toggle-row { display: none; }
       #section-pkg { display: none !important; }
@@ -203,19 +205,17 @@
 <header>
   <div class="header-inner">
     <div class="brand-logo">
-      <div class="brand-globe">
-        <!-- Simplified globe SVG in Penetron navy -->
-        <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="19" cy="19" r="17" stroke="white" stroke-width="1.5" fill="none"/>
-          <ellipse cx="19" cy="19" rx="7" ry="17" stroke="white" stroke-width="1.5" fill="none"/>
-          <line x1="2" y1="13" x2="36" y2="13" stroke="white" stroke-width="1.2"/>
-          <line x1="2" y1="19" x2="36" y2="19" stroke="white" stroke-width="1.2"/>
-          <line x1="2" y1="25" x2="36" y2="25" stroke="white" stroke-width="1.2"/>
+      <!-- Orange block matches the square in the official Penetron logo -->
+      <div class="brand-block">
+        <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Stylized "P" drop / water shield -->
+          <path d="M15 3 C15 3 6 10 6 17.5 A9 9 0 0 0 24 17.5 C24 10 15 3 15 3Z" fill="white" opacity="0.9"/>
+          <path d="M15 10 C15 10 10 14.5 10 17.5 A5 5 0 0 0 20 17.5 C20 14.5 15 10 15 10Z" fill="#F5901E"/>
         </svg>
       </div>
       <div class="brand-wordmark">
-        <div class="name">PENETR<span>ON</span></div>
-        <div class="tagline">The Crystalline Waterproofing Authority</div>
+        <div class="name">PENETRON</div>
+        <div class="tagline">Total Concrete Protection</div>
       </div>
     </div>
     <div class="header-divider"></div>
@@ -756,12 +756,12 @@
         <div class="metric-value membrane">${fmt$(mSchedCost)}</div>
         <div class="metric-sub">${memSched.toFixed(1)} days &times; ${fmt$(cpd)}/day</div>
       </div>
-      <div class="metric-cell last-row" style="background:#fff0f2"><div class="metric-label" style="font-size:.8rem;color:var(--p-red)">True Total Cost</div></div>
-      <div class="metric-cell last-row" style="background:#fff0f2">
+      <div class="metric-cell last-row" style="background:#fff7ee"><div class="metric-label" style="font-size:.8rem;color:var(--p-orange)">True Total Cost</div></div>
+      <div class="metric-cell last-row" style="background:#fff7ee">
         <div class="metric-value penetron" style="font-size:1.4rem">${fmt$(pTrueTotal)}</div>
         <div class="metric-sub">direct + schedule</div>
       </div>
-      <div class="metric-cell last-row" style="background:#fff0f2">
+      <div class="metric-cell last-row" style="background:#fff7ee">
         <div class="metric-value membrane" style="font-size:1.4rem">${fmt$(mTrueTotal)}</div>
         <div class="metric-sub">direct + schedule</div>
       </div>
@@ -778,7 +778,7 @@
     document.getElementById('results-body').innerHTML = `
       <div class="comparison-grid">
         <div class="col-header">Metric</div>
-        <div class="col-header" style="color:var(--p-red)">Penetron Admixture</div>
+        <div class="col-header" style="color:var(--p-orange)">Penetron Admixture</div>
         <div class="col-header" style="color:var(--p-navy)">Membrane System</div>
 
         <div class="metric-cell"><div class="metric-label">Direct Cost</div></div>
@@ -834,7 +834,7 @@
           <div class="sched-title">Penetron Schedule Impact</div>
           <div class="sched-days">${pSched.toFixed(1)}</div>
           <div class="sched-unit">critical path days added</div>
-          ${hasCPD ? '<div class="sched-note" style="color:var(--p-red)">' + fmt$(pSchedCost) + ' schedule cost</div>' : ''}
+          ${hasCPD ? '<div class="sched-note" style="color:var(--p-orange)">' + fmt$(pSchedCost) + ' schedule cost</div>' : ''}
         </div>
         <div class="sched-card membrane">
           <div class="sched-title">Membrane Schedule Impact</div>
