@@ -385,6 +385,9 @@
         <div class="fields-row">
           <div class="field">
             <label>Wall Height <span class="hint">below grade</span></label>
+        <div class="fields-row">
+          <div class="field">
+            <label>Wall Height Below Grade <span class="hint">0 if slab only</span></label>
             <div class="input-wrap">
               <input type="number" id="slab_wall_h" min="0" step="0.5" placeholder="e.g. 8" oninput="compute()" />
               <span class="unit">ft</span>
@@ -394,6 +397,9 @@
             <label>Wall Thickness <span class="hint">defaults to slab thickness</span></label>
             <div class="input-wrap">
               <input type="number" id="slab_wall_t" min="0" step="0.5" placeholder="same as slab" oninput="compute()" />
+            <label>Wall Thickness <span class="hint">typical 8–16 in</span></label>
+            <div class="input-wrap">
+              <input type="number" id="slab_wall_t" min="0" step="0.5" placeholder="e.g. 12" oninput="compute()" />
               <span class="unit">in</span>
             </div>
           </div>
@@ -613,6 +619,11 @@
           <div class="computed-field" id="m_sf_display">— SF</div>
         </div>
         <div class="field">
+        <div class="field">
+          <label>Total Waterproofed Area (SF) <span class="hint">auto-filled from Step 1</span></label>
+          <div class="computed-field" id="m_sf_display">— SF</div>
+        </div>
+        <div class="field">
           <label>Membrane Material Cost <span class="hint">$/SF</span></label>
           <div class="input-wrap">
             <input type="number" id="m_membrane_cost_sf" min="0" step="0.01" placeholder="e.g. 3.50" oninput="compute()" />
@@ -760,6 +771,34 @@
     return { cy: Math.round(cy * 10) / 10, bottomSF: Math.round(bottomSF), wallSF: Math.round(wallSF) };
   }
 
+      const wh = v('slab_wall_h'), wt = v('slab_wall_t') / 12;
+      cy = (l * w * t) / 27;
+      // walls: perimeter × height × thickness
+      if (wh > 0 && wt > 0) cy += (2 * (l + w) * wh * wt) / 27;
+      bottomSF = l * w;
+      wallSF   = wh > 0 ? 2 * (l + w) * wh : 0;
+
+    } else if (currentType === 'pilecap') {
+      const l = v('cap_l'), w = v('cap_w'), d = v('cap_d'), qty = v('cap_qty') || 1;
+      cy = (l * w * d / 27) * qty;
+      bottomSF = l * w * qty;
+      wallSF   = checked('cap_sides') ? 2 * (l + w) * d * qty : 0;
+
+    } else if (currentType === 'elevator') {
+      const l = v('pit_l'), w = v('pit_w'), depth = v('pit_depth');
+      const wt = v('pit_wall_t') / 12, st = v('pit_slab_t') / 12;
+      const wTable = v('pit_wt');
+      // wall concrete: perimeter × depth × wall thickness
+      cy = (2 * (l + w) * depth * wt + l * w * st) / 27;
+      bottomSF = l * w;
+      // walls exposed below water table
+      const exposedH = Math.max(0, depth - wTable);
+      wallSF   = 2 * (l + w) * exposedH;
+    }
+
+    return { cy: Math.round(cy * 10) / 10, bottomSF: Math.round(bottomSF), wallSF: Math.round(wallSF) };
+  }
+
   function compute() {
     const d = calcDerived();
     derivedCY = d.cy;
@@ -808,6 +847,16 @@
     // Schedule costs
     const pSchedCost = pSched * cpd;
     const mSchedCost = memSched * cpd;
+
+    // True total = direct cost + schedule cost
+    const pTrueTotal = pAdmixTotal + pSchedCost;
+    const mTrueTotal = memTotalCost + mSchedCost;
+
+    const pCostPerCY = volume > 0 ? pAdmixTotal / volume : 0;
+    const mCostPerCY = volume > 0 ? memTotalCost / volume : 0;
+    const pCostPerSF = totalSF > 0 ? pAdmixTotal / totalSF : 0;
+    const mCostPerSF = totalSF > 0 ? memTotalCost / totalSF : 0;
+
 
     // True total = direct cost + schedule cost
     const pTrueTotal = pAdmixTotal + pSchedCost;
@@ -954,6 +1003,7 @@
           <div class="sched-days" style="font-size:1.4rem;color:${schedDiff>0?'var(--green)':(schedDiff<0?'#c0392b':'var(--text-muted)')}">${(hasPenetron||hasMembrane) ? dld(schedDiff) : '—'}</div>
           <div class="sched-unit">${schedDiff > 0 ? 'Penetron faster' : (schedDiff < 0 ? 'Membrane faster' : 'Equal')}</div>
           ${hasCPD ? '<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:' + (schedDiff>0?'var(--green)':schedDiff<0?'#c0392b':'var(--text-muted)') + '">' + (schedDiff !== 0 ? (schedDiff > 0 ? 'Saves ' : 'Costs ') + fmt$(Math.abs(schedDiff * cpd)) : '') + '</div>' : ''}
+          ${hasCPD ? `<div style="margin-top:6px;font-size:.78rem;font-weight:700;color:${schedDiff>0?'var(--green)':(schedDiff<0?'#c0392b':'var(--text-muted)'})">${schedDiff !== 0 ? (schedDiff > 0 ? 'Saves ' : 'Costs ') + fmt$(Math.abs(schedDiff * cpd)) : ''}</div>` : ''}
         </div>
       </div>
 
