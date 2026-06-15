@@ -994,9 +994,9 @@ function renderProcessSteps(yr) {
     + '</ul></div>';
 
   var contactBox = '<div class="w-contact-box"><div class="w-contact-label">Ready to start your warranty?</div>'
-    + '<a class="w-contact-link" href="mailto:technicalsupport@penetron.com?subject=Warranty%20Request%20-%20[Project%20Name]&body=Project%20Name%3A%0AGeneral%20Contractor%3A%0AEstimated%20Treated%20CY%3A%0ATarget%20First%20Pour%20Date%3A%0AWarranty%20Type%20Requested%3A%20' + yr + '-Year">'
+    + '<a class="w-contact-link" href="mailto:?subject=Warranty%20Request%20-%20[Project%20Name]&body=Project%20Name%3A%0AGeneral%20Contractor%3A%0AEstimated%20Treated%20CY%3A%0ATarget%20First%20Pour%20Date%3A%0AWarranty%20Type%20Requested%3A%20' + yr + '-Year">'
     + 'Contact your local Penetron Account Manager</a>'
-    + '<div class="w-contact-sub">technicalsupport@penetron.com &nbsp;·&nbsp; (631) 941-9700</div></div>';
+    + '<div class="w-contact-sub">(631) 941-9700 &nbsp;·&nbsp; www.penetron.com</div></div>';
 
   body.innerHTML = critNote + stepsHtml + delayBox + contactBox;
 }
