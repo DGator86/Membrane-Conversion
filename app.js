@@ -1,5 +1,22 @@
 var currentType = 'slab';
 var slabDimMode = 'lw';
+var sensitivityIdx = 1;
+
+var SENS_DESCS = [
+  'Conservative — lower multiplier, closer to raw day count',
+  'Balanced — moderate multiplier for schedule savings',
+  'Aggressive — higher multiplier, reflects strong South FL market'
+];
+
+function setSensitivity(idx) {
+  sensitivityIdx = idx;
+  document.querySelectorAll('.sens-btn').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.dataset.idx) === idx);
+  });
+  var descEl = document.getElementById('sensitivity-desc');
+  if (descEl) descEl.textContent = SENS_DESCS[idx] || SENS_DESCS[1];
+  compute();
+}
 
 function setSlabDimMode(mode) {
   slabDimMode = mode;
@@ -227,13 +244,10 @@ function compute() {
   }
 
   // ── Schedule Acceleration Curve ──
-  var sensitivityIdx = parseInt(sel('schedule_sensitivity')) || 1;
   var sensitivityName = SENSITIVITY_LABELS[sensitivityIdx] || 'Balanced';
   var schedDaysSaved = memSched - pSched;
   var accelFactor = schedDaysSaved > 0 ? calcAccelFactor(schedDaysSaved, sensitivityIdx) : 1;
   var projectAccelValue = (schedDaysSaved > 0 && hasCPD) ? Math.round(schedDaysSaved * cpd * accelFactor) : 0;
-
-  document.getElementById('sensitivity-label').textContent = sensitivityName;
 
   var accelDaysEl  = document.getElementById('accel-days');
   var accelFactEl  = document.getElementById('accel-factor');
@@ -407,9 +421,11 @@ function compute() {
     : (schedDiff < 0
       ? '<span style="color:#c0392b">' + Math.abs(schedDiff).toFixed(0) + ' Days Slower</span>'
       : '<span>No Change</span>');
-  var kpiSchedSub = hasCPD && schedDiff !== 0
-    ? 'Estimated time value:<br><strong>' + fmt$(Math.abs(schedDiff * cpd)) + '</strong>'
-    : 'Enter cost/day above to quantify';
+  var kpiSchedSub = hasCPD && schedDiff > 0
+    ? 'Acceleration value (' + sensitivityName + '):<br><strong>' + fmt$(projectAccelValue) + '</strong>'
+    : (hasCPD && schedDiff < 0
+      ? 'Schedule cost: <strong>' + fmt$(Math.abs(schedDiff) * cpd) + '</strong>'
+      : 'Enter cost/day above to quantify');
   var kpi2 = '<div class="kpi-card">'
     + '<div class="kpi-label">Critical Path Improvement</div>'
     + '<div class="kpi-value kpi-days">' + kpiDaysDisplay + '</div>'

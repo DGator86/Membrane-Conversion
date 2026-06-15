@@ -569,15 +569,12 @@
       <div class="risk-info" id="risk-info-line"></div>
 
       <div class="section-label">Schedule Sensitivity</div>
-      <div class="sensitivity-slider-wrap">
-        <input type="range" id="schedule_sensitivity" min="0" max="2" step="1" value="1" oninput="compute()" class="sensitivity-slider" />
-        <div class="sensitivity-labels">
-          <span>Conservative</span>
-          <span>Balanced</span>
-          <span>Aggressive</span>
-        </div>
-        <div class="sensitivity-current" id="sensitivity-label">Balanced</div>
+      <div class="sensitivity-btn-group">
+        <button class="sens-btn" data-idx="0" onclick="setSensitivity(0)">Conservative</button>
+        <button class="sens-btn active" data-idx="1" onclick="setSensitivity(1)">Balanced</button>
+        <button class="sens-btn" data-idx="2" onclick="setSensitivity(2)">Aggressive</button>
       </div>
+      <div class="sensitivity-desc" id="sensitivity-desc">Balanced — moderate multiplier for schedule savings</div>
 
       <div class="accel-grid">
         <div class="accel-box">
