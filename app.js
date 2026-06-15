@@ -43,6 +43,15 @@ function selectType(type) {
   if (pileField) pileField.style.display = type === 'pilecap' ? 'block' : 'none';
   var penField = document.getElementById('pen-detail-field');
   if (penField) penField.style.display = type === 'pilecap' ? 'none' : 'block';
+  var monoSection = document.getElementById('mono-pour-section');
+  if (monoSection) monoSection.style.display = type === 'elevator' ? 'block' : 'none';
+  compute();
+}
+
+function toggleMonoPour() {
+  var on = document.getElementById('mono_pour').checked;
+  var daysField = document.getElementById('mono-days-field');
+  if (daysField) daysField.style.display = on ? 'block' : 'none';
   compute();
 }
 
@@ -196,6 +205,7 @@ function compute() {
   // Penetron: admixture only, zero critical path days (added in ready-mix truck)
   var pCostCY     = v('p_cost_per_cy');
   var pSched      = 0;
+  var monolithicDays = (currentType === 'elevator' && chk('mono_pour')) ? (v('mono_days') || 0) : 0;
   var pAdmixTotal = d.cy * pCostCY;
 
   // Membrane base costs
@@ -263,7 +273,7 @@ function compute() {
 
   // ── Schedule Acceleration Curve ──
   var sensitivityName = SENSITIVITY_LABELS[sensitivityIdx] || 'Balanced';
-  var schedDaysSaved = memSched - pSched;
+  var schedDaysSaved = (memSched - pSched) + monolithicDays;
   var accelFactor = schedDaysSaved > 0 ? calcAccelFactor(schedDaysSaved, sensitivityIdx) : 1;
   var projectAccelValue = (schedDaysSaved > 0 && hasCPD) ? Math.round(schedDaysSaved * cpd * accelFactor) : 0;
 
@@ -289,6 +299,20 @@ function compute() {
     accelSubEl.textContent  = 'Enter membrane schedule days above';
   }
 
+  // Update monolithic benefit note
+  var monoBenefitEl = document.getElementById('mono-benefit-note');
+  if (monoBenefitEl) {
+    if (monolithicDays > 0 && hasCPD) {
+      var monoAccelFactor = calcAccelFactor(schedDaysSaved, sensitivityIdx);
+      var monoValue = Math.round(monolithicDays * cpd * monoAccelFactor);
+      monoBenefitEl.textContent = '+' + monolithicDays + ' days added to Penetron schedule advantage — estimated value: ' + fmt$(monoValue);
+    } else if (monolithicDays > 0) {
+      monoBenefitEl.textContent = '+' + monolithicDays + ' days added to Penetron schedule advantage (enter Cost/Day to see value)';
+    } else {
+      monoBenefitEl.textContent = '';
+    }
+  }
+
   var pSchedCost = pSched * cpd;
   var mSchedCost = memSched * cpd;
   var pTrueTotal = pAdmixTotal + pSchedCost;
@@ -298,7 +322,7 @@ function compute() {
   var pCostPerSF = totalSF > 0 ? pAdmixTotal  / totalSF : 0;
   var mCostPerSF = totalSF > 0 ? memTotalCost / totalSF : 0;
   var directDiff = memTotalCost - pAdmixTotal;
-  var schedDiff  = memSched - pSched;
+  var schedDiff  = (memSched - pSched) + monolithicDays;
   var trueDiff   = mTrueTotal - pTrueTotal;
   var perCYdiff  = mCostPerCY - pCostPerCY;
   var perSFdiff  = mCostPerSF - pCostPerSF;

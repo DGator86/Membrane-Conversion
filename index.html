@@ -389,8 +389,31 @@
             <span class="unit">$/CY</span>
           </div>
         </div>
-      </div>
-    </details>
+
+        <!-- Monolithic pour toggle — elevator pit only -->
+        <div id="mono-pour-section" style="display:none">
+          <div class="mono-divider"></div>
+          <div class="mono-toggle-row">
+            <div class="mono-toggle-label">
+              <span class="mono-label-main">Can pit be poured monolithically?</span>
+              <span class="mono-label-sub">Penetron eliminates the need to stage separate base and wall pours</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="mono_pour" onchange="toggleMonoPour()" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+          <div id="mono-days-field" style="display:none">
+            <div class="field" style="margin-top:10px">
+              <label>Days Saved <span class="hint">monolithic vs. staged pour</span></label>
+              <div class="input-wrap">
+                <input type="number" id="mono_days" min="0" step="1" placeholder="e.g. 3" oninput="compute()" />
+                <span class="unit">days</span>
+              </div>
+            </div>
+            <div class="mono-benefit-note" id="mono-benefit-note"></div>
+          </div>
+        </div>
 
     <!-- ── MEMBRANE ── -->
     <details class="input-section" open>
