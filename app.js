@@ -100,25 +100,6 @@ function calcDerived() {
     cjLF = v('slab_cj_lf');
     penCount = v('slab_pen_count');
 
-    // Subtract elevator pit voids from slab CY
-    var pitL = v('slab_pit_l'), pitW = v('slab_pit_w');
-    var pitQtyS = v('slab_pit_qty') || (pitL > 0 && pitW > 0 ? 1 : 0);
-    var pitDepthS = v('slab_pit_depth');
-    var pitNote = document.getElementById('slab-pit-note');
-    if (pitL > 0 && pitW > 0 && pitQtyS > 0) {
-      var pitVoidSF = pitL * pitW * pitQtyS;
-      var pitVoidCY = (pitVoidSF * t) / 27;
-      cy = Math.max(0, cy - pitVoidCY);
-      bottomSF = Math.max(0, bottomSF - pitVoidSF);
-      var pitDepthNote = pitDepthS > 0 ? ' — pit depth (' + pitDepthS + ' ft) below slab not included in this section' : '';
-      if (pitNote) {
-        pitNote.style.display = 'block';
-        pitNote.textContent = 'Elevator pit void: ' + fmtN(pitVoidSF) + ' SF (' + fmtN(pitVoidCY, 1) + ' CY) deducted from slab' + pitDepthNote + '.';
-      }
-    } else {
-      if (pitNote) pitNote.style.display = 'none';
-    }
-
   } else if (currentType === 'pilecap') {
     var cl = v('cap_l'), cw = v('cap_w'), cd = v('cap_d'), qty = v('cap_qty') || 1;
     var pilesPerCap = v('cap_piles_per');
@@ -133,6 +114,22 @@ function calcDerived() {
     cjLF = v('cap_cj_lf');
     piles = pilesPerCap * qty;
     penCount = 0; // pile boot/flashing covers all pile penetrations — no separate pen count
+
+    // Subtract elevator pit void from pile cap CY
+    var capPitL = v('cap_pit_l'), capPitW = v('cap_pit_w');
+    var capPitNote = document.getElementById('cap-pit-note');
+    if (capPitL > 0 && capPitW > 0 && cd > 0) {
+      var pitVoidSF = capPitL * capPitW * qty;
+      var pitVoidCY = (pitVoidSF * cd) / 27;
+      cy = Math.max(0, cy - pitVoidCY);
+      bottomSF = Math.max(0, bottomSF - pitVoidSF);
+      if (capPitNote) {
+        capPitNote.style.display = 'block';
+        capPitNote.textContent = 'Elevator pit void: ' + fmtN(pitVoidSF) + ' SF (' + fmtN(pitVoidCY, 1) + ' CY) deducted from pile cap yardage.';
+      }
+    } else {
+      if (capPitNote) capPitNote.style.display = 'none';
+    }
 
   } else if (currentType === 'elevator') {
     var pl = v('pit_l'), pw = v('pit_w'), depth = v('pit_depth');
