@@ -96,16 +96,19 @@ function calcDerived() {
   };
 }
 
-var OPP_TABLE = {
-  low:    { under25: 0,    p25to75: 1000,  p75to150: 2500,  p150to300: 5000,  over300: 7500  },
-  medium: { under25: 1000, p25to75: 3000,  p75to150: 7500,  p150to300: 15000, over300: 25000 },
-  high:   { under25: 2500, p25to75: 7500,  p75to150: 15000, p150to300: 30000, over300: 50000 }
-};
+// Schedule acceleration curve configs: [pivot, exponent]
+// Acceleration Factor = 1 + (daysSaved / pivot) ^ exponent
+var ACCEL_CONFIGS = [
+  [25, 1.2],  // 0 = Conservative
+  [20, 1.5],  // 1 = Balanced
+  [15, 1.8]   // 2 = Aggressive
+];
+var SENSITIVITY_LABELS = ['Conservative', 'Balanced', 'Aggressive'];
 
-function getDefaultMultiplier(sensitivity, size) {
-  var row = OPP_TABLE[sensitivity];
-  if (!row) return 0;
-  return row[size] || 0;
+function calcAccelFactor(days, sensitivityIdx) {
+  var cfg = ACCEL_CONFIGS[sensitivityIdx] || ACCEL_CONFIGS[1];
+  if (days <= 0) return 1;
+  return 1 + Math.pow(days / cfg[0], cfg[1]);
 }
 
 function compute() {
@@ -200,25 +203,35 @@ function compute() {
     riskInfoEl.style.display = 'none';
   }
 
-  // ── Schedule Opportunity Value ──
-  var sensitivity  = sel('schedule_sensitivity') || 'medium';
-  var projSize     = sel('project_size') || 'p75to150';
-  var defaultMult  = getDefaultMultiplier(sensitivity, projSize);
-  var overrideMult = v('opp_override');
-  var activeMult   = overrideMult > 0 ? overrideMult : defaultMult;
+  // ── Schedule Acceleration Curve ──
+  var sensitivityIdx = parseInt(sel('schedule_sensitivity')) || 1;
+  var sensitivityName = SENSITIVITY_LABELS[sensitivityIdx] || 'Balanced';
   var schedDaysSaved = memSched - pSched;
-  var oppValue = (schedDaysSaved > 0 && activeMult > 0) ? schedDaysSaved * activeMult : 0;
+  var accelFactor = schedDaysSaved > 0 ? calcAccelFactor(schedDaysSaved, sensitivityIdx) : 1;
+  var projectAccelValue = (schedDaysSaved > 0 && hasCPD) ? Math.round(schedDaysSaved * cpd * accelFactor) : 0;
 
-  document.getElementById('opp-default-mult').textContent = fmt$(defaultMult) + '/day';
+  document.getElementById('sensitivity-label').textContent = sensitivityName;
 
-  var oppValueEl  = document.getElementById('opp-value');
-  var oppSubEl    = document.getElementById('opp-value-sub');
-  if (schedDaysSaved > 0 && activeMult > 0) {
-    oppValueEl.textContent = fmt$(oppValue);
-    oppSubEl.textContent   = schedDaysSaved.toFixed(1) + ' days × ' + fmt$(activeMult) + '/day';
+  var accelDaysEl  = document.getElementById('accel-days');
+  var accelFactEl  = document.getElementById('accel-factor');
+  var accelValEl   = document.getElementById('accel-value');
+  var accelSubEl   = document.getElementById('accel-value-sub');
+
+  if (schedDaysSaved > 0) {
+    accelDaysEl.textContent = schedDaysSaved.toFixed(0);
+    accelFactEl.textContent = accelFactor.toFixed(2) + '×';
+    if (hasCPD) {
+      accelValEl.textContent = fmt$(projectAccelValue);
+      accelSubEl.textContent = schedDaysSaved.toFixed(0) + ' days × ' + fmt$(cpd) + '/day × ' + accelFactor.toFixed(2);
+    } else {
+      accelValEl.textContent = '—';
+      accelSubEl.textContent = 'Enter cost/day above';
+    }
   } else {
-    oppValueEl.textContent = '—';
-    oppSubEl.textContent   = schedDaysSaved <= 0 ? 'No schedule advantage yet' : 'Set project profile above';
+    accelDaysEl.textContent = '—';
+    accelFactEl.textContent = '—';
+    accelValEl.textContent  = '—';
+    accelSubEl.textContent  = 'Enter membrane schedule days above';
   }
 
   if (!hasPenetron && !hasMembrane) {
@@ -310,12 +323,10 @@ function compute() {
 
   var lastRowClass = hasCPD ? '' : 'last-row';
 
-  // ── TEI Calculation ──
+  // ── Economic Benefit Calculation ──
   var teiDirectSavings = directDiff > 0 ? directDiff : 0;
-  var teiSchedSavings  = (schedDiff > 0 && hasCPD) ? schedDiff * cpd : 0;
-  var teiOppValue      = oppValue > 0 ? oppValue : 0;
   var teiRiskReduction = (hasCPD && cxTotal > 0) ? riskDelayDays * cpd : 0;
-  var teiTotal = teiDirectSavings + teiSchedSavings + teiOppValue + teiRiskReduction;
+  var teiTotal = teiDirectSavings + projectAccelValue + teiRiskReduction;
 
   // ────────────────────────────────────────
   // LAYER 1: Executive Recommendation
@@ -457,14 +468,13 @@ function compute() {
   // ────────────────────────────────────────
   var teiCard = '';
   if (hasPenetron && hasMembrane) {
-    var schedSavingsLabel = schedDiff > 0
-      ? schedDiff.toFixed(1) + ' days × ' + fmt$(cpd) + '/day'
+    var accelLabel = schedDiff > 0
+      ? schedDiff.toFixed(0) + ' days × ' + fmt$(cpd) + '/day × ' + accelFactor.toFixed(2) + ' (' + sensitivityName + ')'
       : 'no schedule advantage';
     teiCard = '<div class="tei-card">'
       + '<div class="tei-title">Economic Benefit Breakdown</div>'
       + '<div class="tei-row"><span class="tei-row-label">Direct Cost Savings</span><span class="tei-row-value">' + (teiDirectSavings > 0 ? fmt$(teiDirectSavings) : '—') + '</span></div>'
-      + '<div class="tei-row"><span class="tei-row-label">Schedule Cost Savings (' + schedSavingsLabel + ')</span><span class="tei-row-value">' + (teiSchedSavings > 0 ? fmt$(teiSchedSavings) : '—') + '</span></div>'
-      + '<div class="tei-row"><span class="tei-row-label">Schedule Opportunity Value</span><span class="tei-row-value">' + (teiOppValue > 0 ? fmt$(teiOppValue) : '—') + '</span></div>'
+      + '<div class="tei-row"><span class="tei-row-label">Project Acceleration Value (' + accelLabel + ')</span><span class="tei-row-value">' + (projectAccelValue > 0 ? fmt$(projectAccelValue) : '—') + '</span></div>'
       + '<div class="tei-row"><span class="tei-row-label">Estimated Rework Exposure Reduction</span><span class="tei-row-value">' + (teiRiskReduction > 0 ? fmt$(teiRiskReduction) : '—') + '</span></div>'
       + '<div class="tei-total-row"><span class="tei-total-label">Estimated Economic Benefit</span><span class="tei-total-value">' + (teiTotal > 0 ? fmt$(teiTotal) : '—') + '</span></div>'
       + '</div>';
@@ -485,12 +495,6 @@ function compute() {
     + '<div class="metric-cell"><div class="metric-label">Detailing Cost</div></div>'
     + '<div class="metric-cell"><div class="metric-value" style="color:var(--green);font-size:.95rem">$0</div><div class="metric-sub">included in admixture</div></div>'
     + '<div class="metric-cell"><div class="metric-value membrane">' + detailingMemVal + '</div><div class="metric-sub">CJ + penetrations + pile boots + allowance</div></div>'
-
-    + '<div class="metric-cell"><div class="metric-label">Direct Savings</div></div>'
-    + '<div class="metric-cell" style="grid-column:2/4">'
-    + '<div class="metric-value diff ' + dc(directDiff) + '">'
-    + ((hasPenetron && hasMembrane) ? ((directDiff >= 0 ? 'Penetron saves ' : 'Membrane saves ') + fmt$(Math.abs(directDiff))) : '—')
-    + '</div></div>'
 
     + '<div class="metric-cell"><div class="metric-label">Cost / CY</div></div>'
     + '<div class="metric-cell"><div class="metric-value penetron">' + ((hasPenetron && d.cy > 0) ? fmt$(pCostPerCY) : '—') + '</div><div class="metric-sub">admixture / CY</div></div>'

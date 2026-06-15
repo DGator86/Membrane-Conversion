@@ -161,14 +161,24 @@ input:checked + .slider::before { transform: translateX(20px); }
 .risk-info.medium { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber); }
 .risk-info.high   { background: #fde8ec; color: #c0392b; border: 1px solid #c0392b; }
 
-.opp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 4px; }
-.opp-box { background: #f4f6f9; border: 1.5px solid var(--gray-border); border-radius: 9px; padding: 14px 16px; }
-.opp-box.result { background: var(--green-bg); border-color: var(--green); }
-.opp-box-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); margin-bottom: 8px; }
-.opp-box.result .opp-box-label { color: var(--green); }
-.opp-box-value { font-size: 1.25rem; font-weight: 800; color: var(--p-navy-dk); }
-.opp-box.result .opp-box-value { color: var(--green); font-size: 1.4rem; }
-.opp-box-sub { font-size: .7rem; color: var(--text-muted); margin-top: 4px; }
+/* ── Schedule Sensitivity Slider ── */
+.sensitivity-slider-wrap { margin: 0 0 16px; }
+.sensitivity-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 5px; border-radius: 3px; background: linear-gradient(to right, #b0bac8, var(--p-navy)); outline: none; cursor: pointer; }
+.sensitivity-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--p-navy-dk); border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.22); cursor: pointer; }
+.sensitivity-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--p-navy-dk); border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.22); cursor: pointer; border: none; }
+.sensitivity-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+.sensitivity-labels span { font-size: .7rem; font-weight: 600; color: var(--text-muted); }
+.sensitivity-current { text-align: center; font-size: .82rem; font-weight: 700; color: var(--p-navy); margin-top: 6px; letter-spacing: .3px; }
+
+/* ── Schedule Acceleration Display ── */
+.accel-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 4px; }
+.accel-box { background: #f4f6f9; border: 1.5px solid var(--gray-border); border-radius: 9px; padding: 14px 16px; text-align: center; }
+.accel-box.result { background: var(--green-bg); border-color: var(--green); }
+.accel-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); margin-bottom: 8px; }
+.accel-box.result .accel-label { color: var(--green); }
+.accel-value { font-size: 1.35rem; font-weight: 900; color: var(--p-navy-dk); }
+.accel-box.result .accel-value { color: var(--green); font-size: 1.5rem; }
+.accel-sub { font-size: .7rem; color: var(--text-muted); margin-top: 4px; }
 
 /* ── Executive Recommendation ── */
 .exec-rec-card { background: var(--p-navy-dk); border-radius: 10px; padding: 24px 28px; margin-bottom: 20px; border-left: 5px solid var(--p-orange); }
