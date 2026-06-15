@@ -503,19 +503,85 @@ function compute() {
   var detailsTradeRow = '<div class="details-trade-row">' + detailsCard + tradeCard + '</div>';
 
   // ────────────────────────────────────────
-  // TEI Breakdown Card
+  // Full Economic Picture Card
   // ────────────────────────────────────────
-  var teiCard = '';
+  var valueCase = '';
   if (hasPenetron && hasMembrane) {
-    var accelLabel = schedDiff > 0
-      ? schedDiff.toFixed(0) + ' days × ' + fmt$(cpd) + '/day × ' + accelFactor.toFixed(2) + ' (' + sensitivityName + ')'
-      : 'no schedule advantage';
-    teiCard = '<div class="tei-card">'
-      + '<div class="tei-title">Economic Benefit Breakdown</div>'
-      + '<div class="tei-row"><span class="tei-row-label">Direct Cost Savings</span><span class="tei-row-value">' + (teiDirectSavings > 0 ? fmt$(teiDirectSavings) : '—') + '</span></div>'
-      + '<div class="tei-row"><span class="tei-row-label">Project Acceleration Value (' + accelLabel + ')</span><span class="tei-row-value">' + (projectAccelValue > 0 ? fmt$(projectAccelValue) : '—') + '</span></div>'
-      + '<div class="tei-row"><span class="tei-row-label">Estimated Rework Exposure Reduction</span><span class="tei-row-value">' + (teiRiskReduction > 0 ? fmt$(teiRiskReduction) : '—') + '</span></div>'
-      + '<div class="tei-total-row"><span class="tei-total-label">Estimated Economic Benefit</span><span class="tei-total-value">' + (teiTotal > 0 ? fmt$(teiTotal) : '—') + '</span></div>'
+    var memAllIn = memTotalCost + mSchedCost + teiRiskReduction;
+    var pAllIn   = pAdmixTotal; // pSched=0, pRisk=0
+    var netAdvantage = memAllIn - pAllIn;
+    var rawSchedSavings = mSchedCost; // pSchedCost = 0 always
+    var accelPremium = (schedDiff > 0 && accelFactor > 1) ? Math.round(projectAccelValue - rawSchedSavings) : 0;
+
+    function vcAdv(n) {
+      if (!hasCPD) return '<span style="color:var(--text-muted)">—</span>';
+      return n > 0 ? '<span class="vc-adv positive">Saves ' + fmt$(n) + '</span>'
+           : n < 0 ? '<span class="vc-adv negative">Costs ' + fmt$(Math.abs(n)) + '</span>'
+           : '<span style="color:var(--text-muted)">Equal</span>';
+    }
+
+    var vcRows = '<div class="vc-row">'
+      + '<div class="vc-col-label">Direct &amp; Detailing Cost</div>'
+      + '<div class="vc-col vc-p">' + fmt$(pAdmixTotal) + '</div>'
+      + '<div class="vc-col vc-m">' + fmt$(memTotalCost) + '</div>'
+      + '<div class="vc-col vc-a">' + vcAdv(directDiff) + '</div>'
+      + '</div>';
+
+    if (hasCPD) {
+      vcRows += '<div class="vc-row">'
+        + '<div class="vc-col-label">Schedule Impact <span class="vc-note">' + memSched.toFixed(1) + ' days \xD7 ' + fmt$(cpd) + '/day</span></div>'
+        + '<div class="vc-col vc-p vc-zero">$0</div>'
+        + '<div class="vc-col vc-m">' + fmt$(mSchedCost) + '</div>'
+        + '<div class="vc-col vc-a">' + (rawSchedSavings > 0 ? '<span class="vc-adv positive">Saves ' + fmt$(rawSchedSavings) + '</span>' : '<span style="color:var(--text-muted)">—</span>') + '</div>'
+        + '</div>';
+
+      vcRows += '<div class="vc-row">'
+        + '<div class="vc-col-label">Rework Exposure <span class="vc-note">' + riskCategory + ' · ' + riskDelayDays + ' day est.</span></div>'
+        + '<div class="vc-col vc-p vc-zero">$0</div>'
+        + '<div class="vc-col vc-m">' + fmt$(teiRiskReduction) + '</div>'
+        + '<div class="vc-col vc-a">' + (teiRiskReduction > 0 ? '<span class="vc-adv positive">Saves ' + fmt$(teiRiskReduction) + '</span>' : '<span style="color:var(--text-muted)">—</span>') + '</div>'
+        + '</div>';
+    }
+
+    vcRows += '<div class="vc-row vc-total-row">'
+      + '<div class="vc-col-label">All-In Estimated Cost</div>'
+      + '<div class="vc-col vc-p vc-p-total">' + fmt$(pAllIn) + '</div>'
+      + '<div class="vc-col vc-m vc-m-total">' + fmt$(memAllIn) + '</div>'
+      + '<div class="vc-col vc-a"></div>'
+      + '</div>';
+
+    var footerHtml = '<div class="vc-footer">';
+    if (hasCPD) {
+      footerHtml += '<div class="vc-foot-row vc-net">'
+        + '<span>Net Cost Advantage</span>'
+        + '<span>' + (netAdvantage > 0 ? fmt$(netAdvantage) : '—') + '</span>'
+        + '</div>';
+      if (accelPremium > 0) {
+        footerHtml += '<div class="vc-foot-row vc-accel">'
+          + '<span>Schedule Acceleration Premium <em>(' + sensitivityName + ', ' + accelFactor.toFixed(2) + '\xD7 multiplier)</em></span>'
+          + '<span>+ ' + fmt$(accelPremium) + '</span>'
+          + '</div>';
+      }
+    }
+    footerHtml += '<div class="vc-foot-row vc-total">'
+      + '<span>Estimated Economic Benefit</span>'
+      + '<span>' + (teiTotal > 0 ? fmt$(teiTotal) : (hasCPD ? '—' : 'Enter cost/day to quantify')) + '</span>'
+      + '</div>'
+      + '</div>';
+
+    valueCase = '<div class="value-case-card">'
+      + '<div class="vc-title">Full Economic Picture</div>'
+      + '<div class="vc-sub">How Penetron compares all-in — direct costs + schedule + rework exposure</div>'
+      + '<div class="vc-table">'
+      + '<div class="vc-row vc-header">'
+      + '<div class="vc-col-label"></div>'
+      + '<div class="vc-col" style="color:var(--p-orange);font-weight:700">Penetron</div>'
+      + '<div class="vc-col" style="color:var(--p-navy);font-weight:700">Membrane</div>'
+      + '<div class="vc-col" style="font-weight:700">Advantage</div>'
+      + '</div>'
+      + vcRows
+      + '</div>'
+      + footerHtml
       + '</div>';
   }
 
@@ -577,10 +643,10 @@ function compute() {
     execRecCard
     + kpiRow
     + detailsTradeRow
-    + teiCard
     + '<div class="section-divider">Supporting Financial Analysis</div>'
     + compGrid
-    + schedComp;
+    + schedComp
+    + valueCase;
 }
 
 compute();
