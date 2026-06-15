@@ -58,6 +58,8 @@ function toggleMode() {
 function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
 function chk(id) { var el = document.getElementById(id); return el ? el.checked : false; }
 function sel(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+function setText(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+function setHTML(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
 
 function fmt$(n) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -271,12 +273,6 @@ function compute() {
     accelSubEl.textContent  = 'Enter membrane schedule days above';
   }
 
-  if (!hasPenetron && !hasMembrane) {
-    document.getElementById('results-body').innerHTML =
-      '<div class="placeholder-msg">Complete Steps 1–3 above to see the comparison.</div>';
-    return;
-  }
-
   var pSchedCost = pSched * cpd;
   var mSchedCost = memSched * cpd;
   var pTrueTotal = pAdmixTotal + pSchedCost;
@@ -396,7 +392,83 @@ function compute() {
   } else if (teiTotal > 0) {
     recNarrative = 'Penetron generates an estimated economic benefit of <strong>' + fmt$(teiTotal) + '</strong> compared to the membrane system.';
   } else {
-    recNarrative = 'Enter cost and schedule data in Steps 2–4 to generate a complete economic recommendation.';
+    recNarrative = 'Enter cost and schedule data in Penetron, Membrane, and Schedule &amp; Risk to generate a complete recommendation.';
+  }
+
+  // ────────────────────────────────────────
+  // UPDATE EXECUTIVE PANEL (always runs)
+  // ────────────────────────────────────────
+  var projectValueCreated = teiTotal;
+
+  // Hero
+  setText('exec-project-value', projectValueCreated > 0 ? fmt$(projectValueCreated) : '—');
+  setText('exec-total-value',   projectValueCreated > 0 ? fmt$(projectValueCreated) : '—');
+
+  // Critical Path card
+  var cpText = (!hasPenetron && !hasMembrane) ? '—'
+    : schedDiff > 0 ? schedDiff.toFixed(0) + ' Days Faster'
+    : schedDiff < 0 ? Math.abs(schedDiff).toFixed(0) + ' Days Slower'
+    : 'No Change';
+  setText('exec-days-faster', cpText);
+  setText('exec-schedule-value',
+    hasCPD && schedDiff > 0 ? 'Acceleration value: ' + fmt$(projectAccelValue)
+    : hasCPD && schedDiff < 0 ? 'Schedule cost: ' + fmt$(Math.abs(schedDiff * cpd))
+    : 'Enter cost/day to quantify');
+
+  // Risk card
+  var riskEl = document.getElementById('exec-risk-display');
+  if (riskEl) {
+    if (!hasPenetron && !hasMembrane) {
+      riskEl.innerHTML = '—';
+    } else if (riskClass !== 'low') {
+      riskEl.innerHTML = '<span class="risk-chip risk-' + riskClass + '">' + riskCategory + '</span>'
+        + ' <span class="risk-arrow">&rarr;</span> '
+        + '<span class="risk-chip risk-low">Low Risk</span>';
+    } else {
+      riskEl.innerHTML = '<span class="risk-chip risk-low">Low Risk</span>';
+    }
+  }
+  setText('exec-risk-sub', hasCPD && teiRiskReduction > 0
+    ? 'Exposure avoided: ' + fmt$(teiRiskReduction)
+    : 'Rework exposure managed');
+
+  // Details card
+  setText('exec-details', detailTotal > 0 ? String(detailTotal) : '—');
+  var detSubParts = [];
+  if (cxCJ > 0)       detSubParts.push(cxCJ + ' CJ detail' + (cxCJ !== 1 ? 's' : ''));
+  if (d.penCount > 0) detSubParts.push(d.penCount + ' penetration' + (d.penCount !== 1 ? 's' : ''));
+  if (d.piles > 0)    detSubParts.push(d.piles + ' pile' + (d.piles !== 1 ? 's' : ''));
+  setText('exec-details-sub', detSubParts.length > 0 ? detSubParts.join(' · ') : 'Enter quantities in Scope');
+
+  // Trade Coordination card
+  var memInterfaces = 3 + (d.cjLF > 0 ? 1 : 0) + (d.penCount > 0 ? 1 : 0) + (d.piles > 0 ? 1 : 0);
+  var penInterfaces = 1 + (d.cjLF > 0 ? 1 : 0);
+  var tradeReduction = Math.round((1 - penInterfaces / memInterfaces) * 100);
+  setText('exec-coordination', (hasPenetron || hasMembrane) ? tradeReduction + '%' : '—');
+  setText('exec-coordination-sub', (hasPenetron || hasMembrane)
+    ? penInterfaces + ' vs ' + memInterfaces + ' trade interfaces'
+    : 'Fewer trade interfaces');
+
+  // Breakdown rows
+  setText('exec-net-cost', (hasPenetron && hasMembrane)
+    ? (directDiff >= 0 ? '+' : '') + fmt$(directDiff)
+    : '—');
+  setText('exec-accel-value', projectAccelValue > 0
+    ? '+' + fmt$(projectAccelValue)
+    : (hasCPD ? '—' : 'Enter $/day'));
+  setText('exec-accel-note', schedDiff > 0 ? '(' + sensitivityName + ')' : '');
+  setText('exec-risk-value', teiRiskReduction > 0 ? '+' + fmt$(teiRiskReduction) : '—');
+
+  // Recommendation
+  setHTML('exec-recommendation', recNarrative);
+
+  // ────────────────────────────────────────
+  // ADVANCED DETAIL (results-body)
+  // ────────────────────────────────────────
+  if (!hasPenetron && !hasMembrane) {
+    document.getElementById('results-body').innerHTML =
+      '<div class="placeholder-msg">Complete Penetron and Membrane inputs to see detailed analysis.</div>';
+    return;
   }
 
   var execRecCard = '<div class="exec-rec-card">'
@@ -475,10 +547,6 @@ function compute() {
   // ────────────────────────────────────────
   // LAYER 3b: Trade Coordination
   // ────────────────────────────────────────
-  var memInterfaces = 3 + (d.cjLF > 0 ? 1 : 0) + (d.penCount > 0 ? 1 : 0) + (d.piles > 0 ? 1 : 0);
-  var penInterfaces = 1 + (d.cjLF > 0 ? 1 : 0);
-  var tradeReduction = Math.round((1 - penInterfaces / memInterfaces) * 100);
-
   var memTradeList = '<li>Waterproofing subcontractor</li><li>Membrane inspection</li><li>Repair / remediation contingency</li>';
   if (d.cjLF > 0) memTradeList += '<li>Construction-joint waterproofing</li>';
   if (d.penCount > 0) memTradeList += '<li>Penetration detailing</li>';
