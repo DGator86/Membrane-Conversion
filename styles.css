@@ -17,7 +17,7 @@
   --radius:      10px;
   --shadow:      0 2px 12px rgba(0,0,0,.09);
 }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-bg); color: var(--text); min-height: 100vh; }
+body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: var(--gray-bg); color: var(--text); min-height: 100vh; }
 
 /* ── Header ── */
 header { background: var(--p-navy-dk); border-bottom: 4px solid var(--p-orange); color: #fff; padding: 0; }
@@ -50,11 +50,10 @@ header { background: var(--p-navy-dk); border-bottom: 4px solid var(--p-orange);
 
 /* ── Type selector ── */
 .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-.type-btn { padding: 14px 10px; border: 2px solid var(--gray-border); border-radius: 9px; background: #fafbfd; cursor: pointer; text-align: center; transition: all .15s; }
+.type-btn { padding: 16px 10px; border: 2px solid var(--gray-border); border-radius: 9px; background: #fafbfd; cursor: pointer; text-align: center; transition: all .15s; }
 .type-btn:hover { border-color: var(--p-navy); background: #edf1fa; }
 .type-btn.active { border-color: var(--p-orange); background: var(--p-orange-lt); box-shadow: 0 0 0 2px rgba(245,144,30,.18); }
-.type-btn .type-icon { font-size: 1.6rem; margin-bottom: 6px; }
-.type-btn .type-name { font-size: .8rem; font-weight: 700; color: var(--p-navy); }
+.type-btn .type-name { font-size: .82rem; font-weight: 700; color: var(--p-navy); letter-spacing: .2px; }
 .type-btn.active .type-name { color: #a05c0a; }
 .type-btn .type-desc { font-size: .7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
 

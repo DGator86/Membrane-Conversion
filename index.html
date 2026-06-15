@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Below-grade waterproofing conversion tool for general contractors and precon teams. Compare integral crystalline admixture against hydrostatic membrane systems." />
   <title>Below-Grade Waterproofing Conversion Tool | Penetron</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -42,17 +45,14 @@
 
       <div class="type-grid">
         <button class="type-btn active" data-type="slab" onclick="selectType('slab')">
-          <div class="type-icon">🏗️</div>
           <div class="type-name">Hydrostatic Slab</div>
           <div class="type-desc">Below-grade mat or foundation slab with perimeter walls</div>
         </button>
         <button class="type-btn" data-type="pilecap" onclick="selectType('pilecap')">
-          <div class="type-icon">🪨</div>
           <div class="type-name">Elevator Pit / Pile Cap</div>
           <div class="type-desc">Pile cap below grade with elevator pit walls and pile penetrations</div>
         </button>
         <button class="type-btn" data-type="elevator" onclick="selectType('elevator')">
-          <div class="type-icon">🛗</div>
           <div class="type-name">Elevator Pit</div>
           <div class="type-desc">Standalone below-grade elevator pit &amp; sump</div>
         </button>
@@ -349,14 +349,6 @@
           <span class="unit">$/CY</span>
         </div>
       </div>
-      <div class="field">
-        <label>Base Concrete Cost <span class="hint">reference $/CY</span></label>
-        <div class="input-wrap">
-          <input type="number" id="p_concrete_per_cy" min="0" step="0.01" placeholder="e.g. 165.00" oninput="compute()" />
-          <span class="unit">$/CY</span>
-        </div>
-      </div>
-
       <div class="section-label">Schedule</div>
       <div class="field">
         <label>Critical Path Days Added <span class="hint">0 for no impact</span></label>
