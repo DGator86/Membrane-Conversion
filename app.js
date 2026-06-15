@@ -1,5 +1,6 @@
 var currentType = 'slab';
 var slabDimMode = 'lw';
+var capDimMode = 'lw';
 var sensitivityIdx = 1;
 
 var SENS_DESCS = [
@@ -28,6 +29,25 @@ function setSlabDimMode(mode) {
   var perimNote = document.getElementById('slab-perimeter-note');
   if (perimNote) perimNote.style.display = mode === 'perim' ? 'none' : '';
   compute();
+}
+
+function setCapDimMode(mode) {
+  capDimMode = mode;
+  document.querySelectorAll('.cap-dim-mode-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  document.getElementById('cap-lw-fields').style.display = mode === 'lw' ? '' : 'none';
+  document.getElementById('cap-sf-fields').style.display = mode === 'sf' ? '' : 'none';
+  var pilesPerField = document.getElementById('cap-piles-per-field');
+  if (pilesPerField) pilesPerField.style.display = mode === 'lw' ? '' : 'none';
+  compute();
+}
+
+function syncCapD(fromMode) {
+  var src = fromMode === 'lw' ? 'cap_d_lw' : 'cap_d_sf';
+  var dst = fromMode === 'lw' ? 'cap_d_sf' : 'cap_d_lw';
+  var srcEl = document.getElementById(src), dstEl = document.getElementById(dst);
+  if (srcEl && dstEl) dstEl.value = srcEl.value;
 }
 
 function selectType(type) {
@@ -110,25 +130,41 @@ function calcDerived() {
     penCount = v('slab_pen_count');
 
   } else if (currentType === 'pilecap') {
-    var cl = v('cap_l'), cw = v('cap_w'), cd = v('cap_d'), qty = v('cap_qty') || 1;
-    var pilesPerCap = v('cap_piles_per');
+    var cd = capDimMode === 'sf' ? v('cap_d_sf') : v('cap_d_lw');
     var pitWallH = v('cap_pit_wall_h');
-    var perim = 2 * (cl + cw);
-    cy = (cl * cw * cd / 27) * qty;
-    if (pitWallH > 0) cy += (perim * pitWallH * (10 / 12) / 27) * qty;
-    bottomSF = cl * cw * qty;
-    var capSidesSF = chk('cap_sides') ? perim * cd * qty : 0;
-    var pitWallSF = pitWallH > 0 ? perim * pitWallH * qty : 0;
-    wallSF = capSidesSF + pitWallSF;
+    var pilesPerCap = v('cap_piles_per');
+    var perim, qty;
+    if (capDimMode === 'sf') {
+      bottomSF = v('cap_total_sf');
+      perim = v('cap_total_perim');
+      qty = 1;
+      cy = (bottomSF * cd) / 27;
+      if (pitWallH > 0 && perim > 0) cy += (perim * pitWallH * (10 / 12) / 27);
+      var capSidesSF = chk('cap_sides') ? perim * cd : 0;
+      var pitWallSF = pitWallH > 0 ? perim * pitWallH : 0;
+      wallSF = capSidesSF + pitWallSF;
+      piles = v('cap_piles_total');
+    } else {
+      var cl = v('cap_l'), cw = v('cap_w');
+      qty = v('cap_qty') || 1;
+      perim = 2 * (cl + cw);
+      cy = (cl * cw * cd / 27) * qty;
+      if (pitWallH > 0) cy += (perim * pitWallH * (10 / 12) / 27) * qty;
+      bottomSF = cl * cw * qty;
+      var capSidesSF = chk('cap_sides') ? perim * cd * qty : 0;
+      var pitWallSF = pitWallH > 0 ? perim * pitWallH * qty : 0;
+      wallSF = capSidesSF + pitWallSF;
+      piles = pilesPerCap * qty;
+    }
     cjLF = v('cap_cj_lf');
-    piles = pilesPerCap * qty;
-    penCount = 0; // pile boot/flashing covers all pile penetrations — no separate pen count
+    penCount = 0;
 
     // Subtract elevator pit void from pile cap CY
     var capPitL = v('cap_pit_l'), capPitW = v('cap_pit_w');
     var capPitNote = document.getElementById('cap-pit-note');
     if (capPitL > 0 && capPitW > 0 && cd > 0) {
-      var pitVoidSF = capPitL * capPitW * qty;
+      var pitVoidQty = capDimMode === 'sf' ? 1 : (v('cap_qty') || 1);
+      var pitVoidSF = capPitL * capPitW * pitVoidQty;
       var pitVoidCY = (pitVoidSF * cd) / 27;
       cy = Math.max(0, cy - pitVoidCY);
       bottomSF = Math.max(0, bottomSF - pitVoidSF);

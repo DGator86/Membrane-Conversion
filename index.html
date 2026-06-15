@@ -168,42 +168,84 @@
         <!-- ELEVATOR PIT / PILE CAP -->
         <div id="dim-pilecap" class="dim-section">
           <div class="section-label">Pile Cap Dimensions</div>
-          <div class="fields-row">
-            <div class="field">
-              <label>Cap Length <span class="hint">ft</span></label>
-              <div class="input-wrap">
-                <input type="number" id="cap_l" min="0" step="0.5" placeholder="e.g. 20" oninput="compute()" />
-                <span class="unit">ft</span>
+          <div class="dim-mode-toggle">
+            <button class="cap-dim-mode-btn dim-mode-btn active" data-mode="lw" onclick="setCapDimMode('lw')">L &times; W</button>
+            <button class="cap-dim-mode-btn dim-mode-btn" data-mode="sf" onclick="setCapDimMode('sf')">Total SF</button>
+          </div>
+
+          <div id="cap-lw-fields">
+            <div class="fields-row">
+              <div class="field">
+                <label>Cap Length <span class="hint">ft</span></label>
+                <div class="input-wrap">
+                  <input type="number" id="cap_l" min="0" step="0.5" placeholder="e.g. 20" oninput="compute()" />
+                  <span class="unit">ft</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>Cap Width <span class="hint">ft</span></label>
+                <div class="input-wrap">
+                  <input type="number" id="cap_w" min="0" step="0.5" placeholder="e.g. 15" oninput="compute()" />
+                  <span class="unit">ft</span>
+                </div>
               </div>
             </div>
-            <div class="field">
-              <label>Cap Width <span class="hint">ft</span></label>
-              <div class="input-wrap">
-                <input type="number" id="cap_w" min="0" step="0.5" placeholder="e.g. 15" oninput="compute()" />
-                <span class="unit">ft</span>
+            <div class="fields-row">
+              <div class="field">
+                <label>Cap Thickness <span class="hint">ft</span></label>
+                <div class="input-wrap">
+                  <input type="number" id="cap_d_lw" min="0" step="0.5" placeholder="e.g. 4" oninput="syncCapD('lw');compute()" />
+                  <span class="unit">ft</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>Number of Caps</label>
+                <div class="input-wrap">
+                  <input type="number" id="cap_qty" min="1" step="1" placeholder="e.g. 12" oninput="compute()" />
+                  <span class="unit">ea</span>
+                </div>
               </div>
             </div>
           </div>
-          <div class="fields-row">
-            <div class="field">
-              <label>Cap Thickness <span class="hint">ft</span></label>
-              <div class="input-wrap">
-                <input type="number" id="cap_d" min="0" step="0.5" placeholder="e.g. 4" oninput="compute()" />
-                <span class="unit">ft</span>
+
+          <div id="cap-sf-fields" style="display:none">
+            <div class="fields-row">
+              <div class="field">
+                <label>Total Pile Cap SF <span class="hint">all caps combined</span></label>
+                <div class="input-wrap">
+                  <input type="number" id="cap_total_sf" min="0" step="1" placeholder="e.g. 3600" oninput="compute()" />
+                  <span class="unit">SF</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>Total Perimeter <span class="hint">all caps combined</span></label>
+                <div class="input-wrap">
+                  <input type="number" id="cap_total_perim" min="0" step="1" placeholder="e.g. 840" oninput="compute()" />
+                  <span class="unit">LF</span>
+                </div>
               </div>
             </div>
-            <div class="field">
-              <label>Number of Caps</label>
-              <div class="input-wrap">
-                <input type="number" id="cap_qty" min="1" step="1" placeholder="e.g. 12" oninput="compute()" />
-                <span class="unit">ea</span>
+            <div class="fields-row">
+              <div class="field">
+                <label>Cap Thickness <span class="hint">ft</span></label>
+                <div class="input-wrap">
+                  <input type="number" id="cap_d_sf" min="0" step="0.5" placeholder="e.g. 4" oninput="syncCapD('sf');compute()" />
+                  <span class="unit">ft</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>Total Piles <span class="hint">all caps</span></label>
+                <div class="input-wrap">
+                  <input type="number" id="cap_piles_total" min="0" step="1" placeholder="e.g. 72" oninput="compute()" />
+                  <span class="unit">ea</span>
+                </div>
               </div>
             </div>
           </div>
 
           <div class="section-label">Pile Configuration</div>
           <div class="fields-row">
-            <div class="field">
+            <div class="field" id="cap-piles-per-field">
               <label>Piles per Cap</label>
               <div class="input-wrap">
                 <input type="number" id="cap_piles_per" min="0" step="1" placeholder="e.g. 6" oninput="compute()" />
