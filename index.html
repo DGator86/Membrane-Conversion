@@ -357,19 +357,6 @@
         </div>
       </div>
 
-      <div class="section-label">Construction Joint Treatment (Penebar)</div>
-      <div class="field">
-        <label>CJ Length <span class="hint">auto-filled from Step 1</span></label>
-        <div class="computed-field" id="p_cj_display">— LF</div>
-      </div>
-      <div class="field">
-        <label>Penebar Strip Cost <span class="hint">typical $3–8/LF installed</span></label>
-        <div class="input-wrap">
-          <input type="number" id="p_penebar_per_lf" min="0" step="0.01" placeholder="e.g. 5.00" oninput="compute()" />
-          <span class="unit">$/LF</span>
-        </div>
-      </div>
-
       <div class="section-label">Schedule</div>
       <div class="field">
         <label>Critical Path Days Added <span class="hint">0 for no impact</span></label>
@@ -504,6 +491,94 @@
             <input type="number" id="m_risk_allowance" min="0" step="100" placeholder="e.g. 5000" oninput="compute()" />
             <span class="unit">$</span>
           </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── STEP 4: Project Impact Analysis ── -->
+  <div class="card full">
+    <div class="card-header impact-header">
+      <div><div class="step-label">Step 4</div>Project Impact Analysis</div>
+    </div>
+    <div class="card-body">
+
+      <div class="fields-row" style="grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+        <div class="field">
+          <label>Project Type <span class="hint">construction category</span></label>
+          <select id="project_type" class="select-field" onchange="compute()">
+            <option value="highrise">High-Rise Residential / Mixed-Use</option>
+            <option value="commercial">Commercial / Office</option>
+            <option value="parking">Parking Structure</option>
+            <option value="industrial">Industrial / Warehouse</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Project Size <span class="hint">total project value</span></label>
+          <select id="project_size" class="select-field" onchange="compute()">
+            <option value="under25">Under $25M</option>
+            <option value="p25to75">$25M – $75M</option>
+            <option value="p75to150" selected>$75M – $150M</option>
+            <option value="p150to300">$150M – $300M</option>
+            <option value="over300">Over $300M</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Schedule Sensitivity <span class="hint">owner / market urgency</span></label>
+          <select id="schedule_sensitivity" class="select-field" onchange="compute()">
+            <option value="low">Low — flexible completion</option>
+            <option value="medium" selected>Medium — standard constraints</option>
+            <option value="high">High — hard deadline / penalty</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-label">Complexity Scoring</div>
+      <div class="complexity-strip">
+        <div class="complexity-cell">
+          <div class="complexity-label">CJ Score</div>
+          <div class="complexity-value" id="cx-cj">0</div>
+          <div class="complexity-sub">pts (LF ÷ 50)</div>
+        </div>
+        <div class="complexity-cell">
+          <div class="complexity-label">Penetrations</div>
+          <div class="complexity-value" id="cx-pen">0</div>
+          <div class="complexity-sub">pts</div>
+        </div>
+        <div class="complexity-cell">
+          <div class="complexity-label">Pile Penetrations</div>
+          <div class="complexity-value" id="cx-pile">0</div>
+          <div class="complexity-sub">pts (×2)</div>
+        </div>
+        <div class="complexity-cell total">
+          <div class="complexity-label">Total Score</div>
+          <div class="complexity-value" id="cx-total">0</div>
+          <div class="complexity-sub" id="cx-risk-label">Low Risk</div>
+        </div>
+      </div>
+      <div class="risk-info" id="risk-info-line"></div>
+
+      <div class="section-label">Schedule Opportunity Value</div>
+      <div class="opp-grid">
+        <div class="opp-box">
+          <div class="opp-box-label">Default Multiplier</div>
+          <div class="opp-box-value" id="opp-default-mult">—</div>
+          <div class="opp-box-sub">$/day · from project profile</div>
+        </div>
+        <div class="opp-box">
+          <div class="opp-box-label">Override Multiplier <span style="font-size:.65rem;font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+          <div class="input-wrap" style="margin-top:4px">
+            <input type="number" id="opp_override" min="0" step="100" placeholder="leave blank to use default" oninput="compute()" />
+            <span class="unit">$/day</span>
+          </div>
+          <div class="opp-box-sub" style="margin-top:6px">Override if project-specific data is available</div>
+        </div>
+        <div class="opp-box result">
+          <div class="opp-box-label">Schedule Opportunity Value</div>
+          <div class="opp-box-value" id="opp-value">—</div>
+          <div class="opp-box-sub" id="opp-value-sub">days saved × active multiplier</div>
         </div>
       </div>
 

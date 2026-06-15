@@ -1,4 +1,4 @@
-let currentType = 'slab';
+var currentType = 'slab';
 
 function selectType(type) {
   currentType = type;
@@ -25,6 +25,7 @@ function toggleMode() {
 
 function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
 function chk(id) { var el = document.getElementById(id); return el ? el.checked : false; }
+function sel(id) { var el = document.getElementById(id); return el ? el.value : ''; }
 
 function fmt$(n) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -93,6 +94,18 @@ function calcDerived() {
   };
 }
 
+var OPP_TABLE = {
+  low:    { under25: 0,    p25to75: 1000,  p75to150: 2500,  p150to300: 5000,  over300: 7500  },
+  medium: { under25: 1000, p25to75: 3000,  p75to150: 7500,  p150to300: 15000, over300: 25000 },
+  high:   { under25: 2500, p25to75: 7500,  p75to150: 15000, p150to300: 30000, over300: 50000 }
+};
+
+function getDefaultMultiplier(sensitivity, size) {
+  var row = OPP_TABLE[sensitivity];
+  if (!row) return 0;
+  return row[size] || 0;
+}
+
 function compute() {
   var d = calcDerived();
   var totalSF = d.bottomSF + d.wallSF;
@@ -111,20 +124,16 @@ function compute() {
   var pileText = d.piles > 0     ? fmtN(d.piles)     + ' piles' : '— (enter pile count above)';
 
   document.getElementById('p_volume_display').textContent = cyText;
-  document.getElementById('p_cj_display').textContent     = cjText;
   document.getElementById('m_sf_display').textContent     = sfText;
   document.getElementById('m_sf_display_pkg').textContent = sfText;
   document.getElementById('m_cj_display').textContent     = cjText;
   document.getElementById('m_pen_display').textContent    = penText;
   document.getElementById('m_pile_display').textContent   = pileText;
 
-  // Penetron costs
-  var pCostCY      = v('p_cost_per_cy');
-  var pSched       = v('p_schedule');
-  var penebarPerLF = v('p_penebar_per_lf');
-  var pAdmixCost   = d.cy * pCostCY;
-  var pPenebarCost = d.cjLF * penebarPerLF;
-  var pAdmixTotal  = pAdmixCost + pPenebarCost;
+  // Penetron costs — admixture only, zero detailing cost
+  var pCostCY     = v('p_cost_per_cy');
+  var pSched      = v('p_schedule');
+  var pAdmixTotal = d.cy * pCostCY;
 
   // Membrane base costs
   var isPkg = document.getElementById('mem_toggle').checked;
@@ -149,6 +158,66 @@ function compute() {
   var hasPenetron = pAdmixTotal > 0;
   var hasMembrane = memTotalCost > 0;
   var hasCPD      = cpd > 0;
+
+  // ── Step 4: Complexity Scoring ──
+  var cxCJ   = Math.floor(d.cjLF / 50);
+  var cxPen  = d.penCount;
+  var cxPile = d.piles * 2;
+  var cxTotal = cxCJ + cxPen + cxPile;
+
+  var riskCategory, riskDelayDays, riskClass;
+  if (cxTotal <= 20) {
+    riskCategory  = 'Low Risk';
+    riskDelayDays = 0.5;
+    riskClass     = 'low';
+  } else if (cxTotal <= 50) {
+    riskCategory  = 'Medium Risk';
+    riskDelayDays = 2;
+    riskClass     = 'medium';
+  } else {
+    riskCategory  = 'High Risk';
+    riskDelayDays = 5;
+    riskClass     = 'high';
+  }
+
+  document.getElementById('cx-cj').textContent    = cxCJ;
+  document.getElementById('cx-pen').textContent   = cxPen;
+  document.getElementById('cx-pile').textContent  = cxPile;
+  document.getElementById('cx-total').textContent = cxTotal;
+  document.getElementById('cx-risk-label').textContent = riskCategory;
+
+  var riskInfoEl = document.getElementById('risk-info-line');
+  var riskCost = riskDelayDays * cpd;
+  if (cxTotal > 0) {
+    riskInfoEl.style.display = 'block';
+    riskInfoEl.className = 'risk-info ' + riskClass;
+    var riskMsg = 'Expected membrane delay exposure: ' + riskDelayDays + ' day' + (riskDelayDays !== 1 ? 's' : '');
+    if (cpd > 0) riskMsg += '  ·  Risk Cost: ' + fmt$(riskCost);
+    riskInfoEl.textContent = riskMsg;
+  } else {
+    riskInfoEl.style.display = 'none';
+  }
+
+  // ── Schedule Opportunity Value ──
+  var sensitivity  = sel('schedule_sensitivity') || 'medium';
+  var projSize     = sel('project_size') || 'p75to150';
+  var defaultMult  = getDefaultMultiplier(sensitivity, projSize);
+  var overrideMult = v('opp_override');
+  var activeMult   = overrideMult > 0 ? overrideMult : defaultMult;
+  var schedDaysSaved = memSched - pSched;
+  var oppValue = (schedDaysSaved > 0 && activeMult > 0) ? schedDaysSaved * activeMult : 0;
+
+  document.getElementById('opp-default-mult').textContent = fmt$(defaultMult) + '/day';
+
+  var oppValueEl  = document.getElementById('opp-value');
+  var oppSubEl    = document.getElementById('opp-value-sub');
+  if (schedDaysSaved > 0 && activeMult > 0) {
+    oppValueEl.textContent = fmt$(oppValue);
+    oppSubEl.textContent   = schedDaysSaved.toFixed(1) + ' days × ' + fmt$(activeMult) + '/day';
+  } else {
+    oppValueEl.textContent = '—';
+    oppSubEl.textContent   = schedDaysSaved <= 0 ? 'No schedule advantage yet' : 'Set project profile above';
+  }
 
   if (!hasPenetron && !hasMembrane) {
     document.getElementById('results-body').innerHTML =
@@ -180,24 +249,6 @@ function compute() {
     return (n >= 0 ? '+' : '') + n.toFixed(1) + ' days';
   }
 
-  var effectiveDiff = hasCPD ? trueDiff : directDiff;
-  var costLabel = hasCPD ? 'true total cost (incl. critical path value)' : 'direct waterproofing cost';
-  var saveAmt = fmt$(Math.abs(effectiveDiff));
-
-  var verdict = '';
-  if (hasPenetron && hasMembrane) {
-    if (effectiveDiff > 0 && schedDiff >= 0)
-      verdict = '<div class="verdict penetron-wins">&#x2705; Penetron saves ' + saveAmt + ' in ' + costLabel + ' and reduces critical path by ' + schedDiff.toFixed(1) + ' day(s).</div>';
-    else if (effectiveDiff < 0 && schedDiff <= 0)
-      verdict = '<div class="verdict membrane-wins">&#x26A0;&#xFE0F; Membrane is ' + saveAmt + ' cheaper in ' + costLabel + ' and ' + Math.abs(schedDiff).toFixed(1) + ' day(s) faster. Verify inputs.</div>';
-    else if (effectiveDiff > 0 && schedDiff < 0)
-      verdict = '<div class="verdict penetron-wins">&#x2705; Penetron saves ' + saveAmt + ' in ' + costLabel + '. Membrane is faster by ' + Math.abs(schedDiff).toFixed(1) + ' day(s) — weigh the schedule premium against savings.</div>';
-    else if (effectiveDiff < 0 && schedDiff > 0)
-      verdict = '<div class="verdict membrane-wins">&#x26A0;&#xFE0F; Membrane is ' + saveAmt + ' cheaper in ' + costLabel + ' but adds ' + schedDiff.toFixed(1) + ' day(s) to the critical path.</div>';
-    else
-      verdict = '<div class="verdict tie">Systems are equivalent at current inputs.</div>';
-  }
-
   var sfNote = totalSF === 0
     ? '<br><small style="color:var(--text-muted);font-size:.65rem">Enter dimensions in Step 1</small>' : '';
 
@@ -217,9 +268,8 @@ function compute() {
     complexSub = '<div class="metric-sub">total membrane cost</div>';
   }
 
-  var pAdmixSub = pPenebarCost > 0
-    ? '<div class="metric-sub">Admix: ' + fmt$(pAdmixCost) + ' + Penebar: ' + fmt$(pPenebarCost) + '</div>'
-    : '<div class="metric-sub">admixture add-cost</div>';
+  var pAdmixSub = '<div class="metric-sub">admixture add-cost only</div>';
+  var detailingMemVal = memComplexity > 0 ? fmt$(memComplexity) : '—';
 
   var trueTotalRows = '';
   if (hasCPD) {
@@ -258,6 +308,48 @@ function compute() {
 
   var lastRowClass = hasCPD ? '' : 'last-row';
 
+  // ── TEI Calculation ──
+  var teiDirectSavings = directDiff > 0 ? directDiff : 0;
+  var teiSchedSavings  = (schedDiff > 0 && hasCPD) ? schedDiff * cpd : 0;
+  var teiOppValue      = oppValue > 0 ? oppValue : 0;
+  var teiRiskReduction = (hasCPD && cxTotal > 0) ? riskDelayDays * cpd : 0;
+  var teiTotal = teiDirectSavings + teiSchedSavings + teiOppValue + teiRiskReduction;
+
+  var teiCard = '';
+  if (hasPenetron && hasMembrane) {
+    var schedSavingsLabel = schedDiff > 0
+      ? schedDiff.toFixed(1) + ' days × ' + fmt$(cpd) + '/day'
+      : 'no schedule advantage';
+    teiCard = '<div class="tei-card">'
+      + '<div class="tei-title">Total Economic Impact — Penetron vs. Membrane</div>'
+      + '<div class="tei-row"><span class="tei-row-label">Direct Cost Savings</span><span class="tei-row-value">' + (teiDirectSavings > 0 ? fmt$(teiDirectSavings) : '—') + '</span></div>'
+      + '<div class="tei-row"><span class="tei-row-label">Schedule Cost Savings (' + schedSavingsLabel + ')</span><span class="tei-row-value">' + (teiSchedSavings > 0 ? fmt$(teiSchedSavings) : '—') + '</span></div>'
+      + '<div class="tei-row"><span class="tei-row-label">Schedule Opportunity Value</span><span class="tei-row-value">' + (teiOppValue > 0 ? fmt$(teiOppValue) : '—') + '</span></div>'
+      + '<div class="tei-row"><span class="tei-row-label">Risk Exposure Reduction (membrane detailing risk)</span><span class="tei-row-value">' + (teiRiskReduction > 0 ? fmt$(teiRiskReduction) : '—') + '</span></div>'
+      + '<div class="tei-total-row"><span class="tei-total-label">Total Economic Impact</span><span class="tei-total-value">' + (teiTotal > 0 ? fmt$(teiTotal) : '—') + '</span></div>'
+      + '</div>';
+  }
+
+  // ── Executive Summary ──
+  var execSummary = '';
+  if (hasPenetron && hasMembrane) {
+    var summaryParts = [];
+    if (currentType === 'pilecap' && d.piles > 0) summaryParts.push(d.piles + ' pile penetration flashings');
+    if (d.penCount > 0 && currentType !== 'pilecap') summaryParts.push(d.penCount + ' penetration flashings');
+    var elimText  = summaryParts.length > 0 ? 'eliminates ' + summaryParts.join(' and ') + ', ' : '';
+    var riskText2 = cxTotal > 0 ? 'reduces below-grade detailing complexity from ' + riskCategory + ' to Low Risk, ' : '';
+    var schedText = schedDiff > 0 ? 'shortens the critical path by ' + schedDiff.toFixed(1) + ' day' + (schedDiff !== 1 ? 's' : '') + ', ' : '';
+    var teiText   = teiTotal > 0
+      ? 'and generates an estimated Total Economic Impact of ' + fmt$(teiTotal) + ' compared to the membrane system'
+      : 'and eliminates membrane detailing risk entirely';
+    var narrative = 'Penetron ' + elimText + riskText2 + schedText + teiText + '.';
+
+    execSummary = '<div class="exec-summary">'
+      + '<div class="exec-summary-title">Executive Summary</div>'
+      + narrative
+      + '</div>';
+  }
+
   document.getElementById('results-body').innerHTML =
     '<div class="comparison-grid">'
     + '<div class="col-header">Metric</div>'
@@ -267,6 +359,10 @@ function compute() {
     + '<div class="metric-cell"><div class="metric-label">Direct Cost</div></div>'
     + '<div class="metric-cell"><div class="metric-value penetron">' + (hasPenetron ? fmt$(pAdmixTotal) : '—') + '</div>' + pAdmixSub + '</div>'
     + '<div class="metric-cell"><div class="metric-value membrane">' + (hasMembrane ? fmt$(memTotalCost) : '—') + '</div>' + complexSub + '</div>'
+
+    + '<div class="metric-cell"><div class="metric-label">Detailing Cost</div></div>'
+    + '<div class="metric-cell"><div class="metric-value" style="color:var(--green);font-size:.95rem">$0</div><div class="metric-sub">included in admixture</div></div>'
+    + '<div class="metric-cell"><div class="metric-value membrane">' + detailingMemVal + '</div><div class="metric-sub">CJ + penetrations + pile boots + risk</div></div>'
 
     + '<div class="metric-cell"><div class="metric-label">Direct Savings</div></div>'
     + '<div class="metric-cell" style="grid-column:2/4">'
@@ -311,7 +407,8 @@ function compute() {
     + schedNoteText
     + '</div>'
     + '</div>'
-    + verdict;
+    + teiCard
+    + execSummary;
 }
 
 compute();
