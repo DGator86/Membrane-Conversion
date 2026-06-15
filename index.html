@@ -146,6 +146,41 @@
             </div>
           </div>
 
+          <div class="section-label">Elevator Pits Within Slab <span class="sec-optional">— optional, subtracted from slab CY</span></div>
+          <div class="fields-row">
+            <div class="field">
+              <label>Pit Length <span class="hint">ft</span></label>
+              <div class="input-wrap">
+                <input type="number" id="slab_pit_l" min="0" step="0.5" placeholder="e.g. 10" oninput="compute()" />
+                <span class="unit">ft</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Pit Width <span class="hint">ft</span></label>
+              <div class="input-wrap">
+                <input type="number" id="slab_pit_w" min="0" step="0.5" placeholder="e.g. 8" oninput="compute()" />
+                <span class="unit">ft</span>
+              </div>
+            </div>
+          </div>
+          <div class="fields-row">
+            <div class="field">
+              <label>Quantity <span class="hint">number of pits</span></label>
+              <div class="input-wrap">
+                <input type="number" id="slab_pit_qty" min="0" step="1" placeholder="e.g. 2" oninput="compute()" />
+                <span class="unit">ea</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Pit Depth Below Slab <span class="hint">ft</span></label>
+              <div class="input-wrap">
+                <input type="number" id="slab_pit_depth" min="0" step="0.5" placeholder="e.g. 4" oninput="compute()" />
+                <span class="unit">ft</span>
+              </div>
+            </div>
+          </div>
+          <div id="slab-pit-note" class="info-note" style="display:none"></div>
+
           <div class="section-label">Detailing Quantities</div>
           <div class="fields-row">
             <div class="field">
