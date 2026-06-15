@@ -191,7 +191,7 @@ function compute() {
   if (cxTotal > 0) {
     riskInfoEl.style.display = 'block';
     riskInfoEl.className = 'risk-info ' + riskClass;
-    var riskMsg = 'Expected membrane delay exposure: ' + riskDelayDays + ' day' + (riskDelayDays !== 1 ? 's' : '');
+    var riskMsg = 'Estimated Rework Exposure: ' + riskDelayDays + ' day' + (riskDelayDays !== 1 ? 's' : '');
     if (cpd > 0) riskMsg += '  ·  Risk Cost: ' + fmt$(riskCost);
     riskInfoEl.textContent = riskMsg;
   } else {
@@ -252,7 +252,7 @@ function compute() {
   var sfNote = totalSF === 0
     ? '<br><small style="color:var(--text-muted);font-size:.65rem">Enter dimensions in Step 1</small>' : '';
 
-  // Complexity breakdown sub-line
+  // Complexity breakdown sub-line (for supporting analysis)
   var complexSub = '';
   if (memComplexity > 0) {
     var parts = [];
@@ -315,43 +315,163 @@ function compute() {
   var teiRiskReduction = (hasCPD && cxTotal > 0) ? riskDelayDays * cpd : 0;
   var teiTotal = teiDirectSavings + teiSchedSavings + teiOppValue + teiRiskReduction;
 
+  // ────────────────────────────────────────
+  // LAYER 1: Executive Recommendation
+  // ────────────────────────────────────────
+  var detailTotal = cxCJ + d.penCount + d.piles;
+
+  var elimParts = [];
+  if (d.piles > 0) elimParts.push(fmtN(d.piles) + ' pile penetration' + (d.piles !== 1 ? 's' : ''));
+  if (d.penCount > 0) elimParts.push(fmtN(d.penCount) + ' penetration flashing' + (d.penCount !== 1 ? 's' : ''));
+  if (cxCJ > 0) elimParts.push(fmtN(cxCJ) + ' construction-joint detail' + (cxCJ !== 1 ? 's' : ''));
+
+  var recPhrases = [];
+  if (elimParts.length > 0) {
+    var elimJoined = elimParts.length === 1 ? elimParts[0]
+      : elimParts.slice(0, -1).join(', ') + ' and ' + elimParts[elimParts.length - 1];
+    recPhrases.push('eliminates ' + elimJoined);
+  }
+  if (riskClass !== 'low') {
+    recPhrases.push('reduces waterproofing risk from <strong>' + riskCategory + '</strong> to <strong>Low Risk</strong>');
+  }
+  if (schedDiff > 0) {
+    recPhrases.push('shortens the critical path by <strong>' + schedDiff.toFixed(1) + ' day' + (schedDiff !== 1 ? 's' : '') + '</strong>');
+  }
+
+  var recNarrative;
+  if (recPhrases.length > 0 && teiTotal > 0) {
+    recNarrative = 'Penetron ' + recPhrases.join(', ') + ', and generates an estimated economic benefit of <strong>' + fmt$(teiTotal) + '</strong>.';
+  } else if (recPhrases.length > 0) {
+    recNarrative = 'Penetron ' + recPhrases.join(', ') + '.';
+  } else if (teiTotal > 0) {
+    recNarrative = 'Penetron generates an estimated economic benefit of <strong>' + fmt$(teiTotal) + '</strong> compared to the membrane system.';
+  } else {
+    recNarrative = 'Enter cost and schedule data in Steps 2–4 to generate a complete economic recommendation.';
+  }
+
+  var execRecCard = '<div class="exec-rec-card">'
+    + '<div class="exec-rec-eyebrow">Executive Recommendation</div>'
+    + '<div class="exec-rec-narrative">' + recNarrative + '</div>'
+    + '</div>';
+
+  // ────────────────────────────────────────
+  // LAYER 2: KPI Cards
+  // ────────────────────────────────────────
+
+  // Card 1 — Economic Benefit
+  var kpi1 = '<div class="kpi-card kpi-highlight">'
+    + '<div class="kpi-label">Estimated Economic Benefit</div>'
+    + '<div class="kpi-value">' + (teiTotal > 0 ? fmt$(teiTotal) : '—') + '</div>'
+    + '<div class="kpi-sub">vs. membrane system</div>'
+    + '</div>';
+
+  // Card 2 — Critical Path
+  var kpiDaysDisplay = schedDiff > 0
+    ? '<span style="color:var(--green)">' + schedDiff.toFixed(0) + ' Days Faster</span>'
+    : (schedDiff < 0
+      ? '<span style="color:#c0392b">' + Math.abs(schedDiff).toFixed(0) + ' Days Slower</span>'
+      : '<span>No Change</span>');
+  var kpiSchedSub = hasCPD && schedDiff !== 0
+    ? 'Estimated time value:<br><strong>' + fmt$(Math.abs(schedDiff * cpd)) + '</strong>'
+    : 'Enter cost/day above to quantify';
+  var kpi2 = '<div class="kpi-card">'
+    + '<div class="kpi-label">Critical Path Improvement</div>'
+    + '<div class="kpi-value kpi-days">' + kpiDaysDisplay + '</div>'
+    + '<div class="kpi-sub">' + kpiSchedSub + '</div>'
+    + '</div>';
+
+  // Card 3 — Details Eliminated
+  var detailLines = '';
+  if (d.piles > 0) detailLines += '<div class="kpi-detail-line">' + d.piles + ' pile penetration' + (d.piles !== 1 ? 's' : '') + '</div>';
+  if (d.penCount > 0) detailLines += '<div class="kpi-detail-line">' + d.penCount + ' penetration' + (d.penCount !== 1 ? 's' : '') + '</div>';
+  if (cxCJ > 0) detailLines += '<div class="kpi-detail-line">' + cxCJ + ' CJ detail' + (cxCJ !== 1 ? 's' : '') + '</div>';
+  var kpi3 = '<div class="kpi-card">'
+    + '<div class="kpi-label">High-Risk Details Eliminated</div>'
+    + '<div class="kpi-value">' + detailTotal + '</div>'
+    + (detailLines || '<div class="kpi-sub">Enter quantities in Step 1</div>')
+    + '</div>';
+
+  // Card 4 — Risk
+  var riskFromLabel = riskClass !== 'low' ? riskCategory : 'Low Risk';
+  var riskDisplay = '<span class="risk-chip risk-' + riskClass + '">' + riskFromLabel + '</span>'
+    + '<span class="risk-arrow"> → </span>'
+    + '<span class="risk-chip risk-low">Low Risk</span>';
+  var kpi4 = '<div class="kpi-card">'
+    + '<div class="kpi-label">Waterproofing Risk</div>'
+    + '<div class="kpi-risk-display">' + riskDisplay + '</div>'
+    + '<div class="kpi-sub">Estimated rework exposure ' + (riskClass !== 'low' ? 'reduced' : 'manageable') + '</div>'
+    + '</div>';
+
+  var kpiRow = '<div class="kpi-row">' + kpi1 + kpi2 + kpi3 + kpi4 + '</div>';
+
+  // ────────────────────────────────────────
+  // LAYER 3a: High-Risk Details + Rework Exposure
+  // ────────────────────────────────────────
+  var detailsCard = '<div class="detail-info-card">'
+    + '<div class="detail-info-title">High-Risk Waterproofing Details</div>'
+    + '<div class="detail-info-row"><span>Construction joints</span><span>' + (d.cjLF > 0 ? fmtN(d.cjLF) + ' LF' : '—') + '</span></div>'
+    + '<div class="detail-info-row"><span>Penetrations</span><span>' + (d.penCount > 0 ? d.penCount + ' ea' : '—') + '</span></div>'
+    + (currentType === 'pilecap' ? '<div class="detail-info-row"><span>Pile penetrations</span><span>' + (d.piles > 0 ? d.piles + ' ea' : '—') + '</span></div>' : '')
+    + '<div class="detail-info-row total"><span>Total high-risk details</span><span>' + detailTotal + '</span></div>'
+    + '<div class="detail-info-exposure ' + riskClass + '">'
+    + '<div class="detail-info-exposure-label">Estimated Rework Exposure</div>'
+    + '<div class="detail-info-exposure-level">' + (riskClass === 'high' ? 'High' : riskClass === 'medium' ? 'Medium' : 'Low') + '</div>'
+    + (hasCPD && cxTotal > 0 ? '<div class="detail-info-exposure-cost">Estimated cost impact: <strong>' + fmt$(riskCost) + '</strong></div>' : '')
+    + '</div>'
+    + '</div>';
+
+  // ────────────────────────────────────────
+  // LAYER 3b: Trade Coordination
+  // ────────────────────────────────────────
+  var memInterfaces = 3 + (d.cjLF > 0 ? 1 : 0) + (d.penCount > 0 ? 1 : 0) + (d.piles > 0 ? 1 : 0);
+  var penInterfaces = 1 + (d.cjLF > 0 ? 1 : 0);
+  var tradeReduction = Math.round((1 - penInterfaces / memInterfaces) * 100);
+
+  var memTradeList = '<li>Waterproofing subcontractor</li><li>Membrane inspection</li><li>Repair / remediation contingency</li>';
+  if (d.cjLF > 0) memTradeList += '<li>Construction-joint waterproofing</li>';
+  if (d.penCount > 0) memTradeList += '<li>Penetration detailing</li>';
+  if (d.piles > 0) memTradeList += '<li>Pile boot / flashing</li>';
+
+  var penTradeList = '<li>Ready-mix supplier</li>';
+  if (d.cjLF > 0) penTradeList += '<li>Waterstop installation</li>';
+
+  var tradeCard = '<div class="trade-card">'
+    + '<div class="trade-card-title">Trade Coordination Reduction</div>'
+    + '<div class="trade-systems">'
+    + '<div class="trade-col"><div class="trade-col-header membrane-label">Membrane System</div><ul class="trade-list membrane-list">' + memTradeList + '</ul></div>'
+    + '<div class="trade-col"><div class="trade-col-header penetron-label">Penetron</div><ul class="trade-list penetron-list">' + penTradeList + '</ul></div>'
+    + '</div>'
+    + '<div class="trade-metrics">'
+    + '<div class="trade-metric"><span>Membrane trade interfaces</span><strong>' + memInterfaces + '</strong></div>'
+    + '<div class="trade-metric"><span>Penetron trade interfaces</span><strong>' + penInterfaces + '</strong></div>'
+    + '<div class="trade-metric highlight"><span>Coordination reduction</span><strong>' + tradeReduction + '%</strong></div>'
+    + '</div>'
+    + '</div>';
+
+  var detailsTradeRow = '<div class="details-trade-row">' + detailsCard + tradeCard + '</div>';
+
+  // ────────────────────────────────────────
+  // TEI Breakdown Card
+  // ────────────────────────────────────────
   var teiCard = '';
   if (hasPenetron && hasMembrane) {
     var schedSavingsLabel = schedDiff > 0
       ? schedDiff.toFixed(1) + ' days × ' + fmt$(cpd) + '/day'
       : 'no schedule advantage';
     teiCard = '<div class="tei-card">'
-      + '<div class="tei-title">Total Economic Impact — Penetron vs. Membrane</div>'
+      + '<div class="tei-title">Economic Benefit Breakdown</div>'
       + '<div class="tei-row"><span class="tei-row-label">Direct Cost Savings</span><span class="tei-row-value">' + (teiDirectSavings > 0 ? fmt$(teiDirectSavings) : '—') + '</span></div>'
       + '<div class="tei-row"><span class="tei-row-label">Schedule Cost Savings (' + schedSavingsLabel + ')</span><span class="tei-row-value">' + (teiSchedSavings > 0 ? fmt$(teiSchedSavings) : '—') + '</span></div>'
       + '<div class="tei-row"><span class="tei-row-label">Schedule Opportunity Value</span><span class="tei-row-value">' + (teiOppValue > 0 ? fmt$(teiOppValue) : '—') + '</span></div>'
-      + '<div class="tei-row"><span class="tei-row-label">Risk Exposure Reduction (membrane detailing risk)</span><span class="tei-row-value">' + (teiRiskReduction > 0 ? fmt$(teiRiskReduction) : '—') + '</span></div>'
-      + '<div class="tei-total-row"><span class="tei-total-label">Total Economic Impact</span><span class="tei-total-value">' + (teiTotal > 0 ? fmt$(teiTotal) : '—') + '</span></div>'
+      + '<div class="tei-row"><span class="tei-row-label">Estimated Rework Exposure Reduction</span><span class="tei-row-value">' + (teiRiskReduction > 0 ? fmt$(teiRiskReduction) : '—') + '</span></div>'
+      + '<div class="tei-total-row"><span class="tei-total-label">Estimated Economic Benefit</span><span class="tei-total-value">' + (teiTotal > 0 ? fmt$(teiTotal) : '—') + '</span></div>'
       + '</div>';
   }
 
-  // ── Executive Summary ──
-  var execSummary = '';
-  if (hasPenetron && hasMembrane) {
-    var summaryParts = [];
-    if (currentType === 'pilecap' && d.piles > 0) summaryParts.push(d.piles + ' pile penetration flashings');
-    if (d.penCount > 0 && currentType !== 'pilecap') summaryParts.push(d.penCount + ' penetration flashings');
-    var elimText  = summaryParts.length > 0 ? 'eliminates ' + summaryParts.join(' and ') + ', ' : '';
-    var riskText2 = cxTotal > 0 ? 'reduces below-grade detailing complexity from ' + riskCategory + ' to Low Risk, ' : '';
-    var schedText = schedDiff > 0 ? 'shortens the critical path by ' + schedDiff.toFixed(1) + ' day' + (schedDiff !== 1 ? 's' : '') + ', ' : '';
-    var teiText   = teiTotal > 0
-      ? 'and generates an estimated Total Economic Impact of ' + fmt$(teiTotal) + ' compared to the membrane system'
-      : 'and eliminates membrane detailing risk entirely';
-    var narrative = 'Penetron ' + elimText + riskText2 + schedText + teiText + '.';
-
-    execSummary = '<div class="exec-summary">'
-      + '<div class="exec-summary-title">Executive Summary</div>'
-      + narrative
-      + '</div>';
-  }
-
-  document.getElementById('results-body').innerHTML =
-    '<div class="comparison-grid">'
+  // ────────────────────────────────────────
+  // LAYER 3 (Supporting): Financial Analysis
+  // ────────────────────────────────────────
+  var compGrid = '<div class="comparison-grid">'
     + '<div class="col-header">Metric</div>'
     + '<div class="col-header" style="color:var(--p-orange)">Penetron Admixture</div>'
     + '<div class="col-header" style="color:var(--p-navy)">Membrane System</div>'
@@ -362,7 +482,7 @@ function compute() {
 
     + '<div class="metric-cell"><div class="metric-label">Detailing Cost</div></div>'
     + '<div class="metric-cell"><div class="metric-value" style="color:var(--green);font-size:.95rem">$0</div><div class="metric-sub">included in admixture</div></div>'
-    + '<div class="metric-cell"><div class="metric-value membrane">' + detailingMemVal + '</div><div class="metric-sub">CJ + penetrations + pile boots + risk</div></div>'
+    + '<div class="metric-cell"><div class="metric-value membrane">' + detailingMemVal + '</div><div class="metric-sub">CJ + penetrations + pile boots + allowance</div></div>'
 
     + '<div class="metric-cell"><div class="metric-label">Direct Savings</div></div>'
     + '<div class="metric-cell" style="grid-column:2/4">'
@@ -385,9 +505,9 @@ function compute() {
     + '<div class="metric-cell ' + lastRowClass + '" style="grid-column:2/4"><div class="metric-value diff ' + dc(perSFdiff) + '">' + ((hasPenetron && hasMembrane && totalSF > 0) ? dl(perSFdiff) : '—') + '</div></div>'
 
     + trueTotalRows
-    + '</div>'
+    + '</div>';
 
-    + '<div class="schedule-comparison">'
+  var schedComp = '<div class="schedule-comparison">'
     + '<div class="sched-card penetron">'
     + '<div class="sched-title">Penetron Schedule Impact</div>'
     + '<div class="sched-days">' + pSched.toFixed(1) + '</div>'
@@ -401,14 +521,21 @@ function compute() {
     + (hasCPD ? '<div class="sched-note" style="color:var(--p-navy)">' + fmt$(mSchedCost) + ' schedule cost</div>' : '')
     + '</div>'
     + '<div class="sched-card diff-card">'
-    + '<div class="sched-title">Schedule Difference</div>'
+    + '<div class="sched-title">Schedule Advantage</div>'
     + '<div class="sched-days" style="font-size:1.4rem;color:' + schedNoteColor + '">' + ((hasPenetron || hasMembrane) ? dld(schedDiff) : '—') + '</div>'
     + '<div class="sched-unit">' + (schedDiff > 0 ? 'Penetron faster' : (schedDiff < 0 ? 'Membrane faster' : 'Equal')) + '</div>'
     + schedNoteText
     + '</div>'
-    + '</div>'
+    + '</div>';
+
+  document.getElementById('results-body').innerHTML =
+    execRecCard
+    + kpiRow
+    + detailsTradeRow
     + teiCard
-    + execSummary;
+    + '<div class="section-divider">Supporting Financial Analysis</div>'
+    + compGrid
+    + schedComp;
 }
 
 compute();
