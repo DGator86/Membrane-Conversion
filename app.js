@@ -773,7 +773,7 @@ function switchTab(tab) {
 /* ══════════════════════════════════════
    WARRANTY TAB
 ══════════════════════════════════════ */
-var selectedWarrantyTier = 5;
+var selectedWarrantyTier = null;
 
 var WARRANTY_TIERS = {
   5:  { rate: 0,  min: 0     },
@@ -829,6 +829,54 @@ function calcWarranty() {
   updateWarrantySummary(cy);
 }
 
+var W_REQS_5 = [
+  ['Warranty request',         'req', '✓', null, null],
+  ['Project drawings',         'req', '✓', null, null],
+  ['Mix design',               'req', '✓', null, null],
+  ['Batch tickets (every pour)','req','✓', null, null],
+  ['Final warranty request',   'req', '✓', null, null],
+  ['Placement schedule',       'opt', 'As needed', null, null],
+  ['Pre-con / pre-pour meeting','opt','As needed', null, null],
+  ['Site photos',              'opt', 'As needed', null, null],
+  ['Inspection documentation', 'opt', 'As needed', null, null],
+  ['Leak test documentation',  'opt', 'If applicable', null, null],
+  ['Repair documentation',     'opt', 'If applicable', null, null],
+  ['Warranty invoice payment', 'na',  '—', null, null]
+];
+
+var W_REQS_EXT = [
+  ['Warranty request',         'req', '✓'],
+  ['Project drawings',         'req', '✓'],
+  ['Mix design',               'req', '✓'],
+  ['Batch tickets (every pour)','req','✓'],
+  ['Final warranty request',   'req', '✓'],
+  ['Placement schedule',       'req', '✓ Required'],
+  ['Pre-con / pre-pour meeting','req','✓ Required'],
+  ['Site photos',              'req', '✓ Required'],
+  ['Inspection documentation', 'req', '✓ Required'],
+  ['Leak test documentation',  'req', 'Required if applicable'],
+  ['Repair documentation',     'opt', 'If applicable'],
+  ['Warranty invoice payment', 'req', '✓ Required']
+];
+
+function renderDocMatrix(yr) {
+  var matrix = document.getElementById('w-doc-matrix');
+  if (!matrix) return;
+
+  var reqs = yr === 5 ? W_REQS_5 : W_REQS_EXT;
+  var tierLabel = yr === 5 ? '5-Year Standard' : yr + '-Year Extended';
+
+  var rows = reqs.map(function(r) {
+    return '<tr><td>' + r[0] + '</td><td class="' + r[1] + '">' + r[2] + '</td></tr>';
+  }).join('');
+
+  matrix.innerHTML = '<div class="w-doc-title">Requirements — ' + tierLabel + '</div>'
+    + '<table class="w-matrix-table">'
+    + '<thead><tr><th>Requirement</th><th style="width:130px">' + tierLabel + '</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table>';
+}
+
 function selectWarrantyTier(yr) {
   selectedWarrantyTier = yr;
   document.querySelectorAll('.w-tier').forEach(function(el) {
@@ -836,11 +884,13 @@ function selectWarrantyTier(yr) {
   });
   var el = document.getElementById('wtier-' + yr);
   if (el) el.classList.add('selected');
+  renderDocMatrix(yr);
   updateWarrantySummary(parseFloat(document.getElementById('w_cy').value) || 0);
 }
 
 function updateWarrantySummary(cy) {
   var yr = selectedWarrantyTier;
+  if (!yr) return;
   var tier = WARRANTY_TIERS[yr];
   var summaryEl = document.getElementById('w-selected-summary');
   var costEl = document.getElementById('w-summary-cost');
@@ -871,4 +921,4 @@ function updateWarrantySummary(cy) {
   noteEl.textContent = note;
 }
 
-selectWarrantyTier(5);
+// No tier pre-selected — user sees "Select a warranty duration" prompt

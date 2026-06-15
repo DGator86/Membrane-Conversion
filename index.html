@@ -727,7 +727,8 @@
 
   <div class="warranty-layout">
 
-    <!-- ── Warranty Cost Calculator ── -->
+    <!-- ── LEFT: Warranty Cost Calculator ── -->
+    <div class="warranty-col">
     <section class="w-card">
       <div class="w-card-header">
         <span class="w-card-title">Warranty Cost Estimator</span>
@@ -798,37 +799,20 @@
           </div>
         </div>
 
-        <div class="w-doc-matrix">
-          <div class="w-doc-title">Documentation Requirements by Tier</div>
-          <table class="w-matrix-table">
-            <thead>
-              <tr>
-                <th>Requirement</th>
-                <th class="w-col-5">5-Year</th>
-                <th class="w-col-ext">10 – 20-Year</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Warranty request</td><td class="req">✓</td><td class="req">✓</td></tr>
-              <tr><td>Project drawings</td><td class="req">✓</td><td class="req">✓</td></tr>
-              <tr><td>Mix design</td><td class="req">✓</td><td class="req">✓</td></tr>
-              <tr><td>Batch tickets (every pour)</td><td class="req">✓</td><td class="req">✓</td></tr>
-              <tr><td>Final warranty request</td><td class="req">✓</td><td class="req">✓</td></tr>
-              <tr><td>Placement schedule</td><td class="opt">As needed</td><td class="req">✓ Required</td></tr>
-              <tr><td>Pre-con / pre-pour meeting</td><td class="opt">As needed</td><td class="req">✓ Required</td></tr>
-              <tr><td>Site photos</td><td class="opt">As needed</td><td class="req">✓ Required</td></tr>
-              <tr><td>Inspection documentation</td><td class="opt">As needed</td><td class="req">✓ Required</td></tr>
-              <tr><td>Leak test documentation</td><td class="opt">If applicable</td><td class="req">Required if applicable</td></tr>
-              <tr><td>Repair documentation</td><td class="opt">If applicable</td><td class="opt">If applicable</td></tr>
-              <tr><td>Warranty invoice payment</td><td class="na">—</td><td class="req">✓ Required</td></tr>
-            </tbody>
-          </table>
+        <div class="w-doc-matrix" id="w-doc-matrix">
+          <div class="w-doc-prompt">
+            <span class="w-doc-prompt-icon">&#9650;</span>
+            Select a warranty duration above to see requirements
+          </div>
         </div>
 
       </div>
     </section>
 
-    <!-- ── Process Steps ── -->
+    </div><!-- /.warranty-col (left) -->
+
+    <!-- ── RIGHT: Process Steps ── -->
+    <div class="warranty-col">
     <section class="w-card">
       <div class="w-card-header">
         <span class="w-card-title">8-Step Warranty Process</span>
@@ -971,6 +955,8 @@
 
       </div>
     </section>
+
+    </div><!-- /.warranty-col (right) -->
 
   </div>
 
