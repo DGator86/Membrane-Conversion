@@ -61,19 +61,45 @@
       <!-- HYDROSTATIC SLAB -->
       <div id="dim-slab" class="dim-section visible">
         <div class="section-label">Mat Slab Dimensions</div>
-        <div class="fields-row">
-          <div class="field">
-            <label>Length <span class="hint">ft</span></label>
-            <div class="input-wrap">
-              <input type="number" id="slab_l" min="0" step="1" placeholder="e.g. 180" oninput="compute()" />
-              <span class="unit">ft</span>
+        <div class="dim-mode-toggle">
+          <button class="dim-mode-btn active" data-mode="lw" onclick="setSlabDimMode('lw')">L × W</button>
+          <button class="dim-mode-btn" data-mode="perim" onclick="setSlabDimMode('perim')">Area &amp; Perimeter</button>
+        </div>
+
+        <div id="dim-lw-fields">
+          <div class="fields-row">
+            <div class="field">
+              <label>Length <span class="hint">ft</span></label>
+              <div class="input-wrap">
+                <input type="number" id="slab_l" min="0" step="1" placeholder="e.g. 180" oninput="compute()" />
+                <span class="unit">ft</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Width <span class="hint">ft</span></label>
+              <div class="input-wrap">
+                <input type="number" id="slab_w" min="0" step="1" placeholder="e.g. 120" oninput="compute()" />
+                <span class="unit">ft</span>
+              </div>
             </div>
           </div>
-          <div class="field">
-            <label>Width <span class="hint">ft</span></label>
-            <div class="input-wrap">
-              <input type="number" id="slab_w" min="0" step="1" placeholder="e.g. 120" oninput="compute()" />
-              <span class="unit">ft</span>
+        </div>
+
+        <div id="dim-perim-fields" style="display:none">
+          <div class="fields-row">
+            <div class="field">
+              <label>Mat Slab Area <span class="hint">SF</span></label>
+              <div class="input-wrap">
+                <input type="number" id="slab_area" min="0" step="1" placeholder="e.g. 21600" oninput="compute()" />
+                <span class="unit">SF</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Perimeter <span class="hint">LF of foundation wall</span></label>
+              <div class="input-wrap">
+                <input type="number" id="slab_perimeter" min="0" step="1" placeholder="e.g. 600" oninput="compute()" />
+                <span class="unit">LF</span>
+              </div>
             </div>
           </div>
         </div>

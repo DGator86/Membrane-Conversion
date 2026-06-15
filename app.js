@@ -1,4 +1,17 @@
 var currentType = 'slab';
+var slabDimMode = 'lw';
+
+function setSlabDimMode(mode) {
+  slabDimMode = mode;
+  document.querySelectorAll('.dim-mode-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  document.getElementById('dim-lw-fields').style.display = mode === 'lw' ? '' : 'none';
+  document.getElementById('dim-perim-fields').style.display = mode === 'perim' ? '' : 'none';
+  var perimNote = document.getElementById('slab-perimeter-note');
+  if (perimNote) perimNote.style.display = mode === 'perim' ? 'none' : '';
+  compute();
+}
 
 function selectType(type) {
   currentType = type;
@@ -40,23 +53,33 @@ function calcDerived() {
   var cy = 0, bottomSF = 0, wallSF = 0, cjLF = 0, piles = 0, penCount = 0;
 
   if (currentType === 'slab') {
-    var l = v('slab_l'), w = v('slab_w'), t = v('slab_t') / 12;
+    var t = v('slab_t') / 12;
     var wh = v('slab_wall_h');
     var wt = (v('slab_wall_t') || v('slab_t')) / 12;
-    var perimeter = 2 * (l + w);
-    cy = (l * w * t) / 27;
+    var perimeter, area;
+    if (slabDimMode === 'perim') {
+      area = v('slab_area');
+      perimeter = v('slab_perimeter');
+    } else {
+      var l = v('slab_l'), w = v('slab_w');
+      area = l * w;
+      perimeter = 2 * (l + w);
+      var note = document.getElementById('slab-perimeter-note');
+      if (note) {
+        if (l > 0 && w > 0) {
+          note.style.display = 'block';
+          document.getElementById('slab-perimeter-val').textContent = fmtN(perimeter);
+        } else {
+          note.style.display = 'none';
+        }
+      }
+    }
+    cy = (area * t) / 27;
     if (wh > 0 && wt > 0) cy += (perimeter * wh * wt) / 27;
-    bottomSF = l * w;
+    bottomSF = area;
     wallSF = wh > 0 ? perimeter * wh : 0;
     cjLF = v('slab_cj_lf');
     penCount = v('slab_pen_count');
-    var note = document.getElementById('slab-perimeter-note');
-    if (l > 0 && w > 0) {
-      note.style.display = 'block';
-      document.getElementById('slab-perimeter-val').textContent = fmtN(perimeter);
-    } else {
-      note.style.display = 'none';
-    }
 
   } else if (currentType === 'pilecap') {
     var cl = v('cap_l'), cw = v('cap_w'), cd = v('cap_d'), qty = v('cap_qty') || 1;

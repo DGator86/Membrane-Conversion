@@ -57,6 +57,13 @@ header { background: var(--p-navy-dk); border-bottom: 4px solid var(--p-orange);
 .type-btn.active .type-name { color: #a05c0a; }
 .type-btn .type-desc { font-size: .7rem; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
 
+/* ── Dim mode toggle ── */
+.dim-mode-toggle { display: inline-flex; border: 1.5px solid var(--gray-border); border-radius: 7px; overflow: hidden; margin-bottom: 14px; }
+.dim-mode-btn { padding: 5px 16px; font-size: .78rem; font-weight: 600; border: none; background: #fafbfd; cursor: pointer; color: var(--text-muted); transition: all .15s; }
+.dim-mode-btn + .dim-mode-btn { border-left: 1.5px solid var(--gray-border); }
+.dim-mode-btn.active { background: var(--p-navy); color: #fff; }
+.dim-mode-btn:hover:not(.active) { background: #edf1fa; color: var(--p-navy); }
+
 /* ── Sections & fields ── */
 .dim-section { display: none; }
 .dim-section.visible { display: block; }
