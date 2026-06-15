@@ -855,7 +855,7 @@ var W_REQS_EXT = [
   ['Site photos',              'req', '✓ Required'],
   ['Inspection documentation', 'req', '✓ Required'],
   ['Leak test documentation',  'req', 'Required if applicable'],
-  ['Repair documentation',     'opt', 'If applicable'],
+  ['Repair documentation',     'req', '✓ Required'],
   ['Warranty invoice payment', 'req', '✓ Required']
 ];
 
