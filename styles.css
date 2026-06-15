@@ -17,7 +17,7 @@
   --radius:      10px;
   --shadow:      0 2px 12px rgba(0,0,0,.09);
 }
-body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: var(--gray-bg); color: var(--text); min-height: 100vh; }
+body { font-family: 'Barlow', 'DIN 2014', 'DIN Pro', Arial, sans-serif; background: var(--gray-bg); color: var(--text); min-height: 100vh; }
 
 /* ── Header ── */
 header { background: var(--p-navy-dk); border-bottom: 4px solid var(--p-orange); color: #fff; padding: 0; }
@@ -25,11 +25,11 @@ header { background: var(--p-navy-dk); border-bottom: 4px solid var(--p-orange);
 .brand-logo { display: flex; align-items: center; gap: 13px; flex-shrink: 0; }
 .brand-block { width: 42px; height: 42px; background: var(--p-orange); border-radius: 5px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .brand-block svg { width: 28px; height: 28px; }
-.brand-wordmark .name { font-size: 1.6rem; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; color: #fff; line-height: 1; }
-.brand-wordmark .tagline { font-size: .56rem; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,.55); margin-top: 4px; }
+.brand-wordmark .name { font-family: 'Barlow Condensed', 'DIN 2014', 'DIN Pro Condensed', Arial Narrow, sans-serif; font-size: 1.75rem; font-weight: 800; letter-spacing: 5px; text-transform: uppercase; color: #fff; line-height: 1; }
+.brand-wordmark .tagline { font-family: 'Barlow', 'DIN 2014', sans-serif; font-size: .55rem; font-weight: 500; letter-spacing: 2.8px; text-transform: uppercase; color: rgba(255,255,255,.5); margin-top: 5px; }
 .header-divider { width: 1px; height: 44px; background: rgba(255,255,255,.2); flex-shrink: 0; }
-.header-title h1 { font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.25; }
-.header-title p { margin-top: 3px; font-size: .76rem; color: rgba(255,255,255,.65); }
+.header-title h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; color: #fff; line-height: 1.25; letter-spacing: .3px; }
+.header-title p { margin-top: 3px; font-size: .76rem; color: rgba(255,255,255,.6); font-weight: 400; }
 
 /* ── Two-panel shell ── */
 .app-shell {
