@@ -576,6 +576,8 @@ footer strong { color: var(--p-orange); }
 .w-matrix-table td.na  { text-align: center; color: var(--gray-border); }
 .w-col-5  { width: 100px; }
 .w-col-ext { width: 140px; }
+.w-matrix-table th.col-active { background: var(--p-orange); }
+.w-matrix-table td.col-active { background: #fff8f0; font-weight: 700; }
 
 /* ── Process Steps ── */
 .w-critical-note { background: var(--p-orange); color: #fff; padding: 12px 20px; font-size: .82rem; line-height: 1.5; }

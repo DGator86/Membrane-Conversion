@@ -1001,6 +1001,13 @@ function renderProcessSteps(yr) {
   body.innerHTML = critNote + stepsHtml + delayBox + contactBox;
 }
 
+function highlightMatrixCol(yr) {
+  var activeCol = yr === 5 ? '5' : 'ext';
+  document.querySelectorAll('#w-matrix-table [data-col]').forEach(function(el) {
+    el.classList.toggle('col-active', el.dataset.col === activeCol);
+  });
+}
+
 function selectWarrantyTier(yr) {
   selectedWarrantyTier = yr;
   document.querySelectorAll('.w-tier').forEach(function(el) {
@@ -1008,6 +1015,7 @@ function selectWarrantyTier(yr) {
   });
   var el = document.getElementById('wtier-' + yr);
   if (el) el.classList.add('selected');
+  highlightMatrixCol(yr);
   renderProcessSteps(yr);
   updateWarrantySummary(parseFloat(document.getElementById('w_cy').value) || 0);
 }
