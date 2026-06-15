@@ -132,9 +132,9 @@ function compute() {
   document.getElementById('m_pen_display').textContent    = penText;
   document.getElementById('m_pile_display').textContent   = pileText;
 
-  // Penetron costs — admixture only, zero detailing cost
+  // Penetron: admixture only, zero critical path days (added in ready-mix truck)
   var pCostCY     = v('p_cost_per_cy');
-  var pSched      = v('p_schedule');
+  var pSched      = 0;
   var pAdmixTotal = d.cy * pCostCY;
 
   // Membrane base costs
