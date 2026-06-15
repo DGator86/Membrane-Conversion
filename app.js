@@ -859,23 +859,6 @@ var W_REQS_EXT = [
   ['Warranty invoice payment', 'req', '✓ Required']
 ];
 
-function renderDocMatrix(yr) {
-  var matrix = document.getElementById('w-doc-matrix');
-  if (!matrix) return;
-
-  var reqs = yr === 5 ? W_REQS_5 : W_REQS_EXT;
-  var tierLabel = yr === 5 ? '5-Year Standard' : yr + '-Year Extended';
-
-  var rows = reqs.map(function(r) {
-    return '<tr><td>' + r[0] + '</td><td class="' + r[1] + '">' + r[2] + '</td></tr>';
-  }).join('');
-
-  matrix.innerHTML = '<div class="w-doc-title">Requirements — ' + tierLabel + '</div>'
-    + '<table class="w-matrix-table">'
-    + '<thead><tr><th>Requirement</th><th style="width:130px">' + tierLabel + '</th></tr></thead>'
-    + '<tbody>' + rows + '</tbody>'
-    + '</table>';
-}
 
 var STEPS_5 = [
   { num: 1, title: 'Initiate', items: [
@@ -1025,7 +1008,6 @@ function selectWarrantyTier(yr) {
   });
   var el = document.getElementById('wtier-' + yr);
   if (el) el.classList.add('selected');
-  renderDocMatrix(yr);
   renderProcessSteps(yr);
   updateWarrantySummary(parseFloat(document.getElementById('w_cy').value) || 0);
 }
