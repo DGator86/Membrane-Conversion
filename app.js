@@ -718,3 +718,117 @@ function compute() {
 }
 
 compute();
+
+/* ══════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════ */
+function switchTab(tab) {
+  document.getElementById('panel-cost').style.display = tab === 'cost' ? '' : 'none';
+  document.getElementById('panel-warranty').style.display = tab === 'warranty' ? '' : 'none';
+  document.getElementById('tab-cost').classList.toggle('active', tab === 'cost');
+  document.getElementById('tab-warranty').classList.toggle('active', tab === 'warranty');
+  if (tab === 'warranty') syncWarrantyCY();
+}
+
+/* ══════════════════════════════════════
+   WARRANTY TAB
+══════════════════════════════════════ */
+var selectedWarrantyTier = 5;
+
+var WARRANTY_TIERS = {
+  5:  { rate: 0,  min: 0     },
+  10: { rate: 10, min: 5000  },
+  15: { rate: 20, min: 10000 },
+  20: { rate: 30, min: 15000 }
+};
+
+function fmt$W(n) {
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function syncWarrantyCY() {
+  var cyDisplay = document.getElementById('p_volume_display');
+  var wCyEl = document.getElementById('w_cy');
+  if (!wCyEl) return;
+  if (cyDisplay && parseFloat(cyDisplay.textContent) > 0 && !wCyEl.value) {
+    wCyEl.value = Math.round(parseFloat(cyDisplay.textContent));
+  }
+  calcWarranty();
+}
+
+function calcWarranty() {
+  var cy = parseFloat(document.getElementById('w_cy').value) || 0;
+  var noteEl = document.getElementById('w-cy-note');
+  var tiers = [5, 10, 15, 20];
+
+  tiers.forEach(function(yr) {
+    var tier = WARRANTY_TIERS[yr];
+    var cost, minHit;
+    if (tier.rate === 0) {
+      cost = 0;
+      minHit = false;
+    } else {
+      var raw = cy * tier.rate;
+      minHit = raw < tier.min && cy > 0;
+      cost = cy > 0 ? Math.max(raw, tier.min) : 0;
+    }
+    var costEl = document.getElementById('wcost-' + yr);
+    var minEl = document.getElementById('wmin-' + yr);
+    if (costEl) {
+      costEl.textContent = cy > 0 ? fmt$W(cost) : (tier.rate === 0 ? '$0' : '—');
+    }
+    if (minEl) {
+      minEl.textContent = minHit ? 'Minimum applies (' + fmt$W(tier.min) + ')' : '';
+    }
+  });
+
+  if (noteEl) {
+    noteEl.textContent = (cy > 0 && cy < 500) ? 'Note: Extended warranties require a 500 CY minimum — minimum cost applies.' : '';
+  }
+
+  updateWarrantySummary(cy);
+}
+
+function selectWarrantyTier(yr) {
+  selectedWarrantyTier = yr;
+  document.querySelectorAll('.w-tier').forEach(function(el) {
+    el.classList.remove('selected');
+  });
+  var el = document.getElementById('wtier-' + yr);
+  if (el) el.classList.add('selected');
+  updateWarrantySummary(parseFloat(document.getElementById('w_cy').value) || 0);
+}
+
+function updateWarrantySummary(cy) {
+  var yr = selectedWarrantyTier;
+  var tier = WARRANTY_TIERS[yr];
+  var summaryEl = document.getElementById('w-selected-summary');
+  var costEl = document.getElementById('w-summary-cost');
+  var noteEl = document.getElementById('w-summary-note');
+
+  if (!summaryEl) return;
+  summaryEl.style.display = 'block';
+
+  var cost, note;
+  if (tier.rate === 0) {
+    cost = '$0';
+    note = 'No warranty fee — standard documentation and coordination only';
+  } else if (cy <= 0) {
+    cost = 'Enter CY above';
+    note = yr + '-Year Extended — $' + tier.rate + '/CY, ' + fmt$W(tier.min) + ' minimum';
+  } else {
+    var raw = cy * tier.rate;
+    var actual = Math.max(raw, tier.min);
+    cost = fmt$W(actual);
+    if (raw < tier.min) {
+      note = 'Minimum applies — ' + Math.round(cy) + ' CY × $' + tier.rate + ' = ' + fmt$W(raw) + ' → minimum ' + fmt$W(tier.min);
+    } else {
+      note = Math.round(cy) + ' CY × $' + tier.rate + '/CY = ' + fmt$W(actual);
+    }
+  }
+
+  costEl.textContent = cost;
+  noteEl.textContent = note;
+}
+
+selectWarrantyTier(5);
