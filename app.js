@@ -11,6 +11,8 @@ function selectType(type) {
   document.getElementById('dim-' + type).classList.add('visible');
   var pileField = document.getElementById('pile-boot-field');
   if (pileField) pileField.style.display = type === 'pilecap' ? 'block' : 'none';
+  var penField = document.getElementById('pen-detail-field');
+  if (penField) penField.style.display = type === 'pilecap' ? 'none' : 'block';
   compute();
 }
 
@@ -69,7 +71,7 @@ function calcDerived() {
     wallSF = capSidesSF + pitWallSF;
     cjLF = v('cap_cj_lf');
     piles = pilesPerCap * qty;
-    penCount = piles;
+    penCount = 0; // pile boot/flashing covers all pile penetrations — no separate pen count
 
   } else if (currentType === 'elevator') {
     var pl = v('pit_l'), pw = v('pit_w'), depth = v('pit_depth');
