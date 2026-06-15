@@ -958,7 +958,8 @@ var STEPS_EXT = [
   { num: 6, title: 'Repairs / Remediation <span class="w-step-if">if required</span>', items: [
     'Document repair location and issue',
     'Collect before / during / after photos',
-    'Document repair products and procedure'
+    'Document repair products and procedure',
+    '<strong>Penetron products must be used for all repairs — third-party repair products void the warranty</strong>'
   ], gray: true },
   { num: 7, title: 'Inspections &amp; Testing', items: [
     'Complete site inspections as required',
