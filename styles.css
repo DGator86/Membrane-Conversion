@@ -522,9 +522,9 @@ footer strong { color: var(--p-orange); }
 .app-tab.active { color: #fff; border-bottom-color: var(--p-orange); }
 
 /* ── Warranty Shell ── */
-.warranty-shell { max-width: 1500px; margin: 0 auto; padding: 0 24px; height: calc(100vh - 120px); }
-.warranty-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; height: 100%; }
-.warranty-col { height: 100%; overflow-y: auto; padding: 24px 0 48px; }
+.warranty-shell { max-width: 1500px; margin: 28px auto 48px; padding: 0 24px; }
+.warranty-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.warranty-col-right { position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto; }
 
 /* ── Warranty Cards ── */
 .w-card { background: #fff; border: 1px solid var(--gray-border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
@@ -563,6 +563,8 @@ footer strong { color: var(--p-orange); }
 .w-doc-matrix { border-top: 1px solid var(--gray-border); padding-top: 16px; }
 .w-doc-prompt { display: flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--text-muted); font-style: italic; padding: 10px 0; }
 .w-doc-prompt-icon { color: var(--p-orange); font-size: .65rem; }
+.w-process-prompt { display: flex; align-items: center; gap: 10px; font-size: .84rem; color: var(--text-muted); font-style: italic; padding: 28px 20px; }
+.w-process-prompt-icon { color: var(--p-orange); font-size: .75rem; }
 .w-doc-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--text-muted); margin-bottom: 10px; }
 .w-matrix-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
 .w-matrix-table th { background: var(--p-navy); color: #fff; padding: 8px 12px; text-align: center; font-size: .7rem; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }

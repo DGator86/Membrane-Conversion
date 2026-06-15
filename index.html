@@ -728,7 +728,7 @@
   <div class="warranty-layout">
 
     <!-- ── LEFT: Warranty Cost Calculator ── -->
-    <div class="warranty-col">
+    <div>
     <section class="w-card">
       <div class="w-card-header">
         <span class="w-card-title">Warranty Cost Estimator</span>
@@ -809,154 +809,23 @@
       </div>
     </section>
 
-    </div><!-- /.warranty-col (left) -->
+    </div><!-- /.left -->
 
-    <!-- ── RIGHT: Process Steps ── -->
-    <div class="warranty-col">
-    <section class="w-card">
-      <div class="w-card-header">
-        <span class="w-card-title">8-Step Warranty Process</span>
-        <span class="w-card-sub">Complete each phase in order before proceeding to the next</span>
-      </div>
-      <div class="w-card-body w-steps-body">
-
-        <div class="w-critical-note">
-          Critical: The warranty process must begin <strong>prior to the first treated concrete placement.</strong>
+    <!-- ── RIGHT: Process Guide (dynamic) ── -->
+    <div class="warranty-col-right">
+      <section class="w-card">
+        <div class="w-card-header">
+          <span class="w-card-title">Warranty Process Guide</span>
+          <span class="w-card-sub" id="w-process-sub">Select a tier to see requirements</span>
         </div>
-
-        <div class="w-step">
-          <div class="w-step-num">1</div>
-          <div class="w-step-content">
-            <div class="w-step-title">Initiate</div>
-            <ul class="w-step-list">
-              <li>Submit warranty request to Penetron</li>
-              <li>Confirm warranty type (5-Year or Extended)</li>
-              <li>Provide estimated treated CY</li>
-              <li>Submit GC contact info and all project stakeholders</li>
-            </ul>
+        <div id="w-process-body" class="w-card-body w-steps-body">
+          <div class="w-process-prompt">
+            <span class="w-process-prompt-icon">&#9664;</span>
+            Select a warranty duration to see the required steps
           </div>
         </div>
-
-        <div class="w-step">
-          <div class="w-step-num">2</div>
-          <div class="w-step-content">
-            <div class="w-step-title">Preconstruction</div>
-            <ul class="w-step-list">
-              <li>Submit project drawings to Penetron</li>
-              <li>Identify Penetron system locations on drawings</li>
-              <li>Submit and get mix design reviewed</li>
-              <li>Confirm dosage and waterproofing details</li>
-              <li>Review construction joints</li>
-              <li>Complete pre-construction meeting (if required)</li>
-              <li>Review Penebar locations <em>(10-yr extended and above only)</em></li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="w-step">
-          <div class="w-step-num">3</div>
-          <div class="w-step-content">
-            <div class="w-step-title">Prior to First Pour</div>
-            <ul class="w-step-list">
-              <li>Confirm warranty request is active before placement begins</li>
-              <li>Confirm approved mix design with batch plant</li>
-              <li>Confirm treated placement areas with concrete sub</li>
-              <li>Complete pre-pour meeting</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="w-step">
-          <div class="w-step-num">4</div>
-          <div class="w-step-content">
-            <div class="w-step-title">Concrete Placement</div>
-            <ul class="w-step-list">
-              <li>Verify Penetron Admix added and dosage confirmed at plant</li>
-              <li>Verify placement areas per approved drawings</li>
-              <li>Collect batch tickets for <strong>every</strong> treated pour</li>
-              <li>Log pour dates and locations</li>
-              <li>Take site photos <em>(10-yr extended and above)</em></li>
-              <li>Document Penebar / joint installation</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="w-step">
-          <div class="w-step-num">5</div>
-          <div class="w-step-content">
-            <div class="w-step-title">Curing &amp; Protection</div>
-            <ul class="w-step-list">
-              <li>Maintain moisture curing — <strong>5 days minimum</strong></li>
-              <li>Protect surface from rapid drying and freezing</li>
-              <li>Document cure method <em>(10-yr extended and above)</em></li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="w-step w-step-conditional">
-          <div class="w-step-num w-step-num-gray">6</div>
-          <div class="w-step-content">
-            <div class="w-step-title">Repairs / Remediation <span class="w-step-if">if required</span></div>
-            <ul class="w-step-list">
-              <li>Document repair location and issue description</li>
-              <li>Collect before / during / after photos</li>
-              <li>Document repair products and procedure</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="w-step">
-          <div class="w-step-num">7</div>
-          <div class="w-step-content">
-            <div class="w-step-title">Inspections &amp; Testing</div>
-            <ul class="w-step-list">
-              <li>Complete site inspections as required</li>
-              <li>Complete leak testing (if applicable)</li>
-              <li>Submit inspection / leak test reports</li>
-              <li>Correct deficiencies and complete final review</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="w-step w-step-last">
-          <div class="w-step-num w-step-num-orange">8</div>
-          <div class="w-step-content">
-            <div class="w-step-title">Closeout &amp; Warranty Issuance</div>
-            <ul class="w-step-list">
-              <li>Submit final warranty request to Penetron</li>
-              <li>Submit all batch tickets</li>
-              <li>Confirm final treated CY</li>
-              <li>Submit inspection / leak test documentation</li>
-              <li>Submit repair / remediation documentation (if applicable)</li>
-              <li><strong>Pay warranty invoice</strong> (if applicable — Extended only)</li>
-              <li>Warranty issued by Penetron</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="w-delay-box">
-          <div class="w-delay-title">Common Delay Triggers</div>
-          <ul class="w-delay-list">
-            <li>Late warranty request — submitted after placement has started</li>
-            <li>Missing batch tickets or incomplete pour history</li>
-            <li>Missing repair documentation (before / during / after photos)</li>
-            <li>Missing leak test documentation</li>
-            <li>Unpaid warranty invoice (Extended warranties)</li>
-          </ul>
-        </div>
-
-        <div class="w-contact-box">
-          <div class="w-contact-label">Ready to start your warranty?</div>
-          <a class="w-contact-link" href="mailto:technicalsupport@penetron.com?subject=Warranty%20Request%20-%20[Project%20Name]&body=Project%20Name%3A%0AGeneral%20Contractor%3A%0AEstimated%20Treated%20CY%3A%0ATarget%20First%20Pour%20Date%3A%0AWarranty%20Type%20Requested%3A">
-            Contact your local Penetron Account Manager
-          </a>
-          <div class="w-contact-sub">technicalsupport@penetron.com &nbsp;·&nbsp; (631) 941-9700</div>
-        </div>
-
-      </div>
-    </section>
-
-    </div><!-- /.warranty-col (right) -->
+      </section>
+    </div><!-- /.warranty-col-right -->
 
   </div>
 

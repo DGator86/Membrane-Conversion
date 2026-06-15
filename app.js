@@ -877,6 +877,146 @@ function renderDocMatrix(yr) {
     + '</table>';
 }
 
+var STEPS_5 = [
+  { num: 1, title: 'Initiate', items: [
+    'Submit warranty request to Penetron',
+    'Confirm 5-Year Standard warranty type',
+    'Provide estimated treated CY',
+    'Submit GC contact info and project stakeholders'
+  ]},
+  { num: 2, title: 'Preconstruction', items: [
+    'Submit project drawings to Penetron',
+    'Submit mix design for review',
+    'Confirm dosage and waterproofing details',
+    'Review construction joints',
+    'Pre-construction meeting if required'
+  ]},
+  { num: 3, title: 'Prior to First Pour', items: [
+    'Confirm warranty request is active before placement',
+    'Confirm approved mix design with batch plant',
+    'Confirm treated placement areas with concrete sub'
+  ]},
+  { num: 4, title: 'Concrete Placement', items: [
+    'Verify Penetron Admix added and dosage confirmed',
+    'Verify placement areas per drawings',
+    '<strong>Collect batch tickets for every treated pour</strong>',
+    'Log pour dates and locations'
+  ]},
+  { num: 5, title: 'Curing &amp; Protection', items: [
+    'Maintain moisture curing — <strong>5 days minimum</strong>',
+    'Protect surface from rapid drying and freezing'
+  ]},
+  { num: 6, title: 'Repairs / Remediation <span class="w-step-if">if required</span>', items: [
+    'Document repair location and issue',
+    'Collect before / during / after photos',
+    'Document repair products and procedure'
+  ], gray: true },
+  { num: 7, title: 'Closeout &amp; Warranty Issuance', num_style: 'orange', items: [
+    'Submit final warranty request to Penetron',
+    'Submit all batch tickets',
+    'Confirm final treated CY',
+    '<strong>No invoice — 5-Year Standard has no warranty fee</strong>',
+    'Warranty issued by Penetron'
+  ]}
+];
+
+var STEPS_EXT = [
+  { num: 1, title: 'Initiate', items: [
+    'Submit warranty request to Penetron',
+    'Confirm Extended warranty type and duration',
+    'Provide estimated treated CY',
+    'Submit GC contact info and all project stakeholders'
+  ]},
+  { num: 2, title: 'Preconstruction', items: [
+    'Submit project drawings to Penetron',
+    '<strong>Penetron system locations identified on drawings — required</strong>',
+    'Submit mix design for review — required',
+    'Confirm dosage and waterproofing details',
+    'Review construction joints',
+    '<strong>Pre-construction meeting required</strong>',
+    'Review Penebar locations'
+  ]},
+  { num: 3, title: 'Prior to First Pour', items: [
+    'Confirm warranty request is active before placement',
+    'Confirm approved mix design with batch plant',
+    'Confirm treated placement areas with concrete sub',
+    '<strong>Pre-pour meeting required</strong>'
+  ]},
+  { num: 4, title: 'Concrete Placement', items: [
+    'Verify Penetron Admix added and dosage confirmed',
+    'Verify placement areas per drawings',
+    '<strong>Collect batch tickets for every treated pour</strong>',
+    'Log pour dates and locations',
+    '<strong>Site photos required</strong>',
+    'Document Penebar / joint installation'
+  ]},
+  { num: 5, title: 'Curing &amp; Protection', items: [
+    'Maintain moisture curing — <strong>5 days minimum</strong>',
+    'Protect surface from rapid drying and freezing',
+    '<strong>Document cure method — required</strong>'
+  ]},
+  { num: 6, title: 'Repairs / Remediation <span class="w-step-if">if required</span>', items: [
+    'Document repair location and issue',
+    'Collect before / during / after photos',
+    'Document repair products and procedure'
+  ], gray: true },
+  { num: 7, title: 'Inspections &amp; Testing', items: [
+    'Complete site inspections as required',
+    'Complete leak testing if applicable',
+    '<strong>Submit inspection / leak test reports — required</strong>',
+    'Correct deficiencies and complete final review'
+  ]},
+  { num: 8, title: 'Closeout &amp; Warranty Issuance', num_style: 'orange', items: [
+    'Submit final warranty request to Penetron',
+    'Submit all batch tickets',
+    'Confirm final treated CY',
+    'Submit inspection / leak test documentation',
+    'Submit repair / remediation documentation if applicable',
+    '<strong>Pay warranty invoice — required for Extended</strong>',
+    'Warranty issued by Penetron'
+  ]}
+];
+
+function renderProcessSteps(yr) {
+  var body = document.getElementById('w-process-body');
+  var sub  = document.getElementById('w-process-sub');
+  if (!body) return;
+
+  var steps = yr === 5 ? STEPS_5 : STEPS_EXT;
+  var tierLabel = yr === 5 ? '5-Year Standard' : yr + '-Year Extended';
+  if (sub) sub.textContent = tierLabel + ' — ' + steps.length + '-step process';
+
+  var critNote = '<div class="w-critical-note">Critical: Warranty process must begin <strong>prior to the first treated concrete placement.</strong></div>';
+
+  var stepsHtml = steps.map(function(s, i) {
+    var isLast = i === steps.length - 1;
+    var numClass = 'w-step-num' + (s.num_style === 'orange' ? ' w-step-num-orange' : s.gray ? ' w-step-num-gray' : '');
+    var stepClass = 'w-step' + (s.gray ? ' w-step-conditional' : '') + (isLast ? ' w-step-last' : '');
+    var lis = s.items.map(function(it) { return '<li>' + it + '</li>'; }).join('');
+    return '<div class="' + stepClass + '">'
+      + '<div class="' + numClass + '">' + s.num + '</div>'
+      + '<div class="w-step-content">'
+      + '<div class="w-step-title">' + s.title + '</div>'
+      + '<ul class="w-step-list">' + lis + '</ul>'
+      + '</div></div>';
+  }).join('');
+
+  var delayBox = '<div class="w-delay-box"><div class="w-delay-title">Common Delay Triggers</div>'
+    + '<ul class="w-delay-list">'
+    + '<li>Late warranty request — submitted after placement has started</li>'
+    + '<li>Missing batch tickets or incomplete pour history</li>'
+    + '<li>Missing repair documentation (before / during / after photos)</li>'
+    + (yr > 5 ? '<li>Missing inspection or leak test documentation</li><li>Unpaid warranty invoice</li>' : '')
+    + '</ul></div>';
+
+  var contactBox = '<div class="w-contact-box"><div class="w-contact-label">Ready to start your warranty?</div>'
+    + '<a class="w-contact-link" href="mailto:technicalsupport@penetron.com?subject=Warranty%20Request%20-%20[Project%20Name]&body=Project%20Name%3A%0AGeneral%20Contractor%3A%0AEstimated%20Treated%20CY%3A%0ATarget%20First%20Pour%20Date%3A%0AWarranty%20Type%20Requested%3A%20' + yr + '-Year">'
+    + 'Contact your local Penetron Account Manager</a>'
+    + '<div class="w-contact-sub">technicalsupport@penetron.com &nbsp;·&nbsp; (631) 941-9700</div></div>';
+
+  body.innerHTML = critNote + stepsHtml + delayBox + contactBox;
+}
+
 function selectWarrantyTier(yr) {
   selectedWarrantyTier = yr;
   document.querySelectorAll('.w-tier').forEach(function(el) {
@@ -885,6 +1025,7 @@ function selectWarrantyTier(yr) {
   var el = document.getElementById('wtier-' + yr);
   if (el) el.classList.add('selected');
   renderDocMatrix(yr);
+  renderProcessSteps(yr);
   updateWarrantySummary(parseFloat(document.getElementById('w_cy').value) || 0);
 }
 
