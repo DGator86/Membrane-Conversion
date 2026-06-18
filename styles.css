@@ -505,7 +505,12 @@ footer strong { color: var(--p-orange); }
   .type-grid, .fields-row, .schedule-comparison { grid-template-columns: 1fr; }
   .derived-strip, .complexity-strip { grid-template-columns: 1fr 1fr; }
   .kpi-row { grid-template-columns: 1fr 1fr; }
-  .comparison-grid { grid-template-columns: 1fr; }
+  .comparison-grid { font-size: .78rem; }
+  .comparison-grid .col-header { padding: 8px 4px; font-size: .62rem; }
+  .comparison-grid .metric-cell { padding: 8px 4px; }
+  .comparison-grid .metric-label { font-size: .6rem; }
+  .comparison-grid .metric-value { font-size: .95rem; }
+  .comparison-grid .metric-sub { font-size: .6rem; line-height: 1.3; }
   .trade-systems { grid-template-columns: 1fr; }
   .impact-grid { grid-template-columns: 1fr; }
   .header-inner { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 16px; }
