@@ -6,6 +6,14 @@ Paste everything below this line into your new Claude Code chat.
 
 Build a **Penetron warranty portal** — a web app where customers (GCs and their teams) can register a project, upload documents, and track their progress through the warranty process step by step with minimal intervention from Penetron staff.
 
+## REUSE FROM EXISTING REPO
+
+Pull branding and warranty step data from the existing Penetron repo at `github.com/dgator86/membrane-conversion` rather than recreating it from scratch. Specifically:
+
+- **Branding** — CSS variables, logo file (`logo_white.png`), and color constants are already defined there
+- **Warranty step data** — The `STEPS_5` and `STEPS_EXT` arrays in `app.js` contain the full step-by-step process content for both warranty tracks. Copy those directly rather than rewriting them.
+- **Do not copy** the cost analysis tool itself — this is a new, separate application. Only take the branding and the step data.
+
 ---
 
 ## BUSINESS CONTEXT
@@ -64,7 +72,7 @@ Penetron is a crystalline concrete waterproofing company. Their admixture produc
 - Orange: `#F5901E`
 - Navy: `#1A4B8C`
 - Dark Navy: `#0D2F5E`
-- I have a white logo PNG I can upload once the project is started
+- White logo PNG is at `github.com/dgator86/membrane-conversion/blob/main/logo_white.png`
 
 ## PREFERRED STACK
 
