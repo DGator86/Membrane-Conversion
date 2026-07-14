@@ -707,9 +707,49 @@
 
   </section>
 
-  <!-- ══════════════════════════════════════
-       RIGHT: Executive Panel
-  ══════════════════════════════════════ -->
+</main>
+
+<!-- ══════════════════════════════════════
+     LIVE SYSTEM COMPARISON — sells the conversion
+══════════════════════════════════════ -->
+<section class="compare-section">
+  <div class="compare-inner">
+    <div class="compare-header">
+      <div class="compare-eyebrow"><i data-lucide="eye"></i> <span id="compare-eyebrow-text">Live System Comparison</span></div>
+      <h2 class="compare-title" id="compare-title">Where the Risk Lives</h2>
+      <p class="compare-desc" id="compare-desc">Every construction joint, penetration, and pile boot becomes a distinct field-applied detail with a membrane system. Penetron treats the concrete itself — updates live as you enter Scope quantities above.</p>
+    </div>
+    <div class="compare-mono-row" id="compare-mono-row" style="display:none">
+      <label class="toggle-switch">
+        <input type="checkbox" id="compare_mono" onchange="toggleCompareMono()" />
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+      <span class="compare-mono-label">Pour monolithically with Penetron <em>— watch the cold joints disappear</em></span>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-panel compare-panel-membrane">
+        <div class="compare-panel-label"><i data-lucide="layers"></i> Hydrostatic Membrane</div>
+        <div class="compare-stage-note" id="compare-stage-membrane"></div>
+        <svg id="diagram-membrane" viewBox="0 0 480 360" class="compare-svg" role="img" aria-label="Membrane system cross section"></svg>
+        <div class="compare-stats" id="compare-stats-membrane"></div>
+      </div>
+      <div class="compare-vs">VS</div>
+      <div class="compare-panel compare-panel-penetron">
+        <div class="compare-panel-label"><i data-lucide="droplets"></i> Penetron Crystalline</div>
+        <div class="compare-stage-note" id="compare-stage-penetron"></div>
+        <svg id="diagram-penetron" viewBox="0 0 480 360" class="compare-svg" role="img" aria-label="Penetron system cross section"></svg>
+        <div class="compare-stats" id="compare-stats-penetron"></div>
+      </div>
+    </div>
+    <div class="compare-takeaway" id="compare-takeaway"></div>
+    <div class="compare-footnote">Illustrative cross-section, not to scale — for discussion purposes only.</div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     EXECUTIVE VIEW — bottom summary
+══════════════════════════════════════ -->
   <aside class="results-panel">
     <div class="exec-card">
 
@@ -789,45 +829,6 @@
 
     </div>
   </aside>
-
-</main>
-
-<!-- ══════════════════════════════════════
-     LIVE SYSTEM COMPARISON — sells the conversion
-══════════════════════════════════════ -->
-<section class="compare-section">
-  <div class="compare-inner">
-    <div class="compare-header">
-      <div class="compare-eyebrow"><i data-lucide="eye"></i> <span id="compare-eyebrow-text">Live System Comparison</span></div>
-      <h2 class="compare-title" id="compare-title">Where the Risk Lives</h2>
-      <p class="compare-desc" id="compare-desc">Every construction joint, penetration, and pile boot becomes a distinct field-applied detail with a membrane system. Penetron treats the concrete itself — updates live as you enter Scope quantities above.</p>
-    </div>
-    <div class="compare-mono-row" id="compare-mono-row" style="display:none">
-      <label class="toggle-switch">
-        <input type="checkbox" id="compare_mono" onchange="toggleCompareMono()" />
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-      </label>
-      <span class="compare-mono-label">Pour monolithically with Penetron <em>— watch the cold joints disappear</em></span>
-    </div>
-    <div class="compare-grid">
-      <div class="compare-panel compare-panel-membrane">
-        <div class="compare-panel-label"><i data-lucide="layers"></i> Hydrostatic Membrane</div>
-        <div class="compare-stage-note" id="compare-stage-membrane"></div>
-        <svg id="diagram-membrane" viewBox="0 0 480 360" class="compare-svg" role="img" aria-label="Membrane system cross section"></svg>
-        <div class="compare-stats" id="compare-stats-membrane"></div>
-      </div>
-      <div class="compare-vs">VS</div>
-      <div class="compare-panel compare-panel-penetron">
-        <div class="compare-panel-label"><i data-lucide="droplets"></i> Penetron Crystalline</div>
-        <div class="compare-stage-note" id="compare-stage-penetron"></div>
-        <svg id="diagram-penetron" viewBox="0 0 480 360" class="compare-svg" role="img" aria-label="Penetron system cross section"></svg>
-        <div class="compare-stats" id="compare-stats-penetron"></div>
-      </div>
-    </div>
-    <div class="compare-takeaway" id="compare-takeaway"></div>
-    <div class="compare-footnote">Illustrative cross-section, not to scale — for discussion purposes only.</div>
-  </div>
-</section>
 
 </div><!-- /#panel-cost -->
 

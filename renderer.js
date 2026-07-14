@@ -240,9 +240,14 @@
   }
 
   /* ════════════════════════════════════════════════════════
-     SCENE 2 — ELEVATOR PIT / PILE CAP  (symmetric section)
+     SCENES 2 & 3 — ELEVATOR PIT sections (shared geometry)
+     Staged (standard): thick pit slab at the bottom, shear
+     walls on either side, cold joints where the walls land.
+     Monolithic: the pit drops out of the mat — earth-formed
+     sloped haunches down to a spread footing pad, one
+     placement. Pile-cap mode adds piles under the slab/pad.
   ════════════════════════════════════════════════════════ */
-  function scenePilecap(mode, d, extra) {
+  function sceneStagedPit(mode, d, extra, opts) {
     var mem = mode === 'mem';
     var fill = mem ? 'url(#p-conc)' : 'url(#p-crys)';
     var s = defs('p');
@@ -250,13 +255,14 @@
     var CAP_L = 108, CAP_R = 372, CAP_T = 208, CAP_B = 268;
     var WL_L = 158, WL_R = 178, WR_L = 302, WR_R = 322; // pit wall x-ranges
     var MUD_B = 280;
+    var hasPiles = !!opts.piles;
+    var sump = !hasPiles && !!(extra && extra.sump);
 
     s += '<rect x="0" y="0" width="480" height="360" fill="' + C.sky + '"/>';
     // soil each side + below
     s += '<rect x="0" y="' + GRADE + '" width="' + WL_L + '" height="' + (360 - GRADE) + '" fill="url(#p-soil)"/>';
     s += '<rect x="' + WR_R + '" y="' + GRADE + '" width="' + (480 - WR_R) + '" height="' + (360 - GRADE) + '" fill="url(#p-soil)"/>';
     s += '<rect x="' + WL_L + '" y="' + MUD_B + '" width="' + (WR_R - WL_L) + '" height="' + (360 - MUD_B) + '" fill="url(#p-soil)"/>';
-    // carve out the cap area from soil (draw cap after soil)
     // groundwater
     s += '<rect x="0" y="' + WT + '" width="' + WL_L + '" height="' + (360 - WT) + '" fill="' + C.waterWash + '"/>';
     s += '<rect x="' + WR_R + '" y="' + WT + '" width="' + (480 - WR_R) + '" height="' + (360 - WT) + '" fill="' + C.waterWash + '"/>';
@@ -264,128 +270,137 @@
     s += '<line x1="0" y1="' + GRADE + '" x2="' + WL_L + '" y2="' + GRADE + '" stroke="#8fa0ba" stroke-width="2"/>';
     s += '<line x1="' + WR_R + '" y1="' + GRADE + '" x2="480" y2="' + GRADE + '" stroke="#8fa0ba" stroke-width="2"/>';
     s += waterTable(6, WL_L - 6, WT, 16);
-    s += txt(8, 56, 'Water table \u2014', C.waterLine, 'start', 9);
+    s += txt(8, 56, 'Water table —', C.waterLine, 'start', 9);
     s += txt(8, 67, 'just below grade', C.waterLine, 'start', 9);
 
-    // mud slab under cap
+    // mud slab under the pit slab
     s += '<rect x="' + (CAP_L - 8) + '" y="' + CAP_B + '" width="' + (CAP_R - CAP_L + 16) + '" height="12" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>';
 
-    // piles
-    var pileCount = cap(d.piles, 5);
-    var nPiles = Math.max(3, pileCount || 3);
-    var pileXs = spread(150, 330, nPiles);
-    pileXs.forEach(function (x) {
-      s += '<rect x="' + (x - 9) + '" y="' + (CAP_B + 12) + '" width="18" height="' + (360 - CAP_B - 12) + '" fill="#b3bcca" stroke="#7d8a9e" stroke-width="1.2"/>';
-      s += rebarV(x, CAP_B + 20, 352);
-    });
+    // piles (pile-cap mode only)
+    var pileXs = [];
+    if (hasPiles) {
+      var pileCount = cap(d.piles, 5);
+      var nPiles = Math.max(3, pileCount || 3);
+      pileXs = spread(150, 330, nPiles);
+      pileXs.forEach(function (x) {
+        s += '<rect x="' + (x - 9) + '" y="' + (CAP_B + 12) + '" width="18" height="' + (360 - CAP_B - 12) + '" fill="#b3bcca" stroke="#7d8a9e" stroke-width="1.2"/>';
+        s += rebarV(x, CAP_B + 20, 352);
+      });
+    }
 
-    // pile cap + pit walls
-    var monoPC = !!(extra && extra.monoPour);
-    if (monoPC) {
-      // ONE continuous placement: pit walls cast monolithically with the rectangular cap.
-      // Real practice: the cap stays a flat rectangular block; walls rise vertically from it \u2014
-      // the only change vs. staged is that the wall-base cold joint disappears.
-      var pcMono = 'M' + WL_L + ' ' + GRADE
-        + ' V' + CAP_T
-        + ' H' + CAP_L
-        + ' V' + CAP_B
-        + ' H' + CAP_R
-        + ' V' + CAP_T
-        + ' H' + WR_R
-        + ' V' + GRADE
-        + ' H' + WR_L
-        + ' V' + CAP_T
-        + ' H' + WL_R
-        + ' V' + GRADE
-        + ' Z';
-      s += '<path d="' + pcMono + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5" stroke-linejoin="round"/>';
-      // continuous L-bars \u2014 wall steel bends into the cap: one cage, one pour
-      s += '<path d="M' + (WL_L + 10) + ' ' + (GRADE + 8) + ' V' + (CAP_T + 14) + ' H228" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      s += '<path d="M' + (WR_R - 10) + ' ' + (GRADE + 8) + ' V' + (CAP_T + 14) + ' H252" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      s += rebarH(CAP_L + 12, CAP_R - 12, CAP_B - 12);
-    } else {
-      s += '<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-      s += '<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-      s += '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-      s += rebarH(CAP_L + 12, CAP_R - 12, CAP_T + 14) + rebarH(CAP_L + 12, CAP_R - 12, CAP_B - 12);
+    // staged placements: slab first, walls after
+    s += '<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+    s += '<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+    s += '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+    s += rebarH(CAP_L + 12, CAP_R - 12, CAP_T + 14) + rebarH(CAP_L + 12, CAP_R - 12, CAP_B - 12);
+    if (sump) {
+      s += '<rect x="216" y="' + CAP_B + '" width="48" height="22" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+      s += txt(206, CAP_B + 32, 'Sump', C.interior, 'end', 8.5);
     }
 
     s += txt(240, 140, 'ELEVATOR PIT', C.interior, 'middle', 11, 700);
-    s += txt(240, 200, 'pit slab on cap', C.interior, 'middle', 8.5);
+    s += txt(240, opts.subY || 200, opts.sub, C.interior, 'middle', 8.5);
 
-    // pressure arrows: lateral both sides + uplift under cap
+    // pressure arrows: lateral both sides + uplift under the slab
     [110, 160].forEach(function (y) {
       s += flowArrow(118, y, 30, 'right', mem ? C.risk : C.waterLine);
       s += flowArrow(362, y, 30, 'left', mem ? C.risk : C.waterLine);
     });
     [218, 262].forEach(function (x) { s += flowArrow(x, 350, 20, 'up', mem ? C.risk : C.waterLine); });
+    if (sump) s += flowArrow(240, 356, 12, 'up', mem ? C.risk : C.waterLine);
+
+    // wall penetrations (standalone pit: sump discharge / conduits)
+    var penCount = hasPiles ? 0 : cap(d.penCount, 3);
+    var penYs = spread(96, 168, penCount);
+    penYs.forEach(function (y) {
+      s += '<rect x="' + (WL_L - 24) + '" y="' + (y - 4) + '" width="' + (WL_R - WL_L + 28) + '" height="8" fill="#98a3b5" stroke="#6b7688" stroke-width="1" rx="2"/>';
+    });
 
     var pileHeadY = CAP_B + 6;
+    var membY = CAP_B + 2;
 
     if (mem) {
-      // under-cap membrane on mud slab, interrupted at every pile
-      var membY = CAP_B + 2;
-      var segs = [CAP_L - 8].concat(pileXs.reduce(function (acc, x) { return acc.concat([x - 12, x + 12]); }, [])).concat([CAP_R + 8]);
-      for (var i = 0; i < segs.length; i += 2) {
-        s += '<line x1="' + segs[i] + '" y1="' + membY + '" x2="' + segs[i + 1] + '" y2="' + membY + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
+      // under-slab membrane on mud slab (interrupted at every pile)
+      if (hasPiles) {
+        var segs = [CAP_L - 8].concat(pileXs.reduce(function (acc, x) { return acc.concat([x - 12, x + 12]); }, [])).concat([CAP_R + 8]);
+        for (var i = 0; i < segs.length; i += 2) {
+          s += '<line x1="' + segs[i] + '" y1="' + membY + '" x2="' + segs[i + 1] + '" y2="' + membY + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
+        }
+      } else if (sump) {
+        s += '<path d="M' + (CAP_L - 8) + ' ' + membY + ' H212 V' + (CAP_B + 24) + ' H268 V' + membY + ' H' + (CAP_R + 8) + '" fill="none" stroke="' + C.membrane + '" stroke-width="3.5" stroke-linejoin="round"/>';
+      } else {
+        s += '<line x1="' + (CAP_L - 8) + '" y1="' + membY + '" x2="' + (CAP_R + 8) + '" y2="' + membY + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
       }
       // wall membrane on pit wall exteriors
       s += '<path d="M' + (WL_L - 4) + ' ' + (GRADE + 2) + ' V' + CAP_T + '" stroke="' + C.membrane + '" stroke-width="3.5" fill="none"/>';
       s += '<path d="M' + (WR_R + 4) + ' ' + (GRADE + 2) + ' V' + CAP_T + '" stroke="' + C.membrane + '" stroke-width="3.5" fill="none"/>';
 
-      // cold joint where pit walls land on cap
+      // cold joint where the walls land on the slab
       s += '<line x1="' + WL_L + '" y1="' + CAP_T + '" x2="' + WL_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>';
       s += '<line x1="' + WR_L + '" y1="' + CAP_T + '" x2="' + WR_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>';
-      s += riskDot(WL_R - 2, CAP_T, 'Cap-to-wall cold joint \u2014 staged pour, field waterstop');
-      s += riskDot(WR_L + 2, CAP_T, 'Cap-to-wall cold joint \u2014 staged pour, field waterstop');
-      s += callout(240, 232, WL_R + 4, CAP_T + 2, 'Cold joints \u2014 staged pour', 'middle', C.risk);
+      s += riskDot(WL_R - 2, CAP_T, 'Wall-to-slab cold joint — staged pour, field waterstop');
+      s += riskDot(WR_L + 2, CAP_T, 'Wall-to-slab cold joint — staged pour, field waterstop');
+      s += callout(240, 232, WL_R + 4, CAP_T + 2, 'Cold joints — staged pour', 'middle', C.risk);
 
-      // pile boots — every pile pierces the membrane
-      pileXs.forEach(function (x) {
-        s += '<path d="M' + (x - 13) + ' ' + membY + ' l5 -8 h16 l5 8" fill="none" stroke="' + C.risk + '" stroke-width="2"/>';
-        s += riskDot(x, pileHeadY - 12, 'Pile boot / flashing \u2014 field-sealed around every pile head');
-      });
-      s += callout(468, 318, pileXs[pileXs.length - 1] + 6, membY + 4, 'Boot at EVERY pile', 'end', C.risk);
+      if (hasPiles) {
+        // pile boots — every pile pierces the membrane
+        pileXs.forEach(function (x) {
+          s += '<path d="M' + (x - 13) + ' ' + membY + ' l5 -8 h16 l5 8" fill="none" stroke="' + C.risk + '" stroke-width="2"/>';
+          s += riskDot(x, pileHeadY - 12, 'Pile boot / flashing — field-sealed around every pile head');
+        });
+        s += callout(468, 318, pileXs[pileXs.length - 1] + 6, membY + 4, 'Boot at EVERY pile', 'end', C.risk);
+      } else {
+        s += riskDot(CAP_L - 8, membY, 'Membrane corner fold — 3-plane transition');
+        s += riskDot(CAP_R + 8, membY, 'Membrane corner fold — 3-plane transition');
+        if (sump) {
+          s += riskDot(214, CAP_B + 8, 'Sump corner — 4 extra membrane folds');
+          s += riskDot(266, CAP_B + 8, 'Sump corner — 4 extra membrane folds');
+        }
+      }
+      penYs.forEach(function (y) { s += riskDot(WL_L - 6, y, 'Penetration through wall membrane — field-sealed collar'); });
       s += callout(10, 300, CAP_L + 4, membY + 2, 'Membrane on mud slab', 'start');
 
       s += insetMembraneLap(408, 96, 40, WR_R + 6, CAP_T);
 
     } else {
-      if (monoPC) {
-        s += checkDot(WL_R + 8, CAP_T, 'No cold joint \u2014 walls cast with the cap in one placement');
-        s += checkDot(WR_L - 8, CAP_T, 'No cold joint \u2014 walls cast with the cap in one placement');
-        s += callout(8, 320, CAP_L + 8, CAP_B - 10, 'Walls + cap \u2014 one placement', 'start', C.ok);
-        s += txt(240, 232, 'Poured monolithically \u2014 no cold joint at the wall base', C.ok, 'middle', 9.5, 700);
-      } else if (d.cjLF > 0) {
+      if (d.cjLF > 0) {
         s += '<rect x="' + (WL_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>';
         s += '<rect x="' + (WR_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>';
-        s += callout(240, 232, WL_R + 2, CAP_T, 'Penebar\u00AE at wall base', 'middle', '#a05c0a');
+        s += callout(240, 232, WL_R + 2, CAP_T, 'Penebar® at wall base', 'middle', '#a05c0a');
       }
-      // piles cast directly into treated cap
-      pileXs.forEach(function (x) { s += checkDot(x, pileHeadY - 10, 'Pile head cast into treated concrete \u2014 crystals seal the interface, no boot'); });
-      s += callout(468, 318, pileXs[pileXs.length - 1] + 4, pileHeadY - 8, '0 pile boots', 'end', C.ok);
+      if (hasPiles) {
+        // piles cast directly into treated slab
+        pileXs.forEach(function (x) { s += checkDot(x, pileHeadY - 10, 'Pile head cast into treated concrete — crystals seal the interface, no boot'); });
+        s += callout(468, 318, pileXs[pileXs.length - 1] + 4, pileHeadY - 8, '0 pile boots', 'end', C.ok);
+      } else {
+        penYs.forEach(function (y) { s += checkDot(WL_L - 6, y, 'Penetration — crystals seal the interface'); });
+        if (sump) s += checkDot(240, CAP_B + 14, 'Sump cast integrally — no membrane folds');
+      }
       s += insetCrystals(408, 96, 40, WR_R + 2, CAP_T + 20);
-      s += txt(240, 254, 'Cap + walls become one waterproof mass', C.ok, 'middle', 9.5, 700);
+      s += txt(240, 254, (hasPiles ? 'Cap' : 'Slab') + ' + walls become one waterproof mass', C.ok, 'middle', 9.5, 700);
     }
     return s;
   }
 
-  /* ════════════════════════════════════════════════════════
-     SCENE 3 — ELEVATOR PIT (standalone, below the SOG)
-  ════════════════════════════════════════════════════════ */
-  function sceneElevator(mode, d, extra) {
+  /* Monolithic spread footing — pit dropped out of the mat.
+     Renders the Penetron side only (the membrane panel always
+     stays on the staged standard construction). */
+  function sceneMonoPit(mode, d, extra, opts) {
     var mem = mode === 'mem';
     var fill = mem ? 'url(#e-conc)' : 'url(#e-crys)';
     var s = defs('e');
-    var SOG_T = 108, SOG_B = 130;             // ground-floor slab
+    var SOG_T = 108, SOG_B = 130;             // ground-floor mat slab
     var WL_L = 138, WL_R = 158, WR_L = 322, WR_R = 342;
     var SLAB_T = 262, SLAB_B = 322;
     var WT = 170;
-    var sump = !!(extra && extra.sump);
-    var mono = !!(extra && extra.monoPour);
+    var hasPiles = !!opts.piles;
+    var sump = !hasPiles && !!(extra && extra.sump);
+    var TOE = 46;  // footing pad projection past the wall face
+    var RUN = 64;  // horizontal run of the earth-formed slope, pad edge up to mat underside
+    var padL = WL_L - TOE, padR = WR_R + TOE;
 
     s += '<rect x="0" y="0" width="480" height="360" fill="' + C.sky + '"/>';
-    // soil: below SOG on both sides, below pit slab
+    // soil: below the mat on both sides, below the pad
     s += '<rect x="0" y="' + SOG_B + '" width="' + WL_L + '" height="' + (360 - SOG_B) + '" fill="url(#e-soil)"/>';
     s += '<rect x="' + WR_R + '" y="' + SOG_B + '" width="' + (480 - WR_R) + '" height="' + (360 - SOG_B) + '" fill="url(#e-soil)"/>';
     s += '<rect x="' + WL_L + '" y="' + (SLAB_B + 10) + '" width="' + (WR_R - WL_L) + '" height="' + (360 - SLAB_B - 10) + '" fill="url(#e-soil)"/>';
@@ -394,136 +409,103 @@
     s += '<rect x="' + WR_R + '" y="' + WT + '" width="' + (480 - WR_R) + '" height="' + (360 - WT) + '" fill="' + C.waterWash + '"/>';
     s += '<rect x="' + WL_L + '" y="' + (SLAB_B + 10) + '" width="' + (WR_R - WL_L) + '" height="' + (360 - SLAB_B - 10) + '" fill="' + C.waterWash + '"/>';
 
-    // ground-floor slabs each side
+    // ground-floor mat each side (merged into the pour by the mono path)
     s += '<rect x="0" y="' + SOG_T + '" width="' + (WL_R) + '" height="' + (SOG_B - SOG_T) + '" fill="url(#e-conc)" stroke="' + C.edge + '" stroke-width="1.2"/>';
     s += '<rect x="' + WR_L + '" y="' + SOG_T + '" width="' + (480 - WR_L) + '" height="' + (SOG_B - SOG_T) + '" fill="url(#e-conc)" stroke="' + C.edge + '" stroke-width="1.2"/>';
     s += txt(60, SOG_T - 8, 'Ground-floor slab', C.interior, 'middle', 9);
 
     s += waterTable(6, WL_L - 6, WT, 16);
-    s += txt(4, WT - 22, 'Water table', C.waterLine, 'start', 8.6);
-    s += txt(4, WT - 11, 'ABOVE pit floor', C.waterLine, 'start', 8.6);
 
-    // mud slab (wider when the monolithic footing pad extends past the walls)
-    var monoShape = mono;
-    var TOE = 46;  // footing pad projection past the wall face
-    var RUN = 64;  // horizontal run of the earth-formed slope, pad edge up to mat underside
-    var mudX1 = monoShape ? (WL_L - TOE - 8) : (WL_L - 8);
-    var mudX2 = monoShape ? (WR_R + TOE + 8) : (WR_R + 8);
-    s += '<rect x="' + mudX1 + '" y="' + SLAB_B + '" width="' + (mudX2 - mudX1) + '" height="10" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>';
-
-    if (monoShape) {
-      // ONE continuous placement: the pit is dropped out of the mat itself.
-      // The mat underside breaks and slopes down (earth-formed, no vertical
-      // formwork) to a footing pad wider than the pit \u2014 mat, sloped haunches,
-      // pad, and pit walls all one pour.
-      var padL = WL_L - TOE, padR = WR_R + TOE;
-      var pMono = 'M0 ' + SOG_T
-            + ' H' + WL_R
-            + ' V' + SLAB_T
-            + ' H' + WR_L
-            + ' V' + SOG_T
-            + ' H480'
-            + ' V' + SOG_B
-            + ' H' + (padR + RUN)
-            + ' L' + padR + ' ' + SLAB_B;
-      if (sump) pMono += ' H264 V' + (SLAB_B + 22) + ' H216 V' + SLAB_B;
-      pMono += ' H' + padL
-         + ' L' + (padL - RUN) + ' ' + SOG_B
-         + ' H0'
-         + ' Z';
-      s += '<path d="' + pMono + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5" stroke-linejoin="round"/>';
-      // one cage, one pour \u2014 wall steel bends into the pad, slope bars follow the haunches
-      s += '<path d="M' + (WL_L + 10) + ' ' + (SOG_B + 8) + ' V' + (SLAB_T + 13) + ' H232" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      s += '<path d="M' + (WR_R - 10) + ' ' + (SOG_B + 8) + ' V' + (SLAB_T + 13) + ' H248" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      s += '<line x1="' + (padL - RUN + 16) + '" y1="' + (SOG_B + 14) + '" x2="' + (padL + 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      s += '<line x1="' + (padR + RUN - 16) + '" y1="' + (SOG_B + 14) + '" x2="' + (padR - 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      // the haunch buries the water-table label — repaint it on top of the concrete
-      s += txt(4, WT - 22, 'Water table', C.waterLine, 'start', 8.6);
-      s += txt(4, WT - 11, 'ABOVE pit floor', C.waterLine, 'start', 8.6);
-      if (sump) s += txt(206, SLAB_B + 32, 'Sump', C.interior, 'end', 8.5);
-    } else {
-      // staged: three separate placements \u2014 edges betray where pours meet
-      s += '<rect x="' + WL_L + '" y="' + SOG_B + '" width="' + (WL_R - WL_L) + '" height="' + (SLAB_T - SOG_B) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-      s += '<rect x="' + WR_L + '" y="' + SOG_B + '" width="' + (WR_R - WR_L) + '" height="' + (SLAB_T - SOG_B) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-      s += '<rect x="' + (WL_L - 8) + '" y="' + SLAB_T + '" width="' + (WR_R - WL_L + 16) + '" height="' + (SLAB_B - SLAB_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-      s += rebarV(WL_L + 10, SOG_B + 8, SLAB_T + 16) + rebarV(WR_R - 10, SOG_B + 8, SLAB_T + 16);
-      s += rebarH(WL_L + 2, WR_R - 2, SLAB_T + 13);
-      if (sump) {
-        s += '<rect x="216" y="' + SLAB_B + '" width="48" height="22" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-        s += txt(206, SLAB_B + 32, 'Sump', C.interior, 'end', 8.5);
-      }
+    // piles under the pad (pile-cap mode)
+    var pileXs = [];
+    if (hasPiles) {
+      var nP = Math.max(3, cap(d.piles, 5) || 3);
+      pileXs = spread(150, 330, nP);
+      pileXs.forEach(function (x) {
+        s += '<rect x="' + (x - 9) + '" y="' + (SLAB_B + 10) + '" width="18" height="' + (360 - SLAB_B - 10) + '" fill="#b3bcca" stroke="#7d8a9e" stroke-width="1.2"/>';
+        s += rebarV(x, SLAB_B + 18, 356);
+      });
     }
 
-    s += txt(240, 190, 'ELEVATOR PIT', C.interior, 'middle', 11, 700);
-    s += txt(240, 206, 'deepest point of the structure', C.interior, 'middle', 8.5);
+    // mud slab spans the full pad
+    s += '<rect x="' + (padL - 8) + '" y="' + SLAB_B + '" width="' + (padR - padL + 16) + '" height="10" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>';
 
-    // pressure: lateral both walls + uplift under slab and sump
-    // (monolithic haunches slope outward, so the arrows start further out)
-    var latL = monoShape ? 8 : 96, latR = monoShape ? 472 : 384, latLen = monoShape ? 26 : 30;
+    // ONE continuous placement: the mat underside breaks and slopes down
+    // (earth-formed, no vertical formwork) to a footing pad wider than the
+    // pit — mat, sloped haunches, pad, and pit walls all one pour.
+    var pMono = 'M0 ' + SOG_T
+          + ' H' + WL_R
+          + ' V' + SLAB_T
+          + ' H' + WR_L
+          + ' V' + SOG_T
+          + ' H480'
+          + ' V' + SOG_B
+          + ' H' + (padR + RUN)
+          + ' L' + padR + ' ' + SLAB_B;
+    if (sump) pMono += ' H264 V' + (SLAB_B + 22) + ' H216 V' + SLAB_B;
+    pMono += ' H' + padL
+       + ' L' + (padL - RUN) + ' ' + SOG_B
+       + ' H0'
+       + ' Z';
+    s += '<path d="' + pMono + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5" stroke-linejoin="round"/>';
+    // one cage, one pour — wall steel bends into the pad, slope bars follow the haunches
+    s += '<path d="M' + (WL_L + 10) + ' ' + (SOG_B + 8) + ' V' + (SLAB_T + 13) + ' H232" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
+    s += '<path d="M' + (WR_R - 10) + ' ' + (SOG_B + 8) + ' V' + (SLAB_T + 13) + ' H248" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
+    s += '<line x1="' + (padL - RUN + 16) + '" y1="' + (SOG_B + 14) + '" x2="' + (padL + 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
+    s += '<line x1="' + (padR + RUN - 16) + '" y1="' + (SOG_B + 14) + '" x2="' + (padR - 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
+    // the haunch buries the water-table label — paint it on top of the concrete
+    s += txt(4, WT - 22, 'Water table', C.waterLine, 'start', 8.6);
+    s += txt(4, WT - 11, 'ABOVE pit floor', C.waterLine, 'start', 8.6);
+    if (sump) s += txt(206, SLAB_B + 32, 'Sump', C.interior, 'end', 8.5);
+
+    s += txt(240, 190, 'ELEVATOR PIT', C.interior, 'middle', 11, 700);
+    s += txt(240, 206, opts.sub, C.interior, 'middle', 8.5);
+
+    // pressure: the haunches slope outward, so lateral arrows start at the edges
     [200, 240].forEach(function (y) {
-      s += flowArrow(latL, y, latLen, 'right', mem ? C.risk : C.waterLine);
-      s += flowArrow(latR, y, latLen, 'left', mem ? C.risk : C.waterLine);
+      s += flowArrow(8, y, 26, 'right', mem ? C.risk : C.waterLine);
+      s += flowArrow(472, y, 26, 'left', mem ? C.risk : C.waterLine);
     });
-    [222, 330].forEach(function (x) { s += flowArrow(x, 354, 14, 'up', mem ? C.risk : C.waterLine); });
+    var upXs = hasPiles ? [222, 258] : [222, 330];
+    upXs.forEach(function (x) { s += flowArrow(x, 354, 14, 'up', mem ? C.risk : C.waterLine); });
     if (sump) s += flowArrow(240, 358, 10, 'up', mem ? C.risk : C.waterLine);
 
-    var penCount = cap(d.penCount, 3);
+    // wall penetrations (standalone pit: sump discharge / conduits)
+    var penCount = hasPiles ? 0 : cap(d.penCount, 3);
     var penYs = spread(150, 195, penCount);
-
-    // penetrations through wall (sump discharge / conduits) — run outward
     penYs.forEach(function (y) {
       s += '<rect x="' + (WL_L - 24) + '" y="' + (y - 4) + '" width="' + (WL_R - WL_L + 28) + '" height="8" fill="#98a3b5" stroke="#6b7688" stroke-width="1" rx="2"/>';
     });
 
-    if (mem) {
-      // membrane wrap: down outside left wall, under slab (around sump), up right wall
-      var path = 'M' + (WL_L - 4) + ' ' + (SOG_B + 2) + ' V' + (SLAB_B - 26) + ' L' + (WL_L - 12) + ' ' + (SLAB_B + 1.5) + ' H' + (sump ? 212 : WR_R + 12);
-      if (sump) path += ' V' + (SLAB_B + 24) + ' H268 V' + (SLAB_B + 1.5) + ' H' + (WR_R + 12);
-      path += ' L' + (WR_R + 4) + ' ' + (SLAB_B - 26) + ' V' + (SOG_B + 2);
-      s += '<path d="' + path + '" fill="none" stroke="' + C.membrane + '" stroke-width="3.5" stroke-linejoin="round"/>';
-
-      // staged pour: slab first, walls after → cold joints at both wall bases
-      s += '<line x1="' + (WL_L - 2) + '" y1="' + SLAB_T + '" x2="' + (WL_R + 2) + '" y2="' + SLAB_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>';
-      s += '<line x1="' + (WR_L - 2) + '" y1="' + SLAB_T + '" x2="' + (WR_R + 2) + '" y2="' + SLAB_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>';
-      s += riskDot(WL_R, SLAB_T, 'Wall-to-slab cold joint \u2014 staged pour');
-      s += riskDot(WR_L, SLAB_T, 'Wall-to-slab cold joint \u2014 staged pour');
-
-      // membrane corner transitions — the four folds
-      s += riskDot(WL_L - 8, SLAB_B, 'Membrane corner fold \u2014 3-plane transition');
-      s += riskDot(WR_R + 8, SLAB_B, 'Membrane corner fold \u2014 3-plane transition');
-      if (sump) {
-        s += riskDot(214, SLAB_B + 6, 'Sump corner \u2014 4 extra membrane folds');
-        s += riskDot(266, SLAB_B + 6, 'Sump corner \u2014 4 extra membrane folds');
-      }
-      penYs.forEach(function (y) { s += riskDot(WL_L - 6, y, 'Penetration through wall membrane \u2014 field-sealed collar'); });
-
-      s += callout(10, 285, WL_L - 10, SLAB_B - 4, 'Blindside membrane wrap', 'start');
-      s += txt(240, 252, 'Stage 1: slab \u00B7 Stage 2: walls', C.risk, 'middle', 9, 700);
-      s += insetMembraneLap(414, 74, 38, WR_R + 8, SLAB_B);
-
-    } else {
-      if (mono) {
-        s += callout(8, 348, WL_L - TOE + 10, SLAB_B - 12, 'Monolithic spread footing \u2014 mat + pit in one pour', 'start', C.ok);
-        s += callout(474, 292, WR_R + TOE + 24, SLAB_B - 44, 'Earth-formed slope \u2014 no forms, no joints', 'end', C.ok);
-        s += txt(240, 252, 'One monolithic pour \u2014 no joints, no seams', C.ok, 'middle', 9.5, 700);
-      } else if (d.cjLF > 0) {
-        s += '<rect x="' + (WL_L + 1) + '" y="' + (SLAB_T - 4) + '" width="18" height="7" rx="3" fill="' + C.penebar + '"/>';
-        s += '<rect x="' + (WR_L + 1) + '" y="' + (SLAB_T - 4) + '" width="18" height="7" rx="3" fill="' + C.penebar + '"/>';
-        s += txt(240, 252, 'Penebar\u00AE at the one pour break', '#a05c0a', 'middle', 9.5, 700);
-      }
-      penYs.forEach(function (y) { s += checkDot(WL_L - 6, y, 'Penetration \u2014 crystals seal the interface'); });
-      if (sump) s += checkDot(240, SLAB_B + 16, 'Sump cast integrally \u2014 no membrane folds');
-      if (mono) {
-        s += checkDot(WL_L - 10, SLAB_T - 8, 'No cold joint \u2014 wall cast with the slab');
-        s += checkDot(WR_R + 10, SLAB_T - 8, 'No cold joint \u2014 wall cast with the slab');
-      } else {
-        s += checkDot(WL_L - 8, SLAB_B, 'No membrane corner \u2014 concrete is continuous');
-        s += checkDot(WR_R + 8, SLAB_B, 'No membrane corner \u2014 concrete is continuous');
+    if (!mem) {
+      s += callout(8, 348, padL + 10, SLAB_B - 12, hasPiles
+        ? 'Monolithic pour — pit + cap on piles, one placement'
+        : 'Monolithic spread footing — mat + pit in one pour', 'start', C.ok);
+      s += callout(474, 292, padR + 24, SLAB_B - 44, 'Earth-formed slope — no forms, no joints', 'end', C.ok);
+      s += txt(240, 252, 'One monolithic pour — no joints, no seams', C.ok, 'middle', 9.5, 700);
+      penYs.forEach(function (y) { s += checkDot(WL_L - 6, y, 'Penetration — crystals seal the interface'); });
+      if (sump) s += checkDot(240, SLAB_B + 16, 'Sump cast integrally — no membrane folds');
+      s += checkDot(WL_L - 10, SLAB_T - 8, 'No cold joint — wall cast with the slab');
+      s += checkDot(WR_R + 10, SLAB_T - 8, 'No cold joint — wall cast with the slab');
+      if (hasPiles) {
+        pileXs.forEach(function (x) { s += checkDot(x, SLAB_B + 16, 'Pile head cast into the treated pad — no boot'); });
+        s += callout(470, 336, pileXs[pileXs.length - 1] + 4, SLAB_B + 16, '0 pile boots', 'end', C.ok);
       }
       s += insetCrystals(414, 74, 38, WR_R + 6, SOG_B + 40);
     }
     return s;
   }
+
+  function scenePilecap(mode, d, extra) {
+    if (extra && extra.monoPour) return sceneMonoPit(mode, d, extra, { piles: true, sub: 'pit + cap on piles — one placement' });
+    return sceneStagedPit(mode, d, extra, { piles: true, sub: 'pit slab on cap' });
+  }
+
+  function sceneElevator(mode, d, extra) {
+    if (extra && extra.monoPour) return sceneMonoPit(mode, d, extra, { piles: false, sub: 'deepest point of the structure' });
+    return sceneStagedPit(mode, d, extra, { piles: false, sub: 'deepest point of the structure', subY: 157 });
+  }
+
 
   /* ── summary + orchestration (unchanged interface) ───── */
   function buildScene(type, mode, d, extra) {

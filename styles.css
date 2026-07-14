@@ -31,20 +31,19 @@ header { background: var(--p-navy-dk); border-bottom: 4px solid var(--p-orange);
 /* ── Two-panel shell ── */
 .app-shell {
   display: grid;
-  grid-template-columns: minmax(360px, 42%) 1fr;
+  grid-template-columns: 1fr;
   gap: 20px;
-  max-width: 1500px;
-  margin: 20px auto 48px;
+  max-width: 1100px;
+  margin: 20px auto 32px;
   padding: 0 24px;
   align-items: start;
 }
 .input-panel { min-width: 0; }
+/* Executive View — full-width summary section at the bottom of the page */
 .results-panel {
-  position: sticky;
-  top: 20px;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  scrollbar-width: thin;
+  max-width: 1100px;
+  margin: 28px auto 48px;
+  padding: 0 24px;
 }
 
 /* ── Input sections (accordion) ── */
@@ -493,7 +492,6 @@ footer strong { color: var(--p-orange); }
 /* ── Responsive ── */
 @media (max-width: 1100px) {
   .app-shell { grid-template-columns: 1fr; }
-  .results-panel { position: static; max-height: none; order: -1; }
 }
 @media (max-width: 900px) {
   .kpi-row { grid-template-columns: 1fr 1fr; }
@@ -630,7 +628,6 @@ footer strong { color: var(--p-orange); }
   body { background: #fff; }
   header { background: var(--p-navy-dk) !important; }
   .app-shell { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
-  .results-panel { position: static; max-height: none; overflow: visible; order: -1; }
   .toggle-row { display: none; }
   #section-pkg { display: none !important; }
   .app-tabs, .header-actions, .compare-section, .sample-row, .exec-eyebrow-actions, .advanced-detail > summary { display: none !important; }
