@@ -241,7 +241,10 @@ function compute() {
   document.getElementById('d-cj').textContent     = d.cjLF > 0     ? fmtN(d.cjLF)     : '—';
 
   if (window.renderComparisonDiagram) {
-    var diagramExtra = { monoPour: chk('mono_pour'), sump: chk('pit_sump') };
+    var diagramExtra = {
+      monoPour: (currentType === 'elevator' || currentType === 'pilecap') && chk('mono_pour'),
+      sump: currentType === 'elevator' && chk('pit_sump')
+    };
     renderComparisonDiagram(d, currentType, diagramExtra);
   }
   var monoRow = document.getElementById('compare-mono-row');

@@ -322,30 +322,7 @@
 
     var pileHeadY = CAP_B + 6;
 
-    if (mem && monoPC) {
-      // Fig-3B: membrane wraps the monolithic spread footing \u2014 boots still required at every pile
-      var membY2 = CAP_B + 2;
-      var segs2 = [CAP_L - 8].concat(pileXs.reduce(function (acc, x) { return acc.concat([x - 12, x + 12]); }, [])).concat([CAP_R + 8]);
-      for (var k = 0; k < segs2.length; k += 2) {
-        s += '<line x1="' + segs2[k] + '" y1="' + membY2 + '" x2="' + segs2[k + 1] + '" y2="' + membY2 + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
-      }
-      s += '<path d="M' + (WL_L - 5) + ' ' + (GRADE + 2) + ' V' + (CAP_T - 5) + ' H' + (CAP_L - 8) + ' V' + membY2 + '" fill="none" stroke="' + C.membrane + '" stroke-width="3.5" stroke-linejoin="round"/>';
-      s += '<path d="M' + (WR_R + 5) + ' ' + (GRADE + 2) + ' V' + (CAP_T - 5) + ' H' + (CAP_R + 8) + ' V' + membY2 + '" fill="none" stroke="' + C.membrane + '" stroke-width="3.5" stroke-linejoin="round"/>';
-      s += riskDot(WL_L - 5, CAP_T - 5, 'Re-entrant corner \u2014 wall-to-cap membrane fold');
-      s += riskDot(WR_R + 5, CAP_T - 5, 'Re-entrant corner \u2014 wall-to-cap membrane fold');
-      s += riskDot(CAP_L - 7, CAP_T - 5, 'Cap shoulder corner \u2014 90\u00B0 fold over the cap edge');
-      s += riskDot(CAP_R + 7, CAP_T - 5, 'Cap shoulder corner \u2014 90\u00B0 fold over the cap edge');
-      s += riskDot(CAP_L - 7, membY2, 'Bottom corner fold \u2014 below the water table');
-      s += riskDot(CAP_R + 7, membY2, 'Bottom corner fold \u2014 below the water table');
-      pileXs.forEach(function (x) {
-        s += '<path d="M' + (x - 13) + ' ' + membY2 + ' l5 -8 h16 l5 8" fill="none" stroke="' + C.risk + '" stroke-width="2"/>';
-        s += riskDot(x, pileHeadY - 12, 'Pile boot / flashing \u2014 field-sealed around every pile head');
-      });
-      s += callout(468, 318, pileXs[pileXs.length - 1] + 6, membY2 + 4, 'Boot at EVERY pile', 'end', C.risk);
-      s += txt(240, 232, 'Same monolithic pour \u2014 boots + corner folds remain', C.risk, 'middle', 9.5, 700);
-      s += insetMembraneLap(408, 96, 40, WR_R + 5, 170);
-
-    } else if (mem) {
+    if (mem) {
       // under-cap membrane on mud slab, interrupted at every pile
       var membY = CAP_B + 2;
       var segs = [CAP_L - 8].concat(pileXs.reduce(function (acc, x) { return acc.concat([x - 12, x + 12]); }, [])).concat([CAP_R + 8]);
@@ -374,8 +351,7 @@
       s += insetMembraneLap(408, 96, 40, WR_R + 6, CAP_T);
 
     } else {
-      var monolithicPC = !!(extra && extra.monoPour);
-      if (monolithicPC) {
+      if (monoPC) {
         s += checkDot(WL_R + 8, CAP_T, 'No cold joint \u2014 walls cast with the cap in one placement');
         s += checkDot(WR_L - 8, CAP_T, 'No cold joint \u2014 walls cast with the cap in one placement');
         s += callout(8, 320, CAP_L + 8, CAP_B - 10, 'Walls + cap \u2014 one placement', 'start', C.ok);
@@ -488,30 +464,7 @@
       s += '<rect x="' + (WL_L - 24) + '" y="' + (y - 4) + '" width="' + (WL_R - WL_L + 28) + '" height="8" fill="#98a3b5" stroke="#6b7688" stroke-width="1" rx="2"/>';
     });
 
-    if (mem && monoShape) {
-      // Membrane pre-installed on mud slab + excavation, wrapping the monolithic footing:
-      // down the wall face, out over the footing toe, down the toe edge, under the slab
-      var toeL = WL_L - TOE - 6, toeR = WR_R + TOE + 6;
-      var mp = 'M' + (WL_L - 5) + ' ' + (SOG_B + 2) + ' V' + (SLAB_T - 4) + ' H' + toeL + ' V' + (SLAB_B + 1.5) + ' H' + (sump ? 216 : toeR);
-      if (sump) mp += ' V' + (SLAB_B + 24) + ' H264 V' + (SLAB_B + 1.5) + ' H' + toeR;
-      mp += ' V' + (SLAB_T - 4) + ' H' + (WR_R + 5) + ' V' + (SOG_B + 2);
-      s += '<path d="' + mp + '" fill="none" stroke="' + C.membrane + '" stroke-width="3.5" stroke-linejoin="round"/>';
-      s += riskDot(WL_L - 5, SLAB_T - 4, 'Re-entrant corner \u2014 wall-to-footing membrane fold');
-      s += riskDot(WR_R + 5, SLAB_T - 4, 'Re-entrant corner \u2014 wall-to-footing membrane fold');
-      s += riskDot(toeL, SLAB_T - 2, 'Footing edge corner \u2014 90\u00B0 fold over the pad edge');
-      s += riskDot(toeR, SLAB_T - 2, 'Footing edge corner \u2014 90\u00B0 fold over the pad edge');
-      s += riskDot(toeL, SLAB_B + 1, 'Bottom footing corner \u2014 below the water table');
-      s += riskDot(toeR, SLAB_B + 1, 'Bottom footing corner \u2014 below the water table');
-      if (sump) {
-        s += riskDot(216, SLAB_B + 6, 'Sump corner \u2014 4 extra membrane folds');
-        s += riskDot(264, SLAB_B + 6, 'Sump corner \u2014 4 extra membrane folds');
-      }
-      penYs.forEach(function (y) { s += riskDot(WL_L - 6, y, 'Penetration through wall membrane \u2014 field-sealed collar'); });
-      s += callout(8, 320, 140, SLAB_B + 2, 'Membrane wraps every face \u2014 installed blind', 'start');
-      s += txt(240, 252, 'Same monolithic pour \u2014 membrane still folds at every corner', C.risk, 'middle', 9, 700);
-      s += insetMembraneLap(414, 74, 38, WR_R + 5, 200);
-
-    } else if (mem) {
+    if (mem) {
       // membrane wrap: down outside left wall, under slab (around sump), up right wall
       var path = 'M' + (WL_L - 4) + ' ' + (SOG_B + 2) + ' V' + (SLAB_B - 26) + ' L' + (WL_L - 12) + ' ' + (SLAB_B + 1.5) + ' H' + (sump ? 212 : WR_R + 12);
       if (sump) path += ' V' + (SLAB_B + 24) + ' H268 V' + (SLAB_B + 1.5) + ' H' + (WR_R + 12);
@@ -567,21 +520,21 @@
     return sceneSlab(mode, d);
   }
 
+  /* Always describes the membrane system's STAGED construction — the
+     monolithic-pour toggle only changes how Penetron builds it, so the
+     membrane side (and its risk count) stays the standard detail. */
   function riskSummary(type, d, extra) {
     if (type === 'pilecap') {
       var pile = d.piles || 0;
-      var monoP = !!(extra && extra.monoPour);
       var parts = [];
       if (pile > 0) parts.push(pile + ' pile boot' + (pile !== 1 ? 's' : ''));
       var joints = 0;
-      if (monoP) { joints = 6; parts.push('6 membrane corner folds at the cap'); }
-      else if (d.cjLF > 0) { joints = 2; parts.push('2 cap-to-wall cold joints'); }
+      if (d.cjLF > 0) { joints = 2; parts.push('2 cap-to-wall cold joints'); }
       return { count: pile + joints, parts: parts };
     }
     if (type === 'elevator') {
-      var monoE = !!(extra && extra.monoPour);
-      var cjE = monoE ? 0 : (Math.ceil(d.cjLF / 30) || 0);
-      var corners = (monoE ? 6 : 2) + ((extra && extra.sump) ? 2 : 0);
+      var cjE = Math.ceil(d.cjLF / 30) || 0;
+      var corners = 2 + ((extra && extra.sump) ? 2 : 0);
       var parts1 = [];
       if (cjE > 0) parts1.push(cjE + ' cold joint' + (cjE !== 1 ? 's' : ''));
       parts1.push(corners + ' membrane corner folds');
@@ -607,17 +560,26 @@
     var penHost = document.getElementById('diagram-penetron');
     if (!memHost || !penHost) return;
 
-    memHost.innerHTML = buildScene(type, 'mem', d, extra);
+    // The membrane side always shows the standard staged construction \u2014
+    // pouring monolithically is what Penetron enables, so only the
+    // Penetron scene switches when the toggle is on.
+    var monoOn = !!(extra && extra.monoPour) && (type === 'elevator' || type === 'pilecap');
+    var memExtra = { monoPour: false, sump: !!(extra && extra.sump) };
+
+    memHost.innerHTML = buildScene(type, 'mem', d, memExtra);
     penHost.innerHTML = buildScene(type, 'pen', d, extra);
 
     var stageMem = document.getElementById('compare-stage-membrane');
     var stagePen = document.getElementById('compare-stage-penetron');
     var notes = STAGE_NOTES[type] || STAGE_NOTES.slab;
-    var monoOn = !!(extra && extra.monoPour) && (type === 'elevator' || type === 'pilecap');
-    if (stageMem) stageMem.textContent = monoOn ? 'Monolithic pour \u2014 membrane pre-installed on the mud slab + excavation, blind' : (notes.mem || '');
+    if (stageMem) {
+      stageMem.textContent = monoOn
+        ? (notes.mem || '') + ' \u2014 staging is required to tie the membrane in'
+        : (notes.mem || '');
+    }
     if (stagePen) {
       stagePen.textContent = monoOn
-        ? (type === 'pilecap' ? 'Monolithic pour \u2014 cap + pit walls in one placement' : 'Monolithic pour \u2014 walls + slab in one placement')
+        ? (type === 'pilecap' ? 'Monolithic pour \u2014 cap + pit walls in one placement' : 'Monolithic pour \u2014 walls + footing in one placement')
         : (notes.pen || 'Admixture goes in the ready-mix truck');
     }
 
