@@ -403,34 +403,43 @@
     s += txt(4, WT - 22, 'Water table', C.waterLine, 'start', 8.6);
     s += txt(4, WT - 11, 'ABOVE pit floor', C.waterLine, 'start', 8.6);
 
-    // mud slab (wider when the monolithic toe extends past the walls)
+    // mud slab (wider when the monolithic footing pad extends past the walls)
     var monoShape = mono;
-    var TOE = 46; // spread footing projection past the wall face, flat pad \u2014 typical monolithic pit footing
+    var TOE = 46;  // footing pad projection past the wall face
+    var RUN = 64;  // horizontal run of the earth-formed slope, pad edge up to mat underside
     var mudX1 = monoShape ? (WL_L - TOE - 8) : (WL_L - 8);
     var mudX2 = monoShape ? (WR_R + TOE + 8) : (WR_R + 8);
     s += '<rect x="' + mudX1 + '" y="' + SLAB_B + '" width="' + (mudX2 - mudX1) + '" height="10" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>';
 
     if (monoShape) {
-      // ONE continuous placement: monolithic spread footing \u2014 a flat rectangular pad projecting
-      // past each wall face, vertical walls rising straight out of it. No batter, no cold joint.
-      var pMono = 'M' + WL_L + ' ' + SOG_B
+      // ONE continuous placement: the pit is dropped out of the mat itself.
+      // The mat underside breaks and slopes down (earth-formed, no vertical
+      // formwork) to a footing pad wider than the pit \u2014 mat, sloped haunches,
+      // pad, and pit walls all one pour.
+      var padL = WL_L - TOE, padR = WR_R + TOE;
+      var pMono = 'M0 ' + SOG_T
+            + ' H' + WL_R
             + ' V' + SLAB_T
-            + ' H' + (WL_L - TOE)
-            + ' V' + SLAB_B;
-      if (sump) pMono += ' H216 V' + (SLAB_B + 22) + ' H264 V' + SLAB_B;
-      pMono += ' H' + (WR_R + TOE)
-         + ' V' + SLAB_T
-         + ' H' + WR_R
-         + ' V' + SOG_B
-         + ' H' + WR_L
-         + ' V' + SLAB_T
-         + ' H' + WL_R
-         + ' V' + SOG_B
+            + ' H' + WR_L
+            + ' V' + SOG_T
+            + ' H480'
+            + ' V' + SOG_B
+            + ' H' + (padR + RUN)
+            + ' L' + padR + ' ' + SLAB_B;
+      if (sump) pMono += ' H264 V' + (SLAB_B + 22) + ' H216 V' + SLAB_B;
+      pMono += ' H' + padL
+         + ' L' + (padL - RUN) + ' ' + SOG_B
+         + ' H0'
          + ' Z';
       s += '<path d="' + pMono + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5" stroke-linejoin="round"/>';
-      // continuous L-bars \u2014 wall steel bends into the slab: one cage, one pour
+      // one cage, one pour \u2014 wall steel bends into the pad, slope bars follow the haunches
       s += '<path d="M' + (WL_L + 10) + ' ' + (SOG_B + 8) + ' V' + (SLAB_T + 13) + ' H232" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
       s += '<path d="M' + (WR_R - 10) + ' ' + (SOG_B + 8) + ' V' + (SLAB_T + 13) + ' H248" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
+      s += '<line x1="' + (padL - RUN + 16) + '" y1="' + (SOG_B + 14) + '" x2="' + (padL + 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
+      s += '<line x1="' + (padR + RUN - 16) + '" y1="' + (SOG_B + 14) + '" x2="' + (padR - 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
+      // the haunch buries the water-table label — repaint it on top of the concrete
+      s += txt(4, WT - 22, 'Water table', C.waterLine, 'start', 8.6);
+      s += txt(4, WT - 11, 'ABOVE pit floor', C.waterLine, 'start', 8.6);
       if (sump) s += txt(206, SLAB_B + 32, 'Sump', C.interior, 'end', 8.5);
     } else {
       // staged: three separate placements \u2014 edges betray where pours meet
@@ -449,9 +458,11 @@
     s += txt(240, 206, 'deepest point of the structure', C.interior, 'middle', 8.5);
 
     // pressure: lateral both walls + uplift under slab and sump
+    // (monolithic haunches slope outward, so the arrows start further out)
+    var latL = monoShape ? 8 : 96, latR = monoShape ? 472 : 384, latLen = monoShape ? 26 : 30;
     [200, 240].forEach(function (y) {
-      s += flowArrow(96, y, 30, 'right', mem ? C.risk : C.waterLine);
-      s += flowArrow(384, y, 30, 'left', mem ? C.risk : C.waterLine);
+      s += flowArrow(latL, y, latLen, 'right', mem ? C.risk : C.waterLine);
+      s += flowArrow(latR, y, latLen, 'left', mem ? C.risk : C.waterLine);
     });
     [222, 330].forEach(function (x) { s += flowArrow(x, 354, 14, 'up', mem ? C.risk : C.waterLine); });
     if (sump) s += flowArrow(240, 358, 10, 'up', mem ? C.risk : C.waterLine);
@@ -492,7 +503,8 @@
 
     } else {
       if (mono) {
-        s += callout(8, 348, WL_L - TOE + 10, SLAB_B - 12, 'Monolithic spread footing \u2014 walls + footing, one pour', 'start', C.ok);
+        s += callout(8, 348, WL_L - TOE + 10, SLAB_B - 12, 'Monolithic spread footing \u2014 mat + pit in one pour', 'start', C.ok);
+        s += callout(474, 292, WR_R + TOE + 24, SLAB_B - 44, 'Earth-formed slope \u2014 no forms, no joints', 'end', C.ok);
         s += txt(240, 252, 'One monolithic pour \u2014 no joints, no seams', C.ok, 'middle', 9.5, 700);
       } else if (d.cjLF > 0) {
         s += '<rect x="' + (WL_L + 1) + '" y="' + (SLAB_T - 4) + '" width="18" height="7" rx="3" fill="' + C.penebar + '"/>';
@@ -579,7 +591,7 @@
     }
     if (stagePen) {
       stagePen.textContent = monoOn
-        ? (type === 'pilecap' ? 'Monolithic pour \u2014 cap + pit walls in one placement' : 'Monolithic pour \u2014 walls + footing in one placement')
+        ? (type === 'pilecap' ? 'Monolithic pour \u2014 cap + pit walls in one placement' : 'Monolithic pour \u2014 pit dropped out of the mat, one placement')
         : (notes.pen || 'Admixture goes in the ready-mix truck');
     }
 
