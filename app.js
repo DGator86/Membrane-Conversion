@@ -64,7 +64,7 @@ function selectType(type) {
   var penField = document.getElementById('pen-detail-field');
   if (penField) penField.style.display = type === 'pilecap' ? 'none' : 'block';
   var monoSection = document.getElementById('mono-pour-section');
-  if (monoSection) monoSection.style.display = type === 'elevator' ? 'block' : 'none';
+  if (monoSection) monoSection.style.display = (type === 'elevator' || type === 'pilecap') ? 'block' : 'none';
   compute();
 }
 
@@ -73,6 +73,13 @@ function toggleMonoPour() {
   var daysField = document.getElementById('mono-days-field');
   if (daysField) daysField.style.display = on ? 'block' : 'none';
   compute();
+}
+
+function toggleCompareMono() {
+  var src = document.getElementById('compare_mono');
+  var dst = document.getElementById('mono_pour');
+  if (src && dst) dst.checked = src.checked;
+  toggleMonoPour();
 }
 
 function toggleMode() {
@@ -87,7 +94,16 @@ function toggleMode() {
 function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
 function chk(id) { var el = document.getElementById(id); return el ? el.checked : false; }
 function sel(id) { var el = document.getElementById(id); return el ? el.value : ''; }
-function setText(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+function setText(id, text) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (el.textContent !== text) {
+    el.textContent = text;
+    el.classList.remove('value-flash');
+    void el.offsetWidth;
+    el.classList.add('value-flash');
+  }
+}
 function setHTML(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
 
 function fmt$(n) {
@@ -224,6 +240,20 @@ function compute() {
   document.getElementById('d-walls').textContent  = d.wallSF > 0   ? fmtN(d.wallSF)   : (d.bottomSF > 0 ? '0' : '—');
   document.getElementById('d-cj').textContent     = d.cjLF > 0     ? fmtN(d.cjLF)     : '—';
 
+  if (window.renderComparisonDiagram) {
+    var diagramExtra = {
+      monoPour: (currentType === 'elevator' || currentType === 'pilecap') && chk('mono_pour'),
+      sump: currentType === 'elevator' && chk('pit_sump')
+    };
+    renderComparisonDiagram(d, currentType, diagramExtra);
+  }
+  var monoRow = document.getElementById('compare-mono-row');
+  if (monoRow) monoRow.style.display = (currentType === 'elevator' || currentType === 'pilecap') ? '' : 'none';
+  var cmSync = document.getElementById('compare_mono');
+  if (cmSync && cmSync.checked !== chk('mono_pour')) cmSync.checked = chk('mono_pour');
+  updateCompareStory();
+  saveState();
+
   // Auto-filled label text
   var cyText   = d.cy > 0        ? fmtN(d.cy, 1)    + ' CY'    : '— (enter dimensions above)';
   var sfText   = totalSF > 0     ? fmtN(totalSF)     + ' SF'    : '— (enter dimensions above)';
@@ -241,7 +271,7 @@ function compute() {
   // Penetron: admixture only, zero critical path days (added in ready-mix truck)
   var pCostCY     = v('p_cost_per_cy');
   var pSched      = 0;
-  var monolithicDays = (currentType === 'elevator' && chk('mono_pour')) ? (v('mono_days') || 0) : 0;
+  var monolithicDays = ((currentType === 'elevator' || currentType === 'pilecap') && chk('mono_pour')) ? (v('mono_days') || 0) : 0;
   var pAdmixTotal = d.cy * pCostCY;
 
   // Membrane base costs
@@ -783,6 +813,213 @@ function compute() {
     + valueCase;
 }
 
+/* ══════════════════════════════════════
+   COMPARISON STORY COPY — per scope type
+══════════════════════════════════════ */
+var TYPE_STORY = {
+  slab: {
+    eyebrow: 'Hydrostatic Mat Slab',
+    title: 'Where the Risk Lives Under Constant Water Pressure',
+    desc: 'Groundwater pushes up against the mat slab around the clock. A membrane relies on one continuous, unbroken sheet between that water and the structure \u2014 every seam, joint, and penetration is a place the seal can fail. Penetron makes the concrete itself the water barrier.'
+  },
+  pilecap: {
+    eyebrow: 'Elevator Pit / Pile Cap',
+    title: 'The Cap-to-Wall Joint Is the Highest-Risk Detail in South Florida',
+    desc: 'Every pile penetrating the cap, and the cold joint where the pit walls land on the cap, is a distinct field-applied detail with a membrane system \u2014 and the hardest place on the job to get a perfect seal. Penetron treats the whole pour as one waterproof mass.'
+  },
+  elevator: {
+    eyebrow: 'Elevator Pit',
+    title: 'Four Corners, One Sump, Zero Room for Error',
+    desc: 'A standalone pit has to be watertight from day one \u2014 it sits below the water table with no way to inspect or repair the exterior once backfilled. Penetron eliminates the membrane seams at every corner and around the sump.'
+  }
+};
+
+function updateCompareStory() {
+  var story = TYPE_STORY[currentType] || TYPE_STORY.slab;
+  setText('compare-eyebrow-text', story.eyebrow);
+  setText('compare-title', story.title);
+  setText('compare-desc', story.desc);
+}
+
+/* ══════════════════════════════════════
+   STATE PERSISTENCE — survives page reload
+══════════════════════════════════════ */
+var STORAGE_KEY = 'penetron_conversion_tool_state_v1';
+
+function saveState() {
+  try {
+    var state = { inputs: {}, checks: {}, selects: {}, meta: {} };
+    document.querySelectorAll('input[type="number"][id], input[type="text"][id]').forEach(function (el) {
+      state.inputs[el.id] = el.value;
+    });
+    document.querySelectorAll('input[type="checkbox"][id]').forEach(function (el) {
+      state.checks[el.id] = el.checked;
+    });
+    document.querySelectorAll('select[id]').forEach(function (el) {
+      state.selects[el.id] = el.value;
+    });
+    state.meta = {
+      currentType: currentType,
+      slabDimMode: slabDimMode,
+      capDimMode: capDimMode,
+      sensitivityIdx: sensitivityIdx,
+      selectedWarrantyTier: selectedWarrantyTier
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) { /* storage unavailable — ignore */ }
+}
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    var state = JSON.parse(raw);
+
+    Object.keys(state.inputs || {}).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = state.inputs[id];
+    });
+    Object.keys(state.checks || {}).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.checked = state.checks[id];
+    });
+    Object.keys(state.selects || {}).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = state.selects[id];
+    });
+
+    var meta = state.meta || {};
+    if (meta.currentType) selectType(meta.currentType);
+    if (meta.slabDimMode) setSlabDimMode(meta.slabDimMode);
+    if (meta.capDimMode) setCapDimMode(meta.capDimMode);
+    if (typeof meta.sensitivityIdx === 'number') setSensitivity(meta.sensitivityIdx);
+    toggleMode();
+    toggleMonoPour();
+    if (meta.selectedWarrantyTier) selectWarrantyTier(meta.selectedWarrantyTier);
+  } catch (e) { /* ignore malformed saved state */ }
+}
+
+function restoreDefaults() {
+  if (!confirm('Clear all entered values and start over?')) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  document.querySelectorAll('input[type="number"][id], input[type="text"][id]').forEach(function (el) { el.value = ''; });
+  document.querySelectorAll('input[type="checkbox"][id]').forEach(function (el) { el.checked = false; });
+  var ptSel = document.getElementById('project_type'); if (ptSel) ptSel.value = 'highrise';
+  var psSel = document.getElementById('project_size'); if (psSel) psSel.value = 'p75to150';
+  selectedWarrantyTier = null;
+  var summaryEl = document.getElementById('w-selected-summary');
+  if (summaryEl) summaryEl.style.display = 'none';
+  document.querySelectorAll('.w-tier').forEach(function (el) { el.classList.remove('selected'); });
+  var body = document.getElementById('w-process-body');
+  if (body) body.innerHTML = '<div class="w-process-prompt"><span class="w-process-prompt-icon">&#9664;</span>Select a warranty duration to see the required steps</div>';
+  selectType('slab');
+  setSlabDimMode('lw');
+  setCapDimMode('lw');
+  setSensitivity(1);
+  toggleMode();
+  toggleMonoPour();
+  compute();
+}
+
+/* ══════════════════════════════════════
+   SAMPLE / DEMO PROJECTS
+══════════════════════════════════════ */
+var SAMPLES = {
+  slab: {
+    inputs: {
+      slab_l: 180, slab_w: 120, slab_t: 36, slab_depth: 8,
+      slab_wall_h: 14, slab_wall_t: 36, slab_cj_lf: 220, slab_pen_count: 18,
+      p_cost_per_cy: 28, p_concrete_per_cy: 185,
+      m_membrane_cost_sf: 3.75, m_install_cost_sf: 2.25, m_inspect: 3500,
+      m_sched_underform: 4, m_sched_walls: 6,
+      m_cj_per_lf: 18, m_pen_per_ea: 350, m_risk_allowance: 15000,
+      cost_per_day: 6500
+    },
+    checks: { mono_pour: false },
+    selects: { project_type: 'highrise', project_size: 'p75to150' }
+  },
+  pilecap: {
+    inputs: {
+      cap_l: 20, cap_w: 15, cap_d_lw: 4.5, cap_qty: 14,
+      cap_piles_per: 6, cap_pile_dia: 24,
+      cap_pit_l: 10, cap_pit_w: 8, cap_pit_wall_h: 10, cap_cj_lf: 90,
+      p_cost_per_cy: 28, p_concrete_per_cy: 185,
+      m_membrane_cost_sf: 3.75, m_install_cost_sf: 2.25, m_inspect: 4200,
+      m_sched_underform: 5, m_sched_walls: 6,
+      m_cj_per_lf: 18, m_pile_boot_per_ea: 800, m_risk_allowance: 20000,
+      cost_per_day: 6500
+    },
+    checks: { mono_pour: false },
+    selects: { project_type: 'highrise', project_size: 'p75to150' }
+  },
+  elevator: {
+    inputs: {
+      pit_l: 10, pit_w: 9, pit_depth: 14, pit_qty: 2,
+      pit_wall_t: 12, pit_slab_t: 10, pit_cj_lf: 48, pit_pen_count: 6,
+      p_cost_per_cy: 28, p_concrete_per_cy: 185,
+      m_membrane_cost_sf: 3.75, m_install_cost_sf: 2.25, m_inspect: 1800,
+      m_sched_underform: 3, m_sched_walls: 4,
+      m_cj_per_lf: 18, m_pen_per_ea: 350, m_risk_allowance: 8000,
+      cost_per_day: 6500,
+      mono_days: 4
+    },
+    checks: { mono_pour: true },
+    selects: { project_type: 'highrise', project_size: 'p75to150' }
+  }
+};
+
+function loadSample(type) {
+  selectType(type);
+  var sample = SAMPLES[type];
+  if (!sample) return;
+  Object.keys(sample.inputs || {}).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.value = sample.inputs[id];
+  });
+  Object.keys(sample.checks || {}).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.checked = sample.checks[id];
+  });
+  Object.keys(sample.selects || {}).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.value = sample.selects[id];
+  });
+  toggleMonoPour();
+  compute();
+}
+
+/* ══════════════════════════════════════
+   COPY SUMMARY TO CLIPBOARD
+══════════════════════════════════════ */
+function copySummary() {
+  var lines = [];
+  lines.push('PENETRON — Below-Grade Waterproofing Conversion Summary');
+  lines.push('');
+  var val = document.getElementById('exec-project-value');
+  if (val) lines.push('Project Value Created: ' + val.textContent);
+  var days = document.getElementById('exec-days-faster');
+  if (days) lines.push('Critical Path: ' + days.textContent);
+  var risk = document.getElementById('exec-risk-display');
+  if (risk) lines.push('Waterproofing Risk: ' + risk.textContent.replace(/\s+/g, ' ').trim());
+  var details = document.getElementById('exec-details');
+  if (details) lines.push('Details Eliminated: ' + details.textContent);
+  var rec = document.getElementById('exec-recommendation');
+  if (rec) { lines.push(''); lines.push(rec.textContent.trim()); }
+  var text = lines.join('\n');
+
+  function flashCopyBtn() {
+    var btn = document.querySelector('.exec-icon-btn[onclick="copySummary()"]');
+    if (!btn) return;
+    btn.classList.add('copied');
+    setTimeout(function () { btn.classList.remove('copied'); }, 1400);
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flashCopyBtn).catch(function () {});
+  }
+}
+
+loadState();
 compute();
 
 /* ══════════════════════════════════════
@@ -816,8 +1053,9 @@ function syncWarrantyCY() {
   var cyDisplay = document.getElementById('p_volume_display');
   var wCyEl = document.getElementById('w_cy');
   if (!wCyEl) return;
-  if (cyDisplay && parseFloat(cyDisplay.textContent) > 0 && !wCyEl.value) {
-    wCyEl.value = Math.round(parseFloat(cyDisplay.textContent));
+  var cyNum = cyDisplay ? parseFloat(String(cyDisplay.textContent).replace(/,/g, '')) : 0;
+  if (cyNum > 0 && !wCyEl.value) {
+    wCyEl.value = Math.round(cyNum);
   }
   calcWarranty();
 }
