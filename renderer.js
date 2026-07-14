@@ -177,12 +177,15 @@
     // mud slab (working slab)
     s += '<rect x="' + (WALL_L - 10) + '" y="' + MAT_B + '" width="' + (480 - WALL_L + 10) + '" height="12" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>';
 
-    // mat slab + wall
+    // mat slab (pour 1), wall above (pour 2) — animate in placement order
+    s += '<g class="pour-1">';
     s += '<rect x="' + WALL_L + '" y="' + MAT_T + '" width="' + (480 - WALL_L) + '" height="' + (MAT_B - MAT_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-    s += '<rect x="' + WALL_L + '" y="' + GRADE + '" width="' + (WALL_R - WALL_L) + '" height="' + (MAT_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-    // rebar
-    s += rebarV(WALL_L + 12, GRADE + 10, MAT_T + 40) + rebarV(WALL_R - 12, GRADE + 10, MAT_T + 40);
     s += rebarH(WALL_L + 12, 468, MAT_T + 14) + rebarH(WALL_L + 12, 468, MAT_B - 14);
+    s += '</g>';
+    s += '<g class="pour-2">';
+    s += '<rect x="' + WALL_L + '" y="' + GRADE + '" width="' + (WALL_R - WALL_L) + '" height="' + (MAT_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+    s += rebarV(WALL_L + 12, GRADE + 10, MAT_T + 40) + rebarV(WALL_R - 12, GRADE + 10, MAT_T + 40);
+    s += '</g>';
 
     // interior label + floor line
     s += txt(258, 178, 'BASEMENT / PARKING LEVEL', C.interior, 'middle', 11, 700);
@@ -206,6 +209,8 @@
       s += '<rect x="' + (x - 5) + '" y="' + (MAT_T - 16) + '" width="10" height="' + (MAT_B - MAT_T + 28) + '" fill="#98a3b5" stroke="#6b7688" stroke-width="1" rx="2"/>';
     });
 
+    // field detailing arrives last (pour 3 of the animation)
+    s += '<g class="pour-3">';
     if (mem) {
       // under-slab membrane on mud slab + wall membrane + protection board
       s += '<line x1="' + (WALL_L - 10) + '" y1="' + (MAT_B + 1.5) + '" x2="480" y2="' + (MAT_B + 1.5) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
@@ -236,6 +241,7 @@
       s += insetCrystals(398, 92, 42, 330, MAT_T + 30);
       s += txt(258, 204, 'Treated concrete \u2014 the structure is the barrier', C.ok, 'middle', 9.5, 700);
     }
+    s += '</g>';
     return s;
   }
 
@@ -288,15 +294,20 @@
       });
     }
 
-    // staged placements: slab first, walls after
+    // staged placements: slab first (pour 1), walls after (pour 2) —
+    // the .pour-* groups animate in that order when the scene changes
+    s += '<g class="pour-1">';
     s += '<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-    s += '<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-    s += '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
     s += rebarH(CAP_L + 12, CAP_R - 12, CAP_T + 14) + rebarH(CAP_L + 12, CAP_R - 12, CAP_B - 12);
     if (sump) {
       s += '<rect x="216" y="' + CAP_B + '" width="48" height="22" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
       s += txt(206, CAP_B + 32, 'Sump', C.interior, 'end', 8.5);
     }
+    s += '</g>';
+    s += '<g class="pour-2">';
+    s += '<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+    s += '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+    s += '</g>';
 
     s += txt(240, 140, 'ELEVATOR PIT', C.interior, 'middle', 11, 700);
     s += txt(240, opts.subY || 200, opts.sub, C.interior, 'middle', 8.5);
@@ -319,6 +330,8 @@
     var pileHeadY = CAP_B + 6;
     var membY = CAP_B + 2;
 
+    // field detailing arrives last (pour 3 of the animation)
+    s += '<g class="pour-3">';
     if (mem) {
       // under-slab membrane on mud slab (interrupted at every pile)
       if (hasPiles) {
@@ -379,6 +392,7 @@
       s += insetCrystals(408, 96, 40, WR_R + 2, CAP_T + 20);
       s += txt(240, 254, (hasPiles ? 'Cap' : 'Slab') + ' + walls become one waterproof mass', C.ok, 'middle', 9.5, 700);
     }
+    s += '</g>';
     return s;
   }
 
@@ -433,6 +447,8 @@
     // ONE continuous placement: the mat underside breaks and slopes down
     // (earth-formed, no vertical formwork) to a footing pad wider than the
     // pit — mat, sloped haunches, pad, and pit walls all one pour.
+    // The whole mass animates in as a single pour (.pour-mono).
+    s += '<g class="pour-1 pour-mono">';
     var pMono = 'M0 ' + SOG_T
           + ' H' + WL_R
           + ' V' + SLAB_T
@@ -453,6 +469,7 @@
     s += '<path d="M' + (WR_R - 10) + ' ' + (SOG_B + 8) + ' V' + (SLAB_T + 13) + ' H248" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
     s += '<line x1="' + (padL - RUN + 16) + '" y1="' + (SOG_B + 14) + '" x2="' + (padL + 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
     s += '<line x1="' + (padR + RUN - 16) + '" y1="' + (SOG_B + 14) + '" x2="' + (padR - 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
+    s += '</g>';
     // the haunch buries the water-table label — paint it on top of the concrete
     s += txt(4, WT - 22, 'Water table', C.waterLine, 'start', 8.6);
     s += txt(4, WT - 11, 'ABOVE pit floor', C.waterLine, 'start', 8.6);
@@ -478,6 +495,7 @@
     });
 
     if (!mem) {
+      s += '<g class="pour-3">';
       s += callout(8, 348, padL + 10, SLAB_B - 12, hasPiles
         ? 'Monolithic pour — pit + cap on piles, one placement'
         : 'Monolithic spread footing — mat + pit in one pour', 'start', C.ok);
@@ -492,6 +510,7 @@
         s += callout(470, 336, pileXs[pileXs.length - 1] + 4, SLAB_B + 16, '0 pile boots', 'end', C.ok);
       }
       s += insetCrystals(414, 74, 38, WR_R + 6, SOG_B + 40);
+      s += '</g>';
     }
     return s;
   }
@@ -549,6 +568,8 @@
     elevator: { mem: 'Two-stage pour \u2014 slab, then walls', pen: null }
   };
 
+  var lastAnimKey = null;
+
   function renderComparisonDiagram(d, type, extra) {
     var memHost = document.getElementById('diagram-membrane');
     var penHost = document.getElementById('diagram-penetron');
@@ -559,6 +580,14 @@
     // Penetron scene switches when the toggle is on.
     var monoOn = !!(extra && extra.monoPour) && (type === 'elevator' || type === 'pilecap');
     var memExtra = { monoPour: false, sump: !!(extra && extra.sump) };
+
+    // Replay the pour-sequence animation only when the scene itself changes
+    // (scope switch, mono toggle, sump) \u2014 not on every keystroke.
+    var animKey = type + '|' + (monoOn ? 1 : 0) + '|' + (memExtra.sump ? 1 : 0);
+    var replay = animKey !== lastAnimKey;
+    lastAnimKey = animKey;
+    memHost.classList.toggle('anim', replay);
+    penHost.classList.toggle('anim', replay);
 
     memHost.innerHTML = buildScene(type, 'mem', d, memExtra);
     penHost.innerHTML = buildScene(type, 'pen', d, extra);

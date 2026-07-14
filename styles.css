@@ -756,6 +756,19 @@ input[type="number"], .select-field { transition: border-color .15s, box-shadow 
 .compare-panel-membrane .compare-panel-label { color: var(--p-navy); }
 .compare-panel-penetron .compare-panel-label { color: #a05c0a; }
 .compare-svg { width: 100%; height: auto; display: block; background: #f5f8fc; border-radius: 8px; border: 1px solid #e2e8f2; }
+
+/* ── Diagram pour-sequence animation ──
+   Replays when the scene changes (scope / mono toggle): the staged side
+   pours the slab (pour-1), then the walls (pour-2), then the field
+   detailing lands (pour-3). A monolithic scene rises as one long pour. */
+@keyframes diagramPour { from { opacity: 0; } to { opacity: 1; } }
+.compare-svg.anim .pour-1 { animation: diagramPour .8s ease-out .15s both; }
+.compare-svg.anim .pour-2 { animation: diagramPour .8s ease-out 1.1s both; }
+.compare-svg.anim .pour-3 { animation: diagramPour .7s ease-out 2s both; }
+.compare-svg.anim .pour-mono { animation-duration: 1.7s; }
+@media (prefers-reduced-motion: reduce) {
+  .compare-svg.anim .pour-1, .compare-svg.anim .pour-2, .compare-svg.anim .pour-3 { animation: none; }
+}
 .diagram-caption-svg, .dcap { font-size: 10px; font-weight: 600; font-family: 'Roboto', Arial, sans-serif; }
 .compare-stats { margin-top: 10px; min-height: 24px; }
 .compare-risk-chip {
