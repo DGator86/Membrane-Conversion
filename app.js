@@ -65,6 +65,14 @@ function selectType(type) {
   if (penField) penField.style.display = type === 'pilecap' ? 'none' : 'block';
   var monoSection = document.getElementById('mono-pour-section');
   if (monoSection) monoSection.style.display = (type === 'elevator' || type === 'pilecap') ? 'block' : 'none';
+  // Every scope starts at the standard construction — the monolithic
+  // what-if has to be flipped on deliberately each time.
+  var monoChk = document.getElementById('mono_pour');
+  if (monoChk && monoChk.checked) {
+    monoChk.checked = false;
+    var monoDays = document.getElementById('mono-days-field');
+    if (monoDays) monoDays.style.display = 'none';
+  }
   compute();
 }
 
@@ -846,6 +854,10 @@ function updateCompareStory() {
 ══════════════════════════════════════ */
 var STORAGE_KEY = 'penetron_conversion_tool_state_v1';
 
+// What-if toggles are never persisted — a reload or scope switch always
+// comes back to the standard construction view.
+var TRANSIENT_CHECKS = ['mono_pour', 'compare_mono'];
+
 function saveState() {
   try {
     var state = { inputs: {}, checks: {}, selects: {}, meta: {} };
@@ -853,6 +865,7 @@ function saveState() {
       state.inputs[el.id] = el.value;
     });
     document.querySelectorAll('input[type="checkbox"][id]').forEach(function (el) {
+      if (TRANSIENT_CHECKS.indexOf(el.id) !== -1) return;
       state.checks[el.id] = el.checked;
     });
     document.querySelectorAll('select[id]').forEach(function (el) {
@@ -880,6 +893,7 @@ function loadState() {
       if (el) el.value = state.inputs[id];
     });
     Object.keys(state.checks || {}).forEach(function (id) {
+      if (TRANSIENT_CHECKS.indexOf(id) !== -1) return;
       var el = document.getElementById(id);
       if (el) el.checked = state.checks[id];
     });
@@ -963,7 +977,7 @@ var SAMPLES = {
       cost_per_day: 6500,
       mono_days: 4
     },
-    checks: { mono_pour: true },
+    checks: {},
     selects: { project_type: 'highrise', project_size: 'p75to150' }
   }
 };
