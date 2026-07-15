@@ -638,8 +638,7 @@
       S('Penebar® at the slab joint', 1, 'wstop2', 'Slab on grade'),
       S('Set slab forms', 1, 'slabForms', 'Slab on grade'),
       S('Set slab steel', 1, 'slabSteel', 'Slab on grade'),
-      S('Pour the slab', 1, 'slabPour', 'Slab on grade'),
-      S('Penetron activates — water triggers crystal growth', 2, 'activate', 'Penetron cure'));
+      S('Pour the slab', 1, 'slabPour', 'Slab on grade'));
     return a;
   }
 
@@ -656,8 +655,7 @@
       S('Install steel — one cage', 2, 'cage', 'Monolithic pour'),
       S('Set the elevator pit form', 1, 'pitForm', 'Monolithic pour'),
       S('Pour monolithic — one placement', 1, 'pour', 'Monolithic pour'),
-      S('Backfill', 1, 'backfill', 'Backfill'),
-      S('Penetron activates — water triggers crystal growth', 2, 'activate', 'Penetron cure'));
+      S('Backfill', 1, 'backfill', 'Backfill'));
     return a;
   }
 
@@ -681,29 +679,38 @@
     return '<rect x="' + x + '" y="' + y1 + '" width="6" height="' + (y2 - y1) + '" fill="#d9b57c" stroke="#9c7a45" stroke-width="1"/>';
   }
 
-  /* Penetron activation — water migrates into the concrete, crystals grow,
-     and the damp concrete dries out as the matrix seals. */
-  function activationFx(washShapes, crystalPts, arrowDefs) {
-    var a = '';
-    // damp concrete drying out
-    a += '<g>' + washShapes + '<animate attributeName="opacity" values="1;0" dur="4s" fill="freeze"/></g>';
-    // water migrating in, fading away as the crystals seal it
-    var ar = '';
-    arrowDefs.forEach(function (d) { ar += flowArrow(d[0], d[1], d[2], d[3], C.waterLine); });
-    a += '<g>' + ar + '<animate attributeName="opacity" values=".9;.9;0" dur="5s" fill="freeze"/></g>';
-    // crystals growing, staggered
-    crystalPts.forEach(function (p, i) {
-      a += '<path d="M' + p[0] + ' ' + (p[1] - 4) + ' l3 3.2 -3 4.8 -3 -4.8 z" fill="#f5901e" stroke="#fff" stroke-width=".6" opacity="0">'
-        + '<animate attributeName="opacity" values="0;1" dur=".8s" begin="' + (0.3 + i * 0.35).toFixed(2) + 's" fill="freeze"/></path>';
+  /* Penetron activation — the treated concrete slowly turns lime as the
+     crystals grow through it, starting the moment each pour is placed. */
+  var LIME = '#a5ce39';
+  function crystalTint(shape, isNew) {
+    if (isNew) return '<g opacity="0">' + shape + '<animate attributeName="opacity" values="0;.32" dur="6s" fill="freeze"/></g>';
+    return '<g opacity=".32">' + shape + '</g>';
+  }
+
+  /* microscope popup: rounded caption card attached above a circular
+     zoomed-in view of the crystals growing across a shrinkage crack */
+  function crystalPopup(isNew) {
+    var cx = 240, cy = 148, r = 32;
+    var p = '<g' + (isNew ? ' class="seq-in"' : '') + '>';
+    p += '<rect x="126" y="58" width="228" height="52" rx="10" fill="#fff" stroke="' + LIME + '" stroke-width="2"/>';
+    p += '<line x1="' + cx + '" y1="110" x2="' + cx + '" y2="' + (cy - r) + '" stroke="' + LIME + '" stroke-width="2.5"/>';
+    p += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#eef1f6" stroke="' + LIME + '" stroke-width="2.5"/>';
+    p += '<clipPath id="crysPop"><circle cx="' + cx + '" cy="' + cy + '" r="' + (r - 2) + '"/></clipPath>';
+    p += '<g clip-path="url(#crysPop)">';
+    p += '<path d="M' + cx + ' ' + (cy - r) + ' l3 10 -5 9 4 10 -3 9 2 8" fill="none" stroke="#8a97ad" stroke-width="1.6"/>';
+    var pts = [[-16, -8], [-6, 4], [5, -4], [14, 8], [-11, 14], [8, 16], [1, -15], [-3, 22]];
+    pts.forEach(function (o, i) {
+      p += '<path d="M' + (cx + o[0]) + ' ' + (cy + o[1] - 4) + ' l3.4 3.4 -3.4 5 -3.4 -5 z" fill="' + LIME + '" stroke="#fff" stroke-width=".7" opacity="0">'
+        + '<animate attributeName="opacity" values="0;1" dur="1s" begin="' + (0.3 + i * 0.5).toFixed(1) + 's" fill="freeze"/></path>';
     });
-    // callout bubble
-    a += '<g class="seq-in">'
-      + '<path d="M292 92 L280 116 L316 92 Z" fill="#fff" stroke="' + C.penebar + '" stroke-width="1.5"/>'
-      + '<rect x="248" y="54" width="224" height="40" rx="9" fill="#fff" stroke="' + C.penebar + '" stroke-width="1.5"/>'
-      + '<text x="360" y="70" text-anchor="middle" fill="#a05c0a" style="font-size:9.5px;font-weight:800">Penetron is growing —</text>'
-      + '<text x="360" y="83" text-anchor="middle" fill="#a05c0a" style="font-size:9.5px;font-weight:800">sealing the concrete matrix</text>'
-      + '</g>';
-    return a;
+    p += '<circle cx="' + (cx - 8) + '" cy="' + (cy + 9) + '" r="1.2" fill="' + LIME + '"><animate attributeName="r" values="1;3;1" dur="3.2s" repeatCount="indefinite"/></circle>';
+    p += '<circle cx="' + (cx + 11) + '" cy="' + (cy - 9) + '" r="1.2" fill="' + LIME + '"><animate attributeName="r" values="1;2.6;1" dur="2.6s" begin="1s" repeatCount="indefinite"/></circle>';
+    p += '</g>';
+    p += '<text x="240" y="72" text-anchor="middle" fill="#4c7015" style="font-size:7.8px;font-weight:800">Penetron crystals begin to grow in the</text>';
+    p += '<text x="240" y="83" text-anchor="middle" fill="#4c7015" style="font-size:7.8px;font-weight:800">presence of water. Filling voids, shrinkage</text>';
+    p += '<text x="240" y="94" text-anchor="middle" fill="#4c7015" style="font-size:7.8px;font-weight:800">cracks and capillary tracts up to 0.5 mm</text>';
+    p += '</g>';
+    return p;
   }
 
   var SEQ_BAR_W = 150;
@@ -986,15 +993,19 @@
         + steelH(WR_L + 8, 468, GRADE - 9, 0) + steelDots(WR_L + 18, 458, GRADE - 5, 26));
     }
 
-    if (!mem && f.activate) {
-      var wash = '<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + C.waterWash + '"/>'
-        + '<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + C.waterWash + '"/>'
-        + '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + C.waterWash + '"/>'
-        + '<rect x="0" y="' + (GRADE - 14) + '" width="' + WL_R + '" height="14" fill="' + C.waterWash + '"/>'
-        + '<rect x="' + WR_L + '" y="' + (GRADE - 14) + '" width="' + (480 - WR_L) + '" height="14" fill="' + C.waterWash + '"/>';
-      var crys = [[168, 120], [312, 152], [150, 240], [240, 250], [330, 232], [172, 192]];
-      var arrows = [[128, 122, 22, 'right'], [352, 122, 22, 'left'], [200, 308, 18, 'up'], [280, 308, 18, 'up']];
-      s += IW('activate', activationFx(wash, crys, arrows));
+    // Penetron activates the moment each treated pour meets water —
+    // the concrete greens up while the other panel is still building
+    if (!mem && f.matPour) {
+      s += crystalTint('<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + LIME + '"/>', nf === 'matPour');
+      if (f.wallPour) {
+        s += crystalTint('<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + LIME + '"/>'
+          + '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + LIME + '"/>', nf === 'wallPour');
+      }
+      if (f.slabPour) {
+        s += crystalTint('<rect x="0" y="' + (GRADE - 14) + '" width="' + WL_R + '" height="14" fill="' + LIME + '"/>'
+          + '<rect x="' + WR_L + '" y="' + (GRADE - 14) + '" width="' + (480 - WR_L) + '" height="14" fill="' + LIME + '"/>', nf === 'slabPour');
+      }
+      s += crystalPopup(nf === 'matPour');
     }
     return s;
   }
@@ -1097,11 +1108,10 @@
       s += IW('cage', cg);
     }
 
-    if (f.activate) {
-      var wash = '<path d="' + pMono + '" fill="' + C.waterWash + '"/>';
-      var crys = [[70, 120], [410, 120], [120, 210], [360, 210], [240, 295], [148, 235]];
-      var arrows = [[8, 210, 22, 'right'], [472, 210, 22, 'left'], [220, 352, 16, 'up'], [300, 352, 16, 'up']];
-      s += IW('activate', activationFx(wash, crys, arrows));
+    // Penetron activates the moment the monolithic pour meets water
+    if (f.pour) {
+      s += crystalTint('<path d="' + pMono + '" fill="' + LIME + '"/>', nf === 'pour');
+      s += crystalPopup(nf === 'pour');
     }
 
     s += waterTable(6, 60, WT, 14);
