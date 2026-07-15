@@ -789,6 +789,51 @@ input[type="number"], .select-field { transition: border-color .15s, box-shadow 
   .compare-svg.anim .pour-1, .compare-svg.anim .pour-2, .compare-svg.anim .pour-3 { animation: none; }
 }
 
+/* ── Build-sequence day tally ── */
+.seq-tally { max-width: 1060px; margin: 10px auto 4px; }
+.seq-tally > summary {
+  cursor: pointer;
+  list-style: none;
+  text-align: center;
+  font-size: .78rem;
+  font-weight: 700;
+  color: #9fb3d1;
+  padding: 8px;
+  user-select: none;
+}
+.seq-tally > summary::-webkit-details-marker { display: none; }
+.seq-tally > summary::before { content: '▸ '; }
+.seq-tally[open] > summary::before { content: '▾ '; }
+.seq-tally-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.seq-tally-col { background: #fff; border-radius: 10px; padding: 12px 14px 12px; font-size: .72rem; }
+.tally-head {
+  font-weight: 800;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--p-navy-dk);
+  border-bottom: 3px solid var(--gray-border);
+  padding-bottom: 7px;
+  margin-bottom: 2px;
+}
+.tally-phase {
+  font-weight: 800;
+  font-size: .6rem;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--p-orange);
+  margin: 9px 0 2px;
+}
+.tally-row { display: flex; gap: 8px; padding: 2.5px 6px; border-radius: 5px; color: var(--text-muted); line-height: 1.45; }
+.tally-days { flex: 0 0 76px; font-weight: 700; color: var(--p-navy); white-space: nowrap; }
+.tally-row.current { background: var(--p-orange-lt); color: var(--text); }
+.tally-row.current .tally-days { color: #a05c0a; }
+.tally-row.done { color: #9aa7bb; }
+.tally-row.done .tally-days { color: #9aa7bb; }
+.tally-row.done .tally-label::after { content: ' ✓'; color: var(--green); font-weight: 800; }
+.tally-total { margin-top: 9px; border-top: 2px solid var(--p-orange); padding-top: 7px; font-weight: 800; color: var(--p-navy-dk); }
+@media (max-width: 900px) { .seq-tally-grid { grid-template-columns: 1fr; } }
+
 /* ── Build-sequence transitions ──
    Each step's new work fades in; excavated soil fades away. */
 @keyframes seqIn { from { opacity: 0; } to { opacity: 1; } }
