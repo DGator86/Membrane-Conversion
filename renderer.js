@@ -534,6 +534,11 @@
      Penetron side (staged or monolithic) finishes early and
      holds a "WATERTIGHT" banner. Steps and day counts are
      illustrative, for discussion only.
+
+     Smoothness: a frame is only rebuilt when its STEP changes.
+     Between steps only the day counter text and the progress
+     bar mutate in place, and each step's new work fades in
+     (.seq-in) while excavated soil fades out (.seq-out).
   ════════════════════════════════════════════════════════ */
   function S(label, days, flag) { return { label: label, days: days, flag: flag }; }
 
@@ -616,31 +621,47 @@
     return t;
   }
 
+  /* flags of every started step at `day`, plus the current step */
   function seqFlagsAt(steps, day) {
-    var f = {}, cum = 0, label = steps[0].label;
+    var f = {}, cum = 0, label = steps[0].label, idx = 0, flag = steps[0].flag;
     for (var i = 0; i < steps.length; i++) {
-      if (day >= cum) { f[steps[i].flag] = true; label = steps[i].label; }
+      if (day >= cum) { f[steps[i].flag] = true; label = steps[i].label; idx = i; flag = steps[i].flag; }
       cum += steps[i].days;
     }
-    return { f: f, label: label };
+    return { f: f, label: label, idx: idx, flag: flag };
   }
 
   function formBoard(x, y1, y2) {
     return '<rect x="' + x + '" y="' + y1 + '" width="6" height="' + (y2 - y1) + '" fill="#d9b57c" stroke="#9c7a45" stroke-width="1"/>';
   }
 
-  function seqHud(mode, day, total, label) {
+  var SEQ_BAR_W = 150;
+
+  function seqHud(key, mode, day, total, label) {
     var done = day >= total;
     var col = done ? (mode === 'mem' ? C.risk : C.ok) : '#0D2F5E';
-    var main = done ? ('WATERTIGHT — ' + total + ' DAYS') : ('DAY ' + Math.min(day + 1, total) + ' of ' + total);
-    var s = '<text x="12" y="30" text-anchor="start" fill="' + col + '"'
-      + ' style="font-size:16px;font-weight:900" paint-order="stroke" stroke="' + C.sky + '" stroke-width="4" stroke-linejoin="round">' + main + '</text>';
-    s += txt(240, 352, done ? 'Sequence complete' : label, done ? col : C.label, 'middle', 9.5, 700);
+    var w = Math.max(2, Math.round(SEQ_BAR_W * Math.min(day, total) / total));
+    var s = '<text id="seqday-' + key + '" x="12" y="30" text-anchor="start" fill="' + col + '"'
+      + ' style="font-size:16px;font-weight:900" paint-order="stroke" stroke="' + C.sky + '" stroke-width="4" stroke-linejoin="round">'
+      + (done ? 'WATERTIGHT — ' + total + ' DAYS' : 'DAY ' + Math.min(day + 1, total) + ' of ' + total) + '</text>';
+    s += '<rect x="12" y="38" width="' + SEQ_BAR_W + '" height="4" rx="2" fill="#d5dce8"/>';
+    s += '<rect id="seqbar-' + key + '" x="12" y="38" width="' + w + '" height="4" rx="2" fill="' + (done ? col : C.penebar) + '" style="transition: width .32s linear"/>';
+    s += '<g class="seq-in">' + txt(240, 352, done ? 'Sequence complete' : label, done ? col : C.label, 'middle', 9.5, 700) + '</g>';
     return s;
   }
 
-  /* one frame of the staged (standard) build — membrane or Penetron */
-  function seqStagedFrame(mode, f, nPiles) {
+  /* in-place updates between step changes — no DOM rebuild */
+  function seqTickHud(key, day, total) {
+    if (day >= total) return;
+    var t = document.getElementById('seqday-' + key);
+    if (t) t.textContent = 'DAY ' + Math.min(day + 1, total) + ' of ' + total;
+    var b = document.getElementById('seqbar-' + key);
+    if (b) b.setAttribute('width', Math.max(2, Math.round(SEQ_BAR_W * day / total)));
+  }
+
+  /* one frame of the staged (standard) build — membrane or Penetron.
+     nf = the flag of the step that just started; its work fades in. */
+  function seqStagedFrame(mode, f, nPiles, nf) {
     var mem = mode === 'mem';
     var fill = mem ? 'url(#p-conc)' : 'url(#p-crys)';
     var s = defs('p');
@@ -650,6 +671,7 @@
     var EX_L = 76, EX_R = 404, EX_B = 280;
     var open = f.dug && !f.backfill;
     var flooded = open && !f.dewater;
+    function IW(flag, chunk) { return flag === nf ? '<g class="seq-in">' + chunk + '</g>' : chunk; }
 
     s += '<rect x="0" y="0" width="480" height="360" fill="' + C.sky + '"/>';
 
@@ -672,16 +694,26 @@
           s += '<line x1="' + EX_L + '" y1="' + WT + '" x2="' + EX_R + '" y2="' + WT + '" stroke="' + C.waterLine + '" stroke-width="1.4" stroke-dasharray="7,4"/>';
           s += txt(240, WT + 26, 'Groundwater floods the cut', C.waterLine, 'middle', 9, 700);
         } else {
-          s += '<path d="M' + EX_L + ' ' + WT + ' Q140 ' + (EX_B + 40) + ' 240 ' + (EX_B + 42)
-            + ' Q340 ' + (EX_B + 40) + ' ' + EX_R + ' ' + WT + '" fill="none" stroke="' + C.waterLine + '" stroke-width="1.4" stroke-dasharray="7,4" opacity=".8"/>';
+          s += IW('dewater', '<path d="M' + EX_L + ' ' + WT + ' Q140 ' + (EX_B + 40) + ' 240 ' + (EX_B + 42)
+            + ' Q340 ' + (EX_B + 40) + ' ' + EX_R + ' ' + WT + '" fill="none" stroke="' + C.waterLine + '" stroke-width="1.4" stroke-dasharray="7,4" opacity=".8"/>');
+        }
+        // the spoil fades away as the dig starts
+        if (nf === 'dug') {
+          s += '<g class="seq-out">'
+            + '<rect x="' + EX_L + '" y="' + GRADE + '" width="' + (EX_R - EX_L) + '" height="' + (EX_B - GRADE) + '" fill="url(#p-soil)"/>'
+            + '<rect x="' + EX_L + '" y="' + WT + '" width="' + (EX_R - EX_L) + '" height="' + (EX_B - WT) + '" fill="' + C.waterWash + '"/>'
+            + '<line x1="' + EX_L + '" y1="' + GRADE + '" x2="' + EX_R + '" y2="' + GRADE + '" stroke="#8fa0ba" stroke-width="2"/>'
+            + '</g>';
         }
       } else {
-        s += '<rect x="' + EX_L + '" y="' + GRADE + '" width="' + (WL_L - EX_L) + '" height="' + (EX_B - GRADE) + '" fill="url(#p-soil)"/>';
-        s += '<rect x="' + WR_R + '" y="' + GRADE + '" width="' + (EX_R - WR_R) + '" height="' + (EX_B - GRADE) + '" fill="url(#p-soil)"/>';
-        s += '<rect x="' + EX_L + '" y="' + WT + '" width="' + (WL_L - EX_L) + '" height="' + (EX_B - WT) + '" fill="' + C.waterWash + '"/>';
-        s += '<rect x="' + WR_R + '" y="' + WT + '" width="' + (EX_R - WR_R) + '" height="' + (EX_B - WT) + '" fill="' + C.waterWash + '"/>';
-        s += '<line x1="' + EX_L + '" y1="' + GRADE + '" x2="' + WL_L + '" y2="' + GRADE + '" stroke="#8fa0ba" stroke-width="2"/>';
-        s += '<line x1="' + WR_R + '" y1="' + GRADE + '" x2="' + EX_R + '" y2="' + GRADE + '" stroke="#8fa0ba" stroke-width="2"/>';
+        var bf = '<rect x="' + EX_L + '" y="' + GRADE + '" width="' + (WL_L - EX_L) + '" height="' + (EX_B - GRADE) + '" fill="url(#p-soil)"/>'
+          + '<rect x="' + WR_R + '" y="' + GRADE + '" width="' + (EX_R - WR_R) + '" height="' + (EX_B - GRADE) + '" fill="url(#p-soil)"/>'
+          + '<rect x="' + EX_L + '" y="' + WT + '" width="' + (WL_L - EX_L) + '" height="' + (EX_B - WT) + '" fill="' + C.waterWash + '"/>'
+          + '<rect x="' + WR_R + '" y="' + WT + '" width="' + (EX_R - WR_R) + '" height="' + (EX_B - WT) + '" fill="' + C.waterWash + '"/>'
+          + '<rect x="' + EX_L + '" y="' + EX_B + '" width="' + (EX_R - EX_L) + '" height="' + (360 - EX_B) + '" fill="' + C.waterWash + '"/>'
+          + '<line x1="' + EX_L + '" y1="' + GRADE + '" x2="' + WL_L + '" y2="' + GRADE + '" stroke="#8fa0ba" stroke-width="2"/>'
+          + '<line x1="' + WR_R + '" y1="' + GRADE + '" x2="' + EX_R + '" y2="' + GRADE + '" stroke="#8fa0ba" stroke-width="2"/>';
+        s += IW('backfill', bf);
       }
     }
     s += waterTable(6, 68, WT, 14);
@@ -690,125 +722,152 @@
 
     // sheet piling + well points hold the cut dry
     if (f.dewater && open) {
-      s += '<rect x="' + (EX_L - 3) + '" y="' + (GRADE - 10) + '" width="5" height="' + (EX_B - GRADE + 28) + '" fill="#7d8a9e"/>';
-      s += '<rect x="' + (EX_R - 2) + '" y="' + (GRADE - 10) + '" width="5" height="' + (EX_B - GRADE + 28) + '" fill="#7d8a9e"/>';
-      s += '<rect x="' + (EX_L - 18) + '" y="' + (GRADE - 6) + '" width="4" height="' + (WT - GRADE + 56) + '" fill="#98a3b5"/>';
-      s += '<rect x="' + (EX_R + 14) + '" y="' + (GRADE - 6) + '" width="4" height="' + (WT - GRADE + 56) + '" fill="#98a3b5"/>';
-      s += txt(EX_R - 44, GRADE - 16, 'Well points + sheets', C.label, 'middle', 8);
+      s += IW('dewater',
+        '<rect x="' + (EX_L - 3) + '" y="' + (GRADE - 10) + '" width="5" height="' + (EX_B - GRADE + 28) + '" fill="#7d8a9e"/>'
+        + '<rect x="' + (EX_R - 2) + '" y="' + (GRADE - 10) + '" width="5" height="' + (EX_B - GRADE + 28) + '" fill="#7d8a9e"/>'
+        + '<rect x="' + (EX_L - 18) + '" y="' + (GRADE - 6) + '" width="4" height="' + (WT - GRADE + 56) + '" fill="#98a3b5"/>'
+        + '<rect x="' + (EX_R + 14) + '" y="' + (GRADE - 6) + '" width="4" height="' + (WT - GRADE + 56) + '" fill="#98a3b5"/>'
+        + txt(EX_R - 44, GRADE - 16, 'Well points + sheets', C.label, 'middle', 8));
     }
 
     // mud slab goes down with the base prep
     if (f.baseMemb || f.matForms) {
-      s += '<rect x="' + (CAP_L - 8) + '" y="' + CAP_B + '" width="' + (CAP_R - CAP_L + 16) + '" height="12" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>';
+      s += IW(mem ? 'baseMemb' : 'matForms',
+        '<rect x="' + (CAP_L - 8) + '" y="' + CAP_B + '" width="' + (CAP_R - CAP_L + 16) + '" height="12" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>');
     }
 
     // piles
     var pileXs = nPiles > 0 ? spread(150, 330, nPiles) : [];
     if (f.piles) {
+      var pp = '';
       pileXs.forEach(function (x) {
-        s += '<rect x="' + (x - 9) + '" y="' + EX_B + '" width="18" height="' + (360 - EX_B) + '" fill="#b3bcca" stroke="#7d8a9e" stroke-width="1.2"/>';
-        s += rebarV(x, EX_B + 8, 352);
+        pp += '<rect x="' + (x - 9) + '" y="' + EX_B + '" width="18" height="' + (360 - EX_B) + '" fill="#b3bcca" stroke="#7d8a9e" stroke-width="1.2"/>';
+        pp += rebarV(x, EX_B + 8, 352);
       });
+      s += IW('piles', pp);
     }
-    if (f.pileTrim) pileXs.forEach(function (x) { s += rebarV(x, EX_B - 18, EX_B + 6); });
+    if (f.pileTrim) {
+      var pt = '';
+      pileXs.forEach(function (x) { pt += rebarV(x, EX_B - 18, EX_B + 6); });
+      s += IW('pileTrim', pt);
+    }
 
     var membY = CAP_B + 2;
     if (mem && f.baseMemb) {
+      var bm = '';
       if (f.piles && pileXs.length) {
         var segs = [CAP_L - 8].concat(pileXs.reduce(function (acc, x) { return acc.concat([x - 12, x + 12]); }, [])).concat([CAP_R + 8]);
         for (var i = 0; i < segs.length; i += 2) {
-          s += '<line x1="' + segs[i] + '" y1="' + membY + '" x2="' + segs[i + 1] + '" y2="' + membY + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
+          bm += '<line x1="' + segs[i] + '" y1="' + membY + '" x2="' + segs[i + 1] + '" y2="' + membY + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
         }
       } else {
-        s += '<line x1="' + (CAP_L - 8) + '" y1="' + membY + '" x2="' + (CAP_R + 8) + '" y2="' + membY + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
+        bm += '<line x1="' + (CAP_L - 8) + '" y1="' + membY + '" x2="' + (CAP_R + 8) + '" y2="' + membY + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
       }
+      s += IW('baseMemb', bm);
     }
     if (mem && f.boots) {
+      var bt = '';
       pileXs.forEach(function (x) {
-        s += '<path d="M' + (x - 13) + ' ' + membY + ' l5 -8 h16 l5 8" fill="none" stroke="' + C.risk + '" stroke-width="2"/>';
+        bt += '<path d="M' + (x - 13) + ' ' + membY + ' l5 -8 h16 l5 8" fill="none" stroke="' + C.risk + '" stroke-width="2"/>';
       });
+      s += IW('boots', bt);
     }
 
-    if (f.matForms && !f.matPour) s += formBoard(CAP_L - 7, CAP_T, EX_B) + formBoard(CAP_R + 1, CAP_T, EX_B);
-    if (f.matRebar) s += rebarH(CAP_L + 12, CAP_R - 12, CAP_T + 14) + rebarH(CAP_L + 12, CAP_R - 12, CAP_B - 12);
+    if (f.matForms && !f.matPour) s += IW('matForms', formBoard(CAP_L - 7, CAP_T, EX_B) + formBoard(CAP_R + 1, CAP_T, EX_B));
+    if (f.matRebar) s += IW('matRebar', rebarH(CAP_L + 12, CAP_R - 12, CAP_T + 14) + rebarH(CAP_L + 12, CAP_R - 12, CAP_B - 12));
 
     if (f.matPour) {
-      s += '<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+      var mp = '<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
       if (!f.wallPour) {
-        [WL_L + 5, WL_R - 5, WR_L + 5, WR_R - 5].forEach(function (x) { s += rebarV(x, CAP_T - 26, CAP_T + 18); });
+        [WL_L + 5, WL_R - 5, WR_L + 5, WR_R - 5].forEach(function (x) { mp += rebarV(x, CAP_T - 26, CAP_T + 18); });
       }
+      s += IW('matPour', mp);
     }
 
     if (mem && f.keyway && !f.wallPour) {
-      s += '<rect x="' + (WL_L + 3) + '" y="' + (CAP_T - 4) + '" width="14" height="6" fill="' + C.sky + '" stroke="' + C.edge + '" stroke-width="1"/>';
-      s += '<rect x="' + (WR_L + 3) + '" y="' + (CAP_T - 4) + '" width="14" height="6" fill="' + C.sky + '" stroke="' + C.edge + '" stroke-width="1"/>';
+      s += IW('keyway',
+        '<rect x="' + (WL_L + 3) + '" y="' + (CAP_T - 4) + '" width="14" height="6" fill="' + C.sky + '" stroke="' + C.edge + '" stroke-width="1"/>'
+        + '<rect x="' + (WR_L + 3) + '" y="' + (CAP_T - 4) + '" width="14" height="6" fill="' + C.sky + '" stroke="' + C.edge + '" stroke-width="1"/>');
     }
 
     if (f.wstop1) {
       if (mem) {
         if (!f.wallPour) {
-          s += '<rect x="' + (WL_L + 3) + '" y="' + (CAP_T - 4) + '" width="14" height="6" rx="2" fill="#3a4354"/>';
-          s += '<rect x="' + (WR_L + 3) + '" y="' + (CAP_T - 4) + '" width="14" height="6" rx="2" fill="#3a4354"/>';
+          s += IW('wstop1',
+            '<rect x="' + (WL_L + 3) + '" y="' + (CAP_T - 4) + '" width="14" height="6" rx="2" fill="#3a4354"/>'
+            + '<rect x="' + (WR_L + 3) + '" y="' + (CAP_T - 4) + '" width="14" height="6" rx="2" fill="#3a4354"/>');
         } else {
-          s += '<line x1="' + WL_L + '" y1="' + CAP_T + '" x2="' + WL_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>';
-          s += '<line x1="' + WR_L + '" y1="' + CAP_T + '" x2="' + WR_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>';
+          s += IW('wallPour',
+            '<line x1="' + WL_L + '" y1="' + CAP_T + '" x2="' + WL_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>'
+            + '<line x1="' + WR_L + '" y1="' + CAP_T + '" x2="' + WR_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>');
         }
       } else {
-        s += '<rect x="' + (WL_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>';
-        s += '<rect x="' + (WR_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>';
+        s += IW('wstop1',
+          '<rect x="' + (WL_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>'
+          + '<rect x="' + (WR_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>');
       }
     }
 
     if (f.wallSteel && !f.wallPour) {
-      [WL_L + 6, WL_L + 14, WR_L + 6, WR_L + 14].forEach(function (x) { s += rebarV(x, GRADE + 4, CAP_T + 16); });
+      var ws = '';
+      [WL_L + 6, WL_L + 14, WR_L + 6, WR_L + 14].forEach(function (x) { ws += rebarV(x, GRADE + 4, CAP_T + 16); });
+      s += IW('wallSteel', ws);
     }
     if (f.wallForms && !f.wallPour) {
-      s += formBoard(WL_L - 7, GRADE, CAP_T) + formBoard(WL_R + 1, GRADE, CAP_T);
-      s += formBoard(WR_L - 7, GRADE, CAP_T) + formBoard(WR_R + 1, GRADE, CAP_T);
+      s += IW('wallForms',
+        formBoard(WL_L - 7, GRADE, CAP_T) + formBoard(WL_R + 1, GRADE, CAP_T)
+        + formBoard(WR_L - 7, GRADE, CAP_T) + formBoard(WR_R + 1, GRADE, CAP_T));
     }
     if (f.wallPour) {
-      s += '<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-      s += '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
-      s += txt(240, 140, 'ELEVATOR PIT', C.interior, 'middle', 11, 700);
+      s += IW('wallPour',
+        '<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>'
+        + '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>'
+        + txt(240, 140, 'ELEVATOR PIT', C.interior, 'middle', 11, 700));
     }
 
     if (mem && f.matMemb) {
-      s += '<line x1="' + (CAP_L - 2) + '" y1="' + (CAP_T - 2) + '" x2="' + (CAP_L - 2) + '" y2="' + (CAP_B + 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
-      s += '<line x1="' + (CAP_R + 2) + '" y1="' + (CAP_T - 2) + '" x2="' + (CAP_R + 2) + '" y2="' + (CAP_B + 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
-      s += '<line x1="' + (CAP_L - 2) + '" y1="' + (CAP_T - 2) + '" x2="' + (WL_L - 3) + '" y2="' + (CAP_T - 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
-      s += '<line x1="' + (WR_R + 3) + '" y1="' + (CAP_T - 2) + '" x2="' + (CAP_R + 2) + '" y2="' + (CAP_T - 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
+      s += IW('matMemb',
+        '<line x1="' + (CAP_L - 2) + '" y1="' + (CAP_T - 2) + '" x2="' + (CAP_L - 2) + '" y2="' + (CAP_B + 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>'
+        + '<line x1="' + (CAP_R + 2) + '" y1="' + (CAP_T - 2) + '" x2="' + (CAP_R + 2) + '" y2="' + (CAP_B + 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>'
+        + '<line x1="' + (CAP_L - 2) + '" y1="' + (CAP_T - 2) + '" x2="' + (WL_L - 3) + '" y2="' + (CAP_T - 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>'
+        + '<line x1="' + (WR_R + 3) + '" y1="' + (CAP_T - 2) + '" x2="' + (CAP_R + 2) + '" y2="' + (CAP_T - 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>');
     }
     if (mem && f.wallMemb) {
-      s += '<line x1="' + (WL_L - 4) + '" y1="' + (GRADE + 2) + '" x2="' + (WL_L - 4) + '" y2="' + CAP_T + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
-      s += '<line x1="' + (WR_R + 4) + '" y1="' + (GRADE + 2) + '" x2="' + (WR_R + 4) + '" y2="' + CAP_T + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
+      s += IW('wallMemb',
+        '<line x1="' + (WL_L - 4) + '" y1="' + (GRADE + 2) + '" x2="' + (WL_L - 4) + '" y2="' + CAP_T + '" stroke="' + C.membrane + '" stroke-width="3.5"/>'
+        + '<line x1="' + (WR_R + 4) + '" y1="' + (GRADE + 2) + '" x2="' + (WR_R + 4) + '" y2="' + CAP_T + '" stroke="' + C.membrane + '" stroke-width="3.5"/>');
     }
 
     // slab on grade over the backfill
     if (mem && f.slabMemb) {
-      s += '<line x1="8" y1="' + (GRADE - 2) + '" x2="' + WL_R + '" y2="' + (GRADE - 2) + '" stroke="' + C.membrane + '" stroke-width="3"/>';
-      s += '<line x1="' + WR_L + '" y1="' + (GRADE - 2) + '" x2="472" y2="' + (GRADE - 2) + '" stroke="' + C.membrane + '" stroke-width="3"/>';
+      s += IW('slabMemb',
+        '<line x1="8" y1="' + (GRADE - 2) + '" x2="' + WL_R + '" y2="' + (GRADE - 2) + '" stroke="' + C.membrane + '" stroke-width="3"/>'
+        + '<line x1="' + WR_L + '" y1="' + (GRADE - 2) + '" x2="472" y2="' + (GRADE - 2) + '" stroke="' + C.membrane + '" stroke-width="3"/>');
     }
     if (f.wstop2) {
       var wsFill = mem ? '#3a4354' : C.penebar;
-      s += '<rect x="' + (WL_R - 16) + '" y="' + (GRADE - 11) + '" width="14" height="6" rx="2" fill="' + wsFill + '"/>';
-      s += '<rect x="' + (WR_L + 2) + '" y="' + (GRADE - 11) + '" width="14" height="6" rx="2" fill="' + wsFill + '"/>';
+      s += IW('wstop2',
+        '<rect x="' + (WL_R - 16) + '" y="' + (GRADE - 11) + '" width="14" height="6" rx="2" fill="' + wsFill + '"/>'
+        + '<rect x="' + (WR_L + 2) + '" y="' + (GRADE - 11) + '" width="14" height="6" rx="2" fill="' + wsFill + '"/>');
     }
     if (f.slabForms && !f.slabPour) {
-      s += formBoard(2, GRADE - 14, GRADE) + formBoard(WL_R - 6, GRADE - 14, GRADE);
-      s += formBoard(WR_L + 1, GRADE - 14, GRADE) + formBoard(473, GRADE - 14, GRADE);
+      s += IW('slabForms',
+        formBoard(2, GRADE - 14, GRADE) + formBoard(WL_R - 6, GRADE - 14, GRADE)
+        + formBoard(WR_L + 1, GRADE - 14, GRADE) + formBoard(473, GRADE - 14, GRADE));
     }
     if (f.slabSteel) {
-      s += rebarH(10, WL_R - 6, GRADE - 7) + rebarH(WR_L + 6, 470, GRADE - 7);
+      s += IW('slabSteel', rebarH(10, WL_R - 6, GRADE - 7) + rebarH(WR_L + 6, 470, GRADE - 7));
     }
     if (f.slabPour) {
-      s += '<rect x="0" y="' + (GRADE - 14) + '" width="' + WL_R + '" height="14" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.2"/>';
-      s += '<rect x="' + WR_L + '" y="' + (GRADE - 14) + '" width="' + (480 - WR_L) + '" height="14" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.2"/>';
+      s += IW('slabPour',
+        '<rect x="0" y="' + (GRADE - 14) + '" width="' + WL_R + '" height="14" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.2"/>'
+        + '<rect x="' + WR_L + '" y="' + (GRADE - 14) + '" width="' + (480 - WR_L) + '" height="14" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.2"/>');
     }
     return s;
   }
 
   /* one frame of the monolithic spread-footing build (Penetron side) */
-  function seqMonoFrame(f, nPiles) {
+  function seqMonoFrame(f, nPiles, nf) {
     var fill = 'url(#e-crys)';
     var s = defs('e');
     var GR = 130, WT = 170;
@@ -818,6 +877,7 @@
     var padL = 92, padR = 388;
     var EXT_L = 10, EXT_R = 470, EXB_L = 78, EXB_R = 402, EX_B = 336;
     var open = f.dug && !f.backfill;
+    function IW(flag, chunk) { return flag === nf ? '<g class="seq-in">' + chunk + '</g>' : chunk; }
 
     s += '<rect x="0" y="0" width="480" height="360" fill="' + C.sky + '"/>';
 
@@ -836,52 +896,71 @@
       s += '<line x1="' + EXT_R + '" y1="' + GR + '" x2="480" y2="' + GR + '" stroke="#8fa0ba" stroke-width="2"/>';
       s += '<polyline points="' + EXT_L + ',' + GR + ' ' + EXB_L + ',' + EX_B + ' ' + EXB_R + ',' + EX_B + ' ' + EXT_R + ',' + GR + '" fill="none" stroke="' + C.soilLine + '" stroke-width="1.6"/>';
       s += '<path d="M23 ' + WT + ' Q240 ' + (EX_B + 16) + ' 457 ' + WT + '" fill="none" stroke="' + C.waterLine + '" stroke-width="1.4" stroke-dasharray="7,4" opacity=".8"/>';
+      if (nf === 'dug') {
+        s += '<g class="seq-out">'
+          + '<path d="M' + EXT_L + ' ' + GR + ' H' + EXT_R + ' L' + EXB_R + ' ' + EX_B + ' H' + EXB_L + ' Z" fill="url(#e-soil)"/>'
+          + '<path d="M23 ' + WT + ' H457 L' + EXB_R + ' ' + EX_B + ' H' + EXB_L + ' Z" fill="' + C.waterWash + '"/>'
+          + '<line x1="' + EXT_L + '" y1="' + GR + '" x2="' + EXT_R + '" y2="' + GR + '" stroke="#8fa0ba" stroke-width="2"/>'
+          + '</g>';
+      }
     } else {
       // backfilled — same soil layout as the finished monolithic scene
-      s += '<rect x="0" y="' + GR + '" width="' + WL_L + '" height="' + (360 - GR) + '" fill="url(#e-soil)"/>';
-      s += '<rect x="' + WR_R + '" y="' + GR + '" width="' + (480 - WR_R) + '" height="' + (360 - GR) + '" fill="url(#e-soil)"/>';
-      s += '<rect x="' + WL_L + '" y="' + (SLAB_B + 10) + '" width="' + (WR_R - WL_L) + '" height="' + (360 - SLAB_B - 10) + '" fill="url(#e-soil)"/>';
-      s += '<rect x="0" y="' + WT + '" width="' + WL_L + '" height="' + (360 - WT) + '" fill="' + C.waterWash + '"/>';
-      s += '<rect x="' + WR_R + '" y="' + WT + '" width="' + (480 - WR_R) + '" height="' + (360 - WT) + '" fill="' + C.waterWash + '"/>';
-      s += '<rect x="' + WL_L + '" y="' + (SLAB_B + 10) + '" width="' + (WR_R - WL_L) + '" height="' + (360 - SLAB_B - 10) + '" fill="' + C.waterWash + '"/>';
+      var bf = '<rect x="0" y="' + GR + '" width="' + WL_L + '" height="' + (360 - GR) + '" fill="url(#e-soil)"/>'
+        + '<rect x="' + WR_R + '" y="' + GR + '" width="' + (480 - WR_R) + '" height="' + (360 - GR) + '" fill="url(#e-soil)"/>'
+        + '<rect x="' + WL_L + '" y="' + (SLAB_B + 10) + '" width="' + (WR_R - WL_L) + '" height="' + (360 - SLAB_B - 10) + '" fill="url(#e-soil)"/>'
+        + '<rect x="0" y="' + WT + '" width="' + WL_L + '" height="' + (360 - WT) + '" fill="' + C.waterWash + '"/>'
+        + '<rect x="' + WR_R + '" y="' + WT + '" width="' + (480 - WR_R) + '" height="' + (360 - WT) + '" fill="' + C.waterWash + '"/>'
+        + '<rect x="' + WL_L + '" y="' + (SLAB_B + 10) + '" width="' + (WR_R - WL_L) + '" height="' + (360 - SLAB_B - 10) + '" fill="' + C.waterWash + '"/>';
+      s += IW('backfill', bf);
     }
 
     // piles under the pad
     var pileXs = nPiles > 0 ? spread(150, 330, nPiles) : [];
     if (f.piles) {
+      var pp = '';
       pileXs.forEach(function (x) {
-        s += '<rect x="' + (x - 9) + '" y="' + (SLAB_B + 10) + '" width="18" height="' + (360 - SLAB_B - 10) + '" fill="#b3bcca" stroke="#7d8a9e" stroke-width="1.2"/>';
-        s += rebarV(x, SLAB_B + 16, 356);
+        pp += '<rect x="' + (x - 9) + '" y="' + (SLAB_B + 10) + '" width="18" height="' + (360 - SLAB_B - 10) + '" fill="#b3bcca" stroke="#7d8a9e" stroke-width="1.2"/>';
+        pp += rebarV(x, SLAB_B + 16, 356);
       });
+      s += IW('piles', pp);
     }
-    if (f.pileTrim) pileXs.forEach(function (x) { s += rebarV(x, SLAB_B - 8, SLAB_B + 14); });
+    if (f.pileTrim) {
+      var pt = '';
+      pileXs.forEach(function (x) { pt += rebarV(x, SLAB_B - 8, SLAB_B + 14); });
+      s += IW('pileTrim', pt);
+    }
 
     // mud slab with the forms
     if (f.forms) {
-      s += '<rect x="' + (padL - 8) + '" y="' + SLAB_B + '" width="' + (padR - padL + 16) + '" height="10" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>';
+      s += IW('forms',
+        '<rect x="' + (padL - 8) + '" y="' + SLAB_B + '" width="' + (padR - padL + 16) + '" height="10" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>');
     }
     if (f.forms && !f.pour) {
-      s += formBoard(padL - 7, SLAB_T, SLAB_B) + formBoard(padR + 1, SLAB_T, SLAB_B);
-      s += formBoard(21, SOG_T, GR) + formBoard(453, SOG_T, GR);
+      s += IW('forms',
+        formBoard(padL - 7, SLAB_T, SLAB_B) + formBoard(padR + 1, SLAB_T, SLAB_B)
+        + formBoard(21, SOG_T, GR) + formBoard(453, SOG_T, GR));
     }
     if (f.cage) {
-      s += '<path d="M' + (WL_L + 10) + ' ' + (GR + 8) + ' V' + (SLAB_T + 13) + ' H232" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      s += '<path d="M' + (WR_R - 10) + ' ' + (GR + 8) + ' V' + (SLAB_T + 13) + ' H248" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      s += '<line x1="44" y1="' + (GR + 14) + '" x2="' + (padL + 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      s += '<line x1="436" y1="' + (GR + 14) + '" x2="' + (padR - 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>';
-      s += rebarH(padL + 10, padR - 10, SLAB_B - 12);
+      var cg = '<path d="M' + (WL_L + 10) + ' ' + (GR + 8) + ' V' + (SLAB_T + 13) + ' H232" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>'
+        + '<path d="M' + (WR_R - 10) + ' ' + (GR + 8) + ' V' + (SLAB_T + 13) + ' H248" fill="none" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>'
+        + '<line x1="44" y1="' + (GR + 14) + '" x2="' + (padL + 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>'
+        + '<line x1="436" y1="' + (GR + 14) + '" x2="' + (padR - 12) + '" y2="' + (SLAB_B - 8) + '" stroke="' + C.rebar + '" stroke-width="1.1" stroke-dasharray="7,5" opacity=".8"/>'
+        + rebarH(padL + 10, padR - 10, SLAB_B - 12);
+      s += IW('cage', cg);
     }
     if (f.pitForm && !f.backfill) {
-      s += '<rect x="' + WL_R + '" y="' + SOG_T + '" width="' + (WR_L - WL_R) + '" height="' + (SLAB_T - SOG_T) + '" fill="rgba(217,181,124,.2)" stroke="#9c7a45" stroke-width="1.5" stroke-dasharray="6,4"/>';
-      s += '<line x1="' + WL_R + '" y1="' + SOG_T + '" x2="' + WR_L + '" y2="' + SLAB_T + '" stroke="#9c7a45" stroke-width="1" stroke-dasharray="6,4"/>';
-      s += '<line x1="' + WR_L + '" y1="' + SOG_T + '" x2="' + WL_R + '" y2="' + SLAB_T + '" stroke="#9c7a45" stroke-width="1" stroke-dasharray="6,4"/>';
+      s += IW('pitForm',
+        '<rect x="' + WL_R + '" y="' + SOG_T + '" width="' + (WR_L - WL_R) + '" height="' + (SLAB_T - SOG_T) + '" fill="rgba(217,181,124,.2)" stroke="#9c7a45" stroke-width="1.5" stroke-dasharray="6,4"/>'
+        + '<line x1="' + WL_R + '" y1="' + SOG_T + '" x2="' + WR_L + '" y2="' + SLAB_T + '" stroke="#9c7a45" stroke-width="1" stroke-dasharray="6,4"/>'
+        + '<line x1="' + WR_L + '" y1="' + SOG_T + '" x2="' + WL_R + '" y2="' + SLAB_T + '" stroke="#9c7a45" stroke-width="1" stroke-dasharray="6,4"/>');
     }
     if (f.pour) {
       var pMono = 'M0 ' + SOG_T
         + ' H' + WL_R + ' V' + SLAB_T + ' H' + WR_L + ' V' + SOG_T + ' H480'
         + ' V' + GR + ' H452 L' + padR + ' ' + SLAB_B + ' H' + padL + ' L28 ' + GR + ' H0 Z';
-      s += '<path d="' + pMono + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5" stroke-linejoin="round"/>';
-      s += txt(240, 200, 'ELEVATOR PIT', C.interior, 'middle', 11, 700);
+      s += IW('pour',
+        '<path d="' + pMono + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5" stroke-linejoin="round"/>'
+        + txt(240, 200, 'ELEVATOR PIT', C.interior, 'middle', 11, 700));
     }
 
     s += waterTable(6, 60, WT, 14);
@@ -933,23 +1012,42 @@
     var btn = document.getElementById('seq-btn');
     if (btn) btn.innerHTML = '&#9632;&nbsp; Stop — back to the risk view';
 
-    var day = 0;
-    function renderDay() {
-      var m = seqFlagsAt(memSteps, Math.min(day, memTotal));
-      memHost.innerHTML = seqStagedFrame('mem', m.f, nPiles) + seqHud('mem', Math.min(day, memTotal), memTotal, m.label);
-      var p = seqFlagsAt(penSteps, Math.min(day, penTotal));
-      penHost.innerHTML = (penMono ? seqMonoFrame(p.f, nPiles) : seqStagedFrame('pen', p.f, nPiles))
-        + seqHud('pen', Math.min(day, penTotal), penTotal, p.label);
+    var day = 0, memKey = -1, penKey = -1;
+
+    // a panel's SVG is only rebuilt when its step (or completion) changes;
+    // between steps only the day counter and progress bar mutate in place
+    function renderPanels() {
+      var mDay = Math.min(day, memTotal);
+      var m = seqFlagsAt(memSteps, mDay);
+      var mk = m.idx * 2 + (mDay >= memTotal ? 1 : 0);
+      if (mk !== memKey) {
+        memKey = mk;
+        var mnf = mDay >= memTotal ? null : m.flag;
+        memHost.innerHTML = seqStagedFrame('mem', m.f, nPiles, mnf) + seqHud('mem', 'mem', mDay, memTotal, m.label);
+      } else {
+        seqTickHud('mem', mDay, memTotal);
+      }
+      var pDay = Math.min(day, penTotal);
+      var p = seqFlagsAt(penSteps, pDay);
+      var pk = p.idx * 2 + (pDay >= penTotal ? 1 : 0);
+      if (pk !== penKey) {
+        penKey = pk;
+        var pnf = pDay >= penTotal ? null : p.flag;
+        penHost.innerHTML = (penMono ? seqMonoFrame(p.f, nPiles, pnf) : seqStagedFrame('pen', p.f, nPiles, pnf))
+          + seqHud('pen', 'pen', pDay, penTotal, p.label);
+      } else {
+        seqTickHud('pen', pDay, penTotal);
+      }
     }
-    renderDay();
+    renderPanels();
     seqTimer = setInterval(function () {
       day++;
-      renderDay();
+      renderPanels();
       if (day >= maxTotal) {
         clearInterval(seqTimer); seqTimer = null; seqPlaying = false;
         if (btn) btn.innerHTML = '&#8635;&nbsp; Replay the build';
       }
-    }, 300);
+    }, 340);
   };
 
   /* ── summary + orchestration (unchanged interface) ───── */

@@ -788,6 +788,17 @@ input[type="number"], .select-field { transition: border-color .15s, box-shadow 
 @media (prefers-reduced-motion: reduce) {
   .compare-svg.anim .pour-1, .compare-svg.anim .pour-2, .compare-svg.anim .pour-3 { animation: none; }
 }
+
+/* ── Build-sequence transitions ──
+   Each step's new work fades in; excavated soil fades away. */
+@keyframes seqIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes seqOut { from { opacity: 1; } to { opacity: 0; } }
+.compare-svg .seq-in { animation: seqIn .5s ease-out both; }
+.compare-svg .seq-out { animation: seqOut .75s ease-in both; }
+@media (prefers-reduced-motion: reduce) {
+  .compare-svg .seq-in { animation: none; }
+  .compare-svg .seq-out { animation: none; opacity: 0; }
+}
 .diagram-caption-svg, .dcap { font-size: 10px; font-weight: 600; font-family: 'Roboto', Arial, sans-serif; }
 .compare-stats { margin-top: 10px; min-height: 24px; }
 .compare-risk-chip {
