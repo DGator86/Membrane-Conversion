@@ -298,7 +298,9 @@
     // the .pour-* groups animate in that order when the scene changes
     s += '<g class="pour-1">';
     s += '<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+    // slab steel: top + bottom mats with stirrup ties between
     s += rebarH(CAP_L + 12, CAP_R - 12, CAP_T + 14) + rebarH(CAP_L + 12, CAP_R - 12, CAP_B - 12);
+    spread(132, 348, 7).forEach(function (x) { s += rebarV(x, CAP_T + 14, CAP_B - 12); });
     if (sump) {
       s += '<rect x="216" y="' + CAP_B + '" width="48" height="22" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
       s += txt(206, CAP_B + 32, 'Sump', C.interior, 'end', 8.5);
@@ -307,6 +309,12 @@
     s += '<g class="pour-2">';
     s += '<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
     s += '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
+    // wall steel: verticals both faces, hooked into the slab, with ties
+    s += rebarV(WL_L + 6, GRADE + 8, CAP_T + 20) + rebarV(WL_R - 6, GRADE + 8, CAP_T + 20);
+    s += rebarV(WR_L + 6, GRADE + 8, CAP_T + 20) + rebarV(WR_R - 6, GRADE + 8, CAP_T + 20);
+    [88, 132, 176].forEach(function (y) {
+      s += rebarH(WL_L + 4, WL_R - 4, y) + rebarH(WR_L + 4, WR_R - 4, y);
+    });
     s += '</g>';
 
     s += txt(240, 140, 'ELEVATOR PIT', C.interior, 'middle', 11, 700);
@@ -347,6 +355,11 @@
       // wall membrane on pit wall exteriors
       s += '<path d="M' + (WL_L - 4) + ' ' + (GRADE + 2) + ' V' + CAP_T + '" stroke="' + C.membrane + '" stroke-width="3.5" fill="none"/>';
       s += '<path d="M' + (WR_R + 4) + ' ' + (GRADE + 2) + ' V' + CAP_T + '" stroke="' + C.membrane + '" stroke-width="3.5" fill="none"/>';
+      // the base mat is fully wrapped — sides + shoulders lap into the underslab sheet
+      s += '<line x1="' + (CAP_L - 2) + '" y1="' + (CAP_T - 2) + '" x2="' + (CAP_L - 2) + '" y2="' + (CAP_B + 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
+      s += '<line x1="' + (CAP_R + 2) + '" y1="' + (CAP_T - 2) + '" x2="' + (CAP_R + 2) + '" y2="' + (CAP_B + 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
+      s += '<line x1="' + (CAP_L - 2) + '" y1="' + (CAP_T - 2) + '" x2="' + (WL_L - 3) + '" y2="' + (CAP_T - 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
+      s += '<line x1="' + (WR_R + 3) + '" y1="' + (CAP_T - 2) + '" x2="' + (CAP_R + 2) + '" y2="' + (CAP_T - 2) + '" stroke="' + C.membrane + '" stroke-width="3.5"/>';
 
       // cold joint where the walls land on the slab
       s += '<line x1="' + WL_L + '" y1="' + CAP_T + '" x2="' + WL_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>';
@@ -354,6 +367,9 @@
       s += riskDot(WL_R - 2, CAP_T, 'Wall-to-slab cold joint — staged pour, field waterstop');
       s += riskDot(WR_L + 2, CAP_T, 'Wall-to-slab cold joint — staged pour, field waterstop');
       s += callout(240, 232, WL_R + 4, CAP_T + 2, 'Cold joints — staged pour', 'middle', C.risk);
+      // PVC waterstops cast into the construction joints
+      s += '<rect x="' + (WL_L + 3) + '" y="' + (CAP_T - 3) + '" width="14" height="6" rx="2" fill="#3a4354"><title>PVC waterstop cast into the cold joint</title></rect>';
+      s += '<rect x="' + (WR_L + 3) + '" y="' + (CAP_T - 3) + '" width="14" height="6" rx="2" fill="#3a4354"><title>PVC waterstop cast into the cold joint</title></rect>';
 
       if (hasPiles) {
         // pile boots — every pile pierces the membrane
@@ -376,11 +392,10 @@
       s += insetMembraneLap(408, 96, 40, WR_R + 6, CAP_T);
 
     } else {
-      if (d.cjLF > 0) {
-        s += '<rect x="' + (WL_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>';
-        s += '<rect x="' + (WR_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>';
-        s += callout(240, 232, WL_R + 2, CAP_T, 'Penebar® at wall base', 'middle', '#a05c0a');
-      }
+      // Penebar waterstop at every construction joint
+      s += '<rect x="' + (WL_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>';
+      s += '<rect x="' + (WR_L + 2) + '" y="' + (CAP_T - 4) + '" width="16" height="7" rx="3" fill="' + C.penebar + '"/>';
+      s += callout(240, 232, WL_R + 2, CAP_T, 'Penebar® at the construction joints', 'middle', '#a05c0a');
       if (hasPiles) {
         // piles cast directly into treated slab
         pileXs.forEach(function (x) { s += checkDot(x, pileHeadY - 10, 'Pile head cast into treated concrete — crystals seal the interface, no boot'); });
@@ -562,7 +577,7 @@
       S('Set full wall steel', 2, 'wallSteel'),
       S('Set vertical wall forms', 1, 'wallForms'),
       S('Pour walls — strip forms', 2, 'wallPour'),
-      S('Membrane on the mat sides', 1, 'matMemb'),
+      S('Wrap the base mat — membrane on all faces', 1, 'matMemb'),
       S('Membrane on the walls — tie into the base', 3, 'wallMemb'),
       S('Backfill the excavation', 1, 'backfill'),
       S('Membrane under the slab on grade', 1, 'slabMemb'),
@@ -594,7 +609,8 @@
       S('Penebar® at the slab joint', 1, 'wstop2'),
       S('Set slab forms', 1, 'slabForms'),
       S('Set slab steel', 1, 'slabSteel'),
-      S('Pour the slab', 1, 'slabPour'));
+      S('Pour the slab', 1, 'slabPour'),
+      S('Penetron activates — water triggers crystal growth', 2, 'activate'));
     return a;
   }
 
@@ -611,7 +627,8 @@
       S('Install steel — one cage', 2, 'cage'),
       S('Set the elevator pit form', 1, 'pitForm'),
       S('Pour monolithic — one placement', 1, 'pour'),
-      S('Backfill', 1, 'backfill'));
+      S('Backfill', 1, 'backfill'),
+      S('Penetron activates — water triggers crystal growth', 2, 'activate'));
     return a;
   }
 
@@ -635,9 +652,34 @@
     return '<rect x="' + x + '" y="' + y1 + '" width="6" height="' + (y2 - y1) + '" fill="#d9b57c" stroke="#9c7a45" stroke-width="1"/>';
   }
 
+  /* Penetron activation — water migrates into the concrete, crystals grow,
+     and the damp concrete dries out as the matrix seals. */
+  function activationFx(washShapes, crystalPts, arrowDefs) {
+    var a = '';
+    // damp concrete drying out
+    a += '<g>' + washShapes + '<animate attributeName="opacity" values="1;0" dur="4s" fill="freeze"/></g>';
+    // water migrating in, fading away as the crystals seal it
+    var ar = '';
+    arrowDefs.forEach(function (d) { ar += flowArrow(d[0], d[1], d[2], d[3], C.waterLine); });
+    a += '<g>' + ar + '<animate attributeName="opacity" values=".9;.9;0" dur="5s" fill="freeze"/></g>';
+    // crystals growing, staggered
+    crystalPts.forEach(function (p, i) {
+      a += '<path d="M' + p[0] + ' ' + (p[1] - 4) + ' l3 3.2 -3 4.8 -3 -4.8 z" fill="#f5901e" stroke="#fff" stroke-width=".6" opacity="0">'
+        + '<animate attributeName="opacity" values="0;1" dur=".8s" begin="' + (0.3 + i * 0.35).toFixed(2) + 's" fill="freeze"/></path>';
+    });
+    // callout bubble
+    a += '<g class="seq-in">'
+      + '<path d="M292 92 L280 116 L316 92 Z" fill="#fff" stroke="' + C.penebar + '" stroke-width="1.5"/>'
+      + '<rect x="248" y="54" width="224" height="40" rx="9" fill="#fff" stroke="' + C.penebar + '" stroke-width="1.5"/>'
+      + '<text x="360" y="70" text-anchor="middle" fill="#a05c0a" style="font-size:9.5px;font-weight:800">Penetron is growing —</text>'
+      + '<text x="360" y="83" text-anchor="middle" fill="#a05c0a" style="font-size:9.5px;font-weight:800">sealing the concrete matrix</text>'
+      + '</g>';
+    return a;
+  }
+
   var SEQ_BAR_W = 150;
 
-  function seqHud(key, mode, day, total, label) {
+  function seqHud(key, mode, day, total, label, stepNo, stepCount) {
     var done = day >= total;
     var col = done ? (mode === 'mem' ? C.risk : C.ok) : '#0D2F5E';
     var w = Math.max(2, Math.round(SEQ_BAR_W * Math.min(day, total) / total));
@@ -646,9 +688,21 @@
       + (done ? 'WATERTIGHT — ' + total + ' DAYS' : 'DAY ' + Math.min(day + 1, total) + ' of ' + total) + '</text>';
     s += '<rect x="12" y="38" width="' + SEQ_BAR_W + '" height="4" rx="2" fill="#d5dce8"/>';
     s += '<rect id="seqbar-' + key + '" x="12" y="38" width="' + w + '" height="4" rx="2" fill="' + (done ? col : C.penebar) + '" style="transition: width .32s linear"/>';
-    s += '<g class="seq-in">' + txt(240, 352, done ? 'Sequence complete' : label, done ? col : C.label, 'middle', 9.5, 700) + '</g>';
+    // stage banner — number above, step name in a pill
+    var pillText = done ? 'Sequence complete — watertight' : label;
+    var pw = Math.min(444, Math.max(160, Math.round(pillText.length * 5.6) + 28));
+    s += '<g class="seq-in">';
+    if (!done) {
+      s += '<text x="240" y="330" text-anchor="middle" fill="' + C.penebar + '"'
+        + ' style="font-size:8px;font-weight:800;letter-spacing:1.6px" paint-order="stroke" stroke="' + C.sky + '" stroke-width="3" stroke-linejoin="round">'
+        + 'STAGE ' + stepNo + ' OF ' + stepCount + '</text>';
+    }
+    s += '<rect x="' + (240 - pw / 2) + '" y="336" width="' + pw + '" height="18" rx="9" fill="' + (done ? col : '#0D2F5E') + '" opacity=".93"/>';
+    s += '<text x="240" y="348.5" text-anchor="middle" fill="#fff" style="font-size:9.5px;font-weight:700">' + pillText + '</text>';
+    s += '</g>';
     return s;
   }
+
 
   /* in-place updates between step changes — no DOM rebuild */
   function seqTickHud(key, day, total) {
@@ -774,7 +828,11 @@
     }
 
     if (f.matForms && !f.matPour) s += IW('matForms', formBoard(CAP_L - 7, CAP_T, EX_B) + formBoard(CAP_R + 1, CAP_T, EX_B));
-    if (f.matRebar) s += IW('matRebar', rebarH(CAP_L + 12, CAP_R - 12, CAP_T + 14) + rebarH(CAP_L + 12, CAP_R - 12, CAP_B - 12));
+    if (f.matRebar) {
+      var mr = rebarH(CAP_L + 12, CAP_R - 12, CAP_T + 14) + rebarH(CAP_L + 12, CAP_R - 12, CAP_B - 12);
+      spread(132, 348, 7).forEach(function (x) { mr += rebarV(x, CAP_T + 14, CAP_B - 12); });
+      s += IW('matRebar', mr);
+    }
 
     if (f.matPour) {
       var mp = '<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>';
@@ -799,7 +857,9 @@
         } else {
           s += IW('wallPour',
             '<line x1="' + WL_L + '" y1="' + CAP_T + '" x2="' + WL_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>'
-            + '<line x1="' + WR_L + '" y1="' + CAP_T + '" x2="' + WR_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>');
+            + '<line x1="' + WR_L + '" y1="' + CAP_T + '" x2="' + WR_R + '" y2="' + CAP_T + '" stroke="' + C.risk + '" stroke-width="2.5" stroke-dasharray="5,3"/>'
+            + '<rect x="' + (WL_L + 3) + '" y="' + (CAP_T - 3) + '" width="14" height="6" rx="2" fill="#3a4354"/>'
+            + '<rect x="' + (WR_L + 3) + '" y="' + (CAP_T - 3) + '" width="14" height="6" rx="2" fill="#3a4354"/>');
         }
       } else {
         s += IW('wstop1',
@@ -808,9 +868,10 @@
       }
     }
 
-    if (f.wallSteel && !f.wallPour) {
+    if (f.wallSteel) {
       var ws = '';
-      [WL_L + 6, WL_L + 14, WR_L + 6, WR_L + 14].forEach(function (x) { ws += rebarV(x, GRADE + 4, CAP_T + 16); });
+      [WL_L + 6, WL_R - 6, WR_L + 6, WR_R - 6].forEach(function (x) { ws += rebarV(x, GRADE + 6, CAP_T + 20); });
+      [88, 132, 176].forEach(function (y) { ws += rebarH(WL_L + 4, WL_R - 4, y) + rebarH(WR_L + 4, WR_R - 4, y); });
       s += IW('wallSteel', ws);
     }
     if (f.wallForms && !f.wallPour) {
@@ -862,6 +923,17 @@
       s += IW('slabPour',
         '<rect x="0" y="' + (GRADE - 14) + '" width="' + WL_R + '" height="14" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.2"/>'
         + '<rect x="' + WR_L + '" y="' + (GRADE - 14) + '" width="' + (480 - WR_L) + '" height="14" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.2"/>');
+    }
+
+    if (!mem && f.activate) {
+      var wash = '<rect x="' + CAP_L + '" y="' + CAP_T + '" width="' + (CAP_R - CAP_L) + '" height="' + (CAP_B - CAP_T) + '" fill="' + C.waterWash + '"/>'
+        + '<rect x="' + WL_L + '" y="' + GRADE + '" width="' + (WL_R - WL_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + C.waterWash + '"/>'
+        + '<rect x="' + WR_L + '" y="' + GRADE + '" width="' + (WR_R - WR_L) + '" height="' + (CAP_T - GRADE) + '" fill="' + C.waterWash + '"/>'
+        + '<rect x="0" y="' + (GRADE - 14) + '" width="' + WL_R + '" height="14" fill="' + C.waterWash + '"/>'
+        + '<rect x="' + WR_L + '" y="' + (GRADE - 14) + '" width="' + (480 - WR_L) + '" height="14" fill="' + C.waterWash + '"/>';
+      var crys = [[168, 120], [312, 152], [150, 240], [240, 250], [330, 232], [172, 192]];
+      var arrows = [[128, 122, 22, 'right'], [352, 122, 22, 'left'], [200, 308, 18, 'up'], [280, 308, 18, 'up']];
+      s += IW('activate', activationFx(wash, crys, arrows));
     }
     return s;
   }
@@ -954,13 +1026,20 @@
         + '<line x1="' + WL_R + '" y1="' + SOG_T + '" x2="' + WR_L + '" y2="' + SLAB_T + '" stroke="#9c7a45" stroke-width="1" stroke-dasharray="6,4"/>'
         + '<line x1="' + WR_L + '" y1="' + SOG_T + '" x2="' + WL_R + '" y2="' + SLAB_T + '" stroke="#9c7a45" stroke-width="1" stroke-dasharray="6,4"/>');
     }
+    var pMono = 'M0 ' + SOG_T
+      + ' H' + WL_R + ' V' + SLAB_T + ' H' + WR_L + ' V' + SOG_T + ' H480'
+      + ' V' + GR + ' H452 L' + padR + ' ' + SLAB_B + ' H' + padL + ' L28 ' + GR + ' H0 Z';
     if (f.pour) {
-      var pMono = 'M0 ' + SOG_T
-        + ' H' + WL_R + ' V' + SLAB_T + ' H' + WR_L + ' V' + SOG_T + ' H480'
-        + ' V' + GR + ' H452 L' + padR + ' ' + SLAB_B + ' H' + padL + ' L28 ' + GR + ' H0 Z';
       s += IW('pour',
         '<path d="' + pMono + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5" stroke-linejoin="round"/>'
         + txt(240, 200, 'ELEVATOR PIT', C.interior, 'middle', 11, 700));
+    }
+
+    if (f.activate) {
+      var wash = '<path d="' + pMono + '" fill="' + C.waterWash + '"/>';
+      var crys = [[70, 120], [410, 120], [120, 210], [360, 210], [240, 295], [148, 235]];
+      var arrows = [[8, 210, 22, 'right'], [472, 210, 22, 'left'], [220, 352, 16, 'up'], [300, 352, 16, 'up']];
+      s += IW('activate', activationFx(wash, crys, arrows));
     }
 
     s += waterTable(6, 60, WT, 14);
@@ -1023,7 +1102,7 @@
       if (mk !== memKey) {
         memKey = mk;
         var mnf = mDay >= memTotal ? null : m.flag;
-        memHost.innerHTML = seqStagedFrame('mem', m.f, nPiles, mnf) + seqHud('mem', 'mem', mDay, memTotal, m.label);
+        memHost.innerHTML = seqStagedFrame('mem', m.f, nPiles, mnf) + seqHud('mem', 'mem', mDay, memTotal, m.label, m.idx + 1, memSteps.length);
       } else {
         seqTickHud('mem', mDay, memTotal);
       }
@@ -1034,7 +1113,7 @@
         penKey = pk;
         var pnf = pDay >= penTotal ? null : p.flag;
         penHost.innerHTML = (penMono ? seqMonoFrame(p.f, nPiles, pnf) : seqStagedFrame('pen', p.f, nPiles, pnf))
-          + seqHud('pen', 'pen', pDay, penTotal, p.label);
+          + seqHud('pen', 'pen', pDay, penTotal, p.label, p.idx + 1, penSteps.length);
       } else {
         seqTickHud('pen', pDay, penTotal);
       }
@@ -1047,7 +1126,7 @@
         clearInterval(seqTimer); seqTimer = null; seqPlaying = false;
         if (btn) btn.innerHTML = '&#8635;&nbsp; Replay the build';
       }
-    }, 340);
+    }, 500);
   };
 
   /* ── summary + orchestration (unchanged interface) ───── */
