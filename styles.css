@@ -757,6 +757,25 @@ input[type="number"], .select-field { transition: border-color .15s, box-shadow 
 .compare-panel-penetron .compare-panel-label { color: #a05c0a; }
 .compare-svg { width: 100%; height: auto; display: block; background: #f5f8fc; border-radius: 8px; border: 1px solid #e2e8f2; }
 
+/* ── Build-sequence button ── */
+.compare-seq-row { display: flex; justify-content: center; margin: 4px 0 16px; }
+.seq-btn {
+  background: var(--p-orange);
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  padding: 10px 26px;
+  font-family: inherit;
+  font-size: .84rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(245,144,30,.4);
+  transition: transform .15s, box-shadow .15s;
+}
+.seq-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(245,144,30,.5); }
+.seq-btn:active { transform: translateY(0); }
+
 /* ── Diagram pour-sequence animation ──
    Replays when the scene changes (scope / mono toggle): the staged side
    pours the slab (pour-1), then the walls (pour-2), then the field
