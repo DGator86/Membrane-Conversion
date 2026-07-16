@@ -258,7 +258,7 @@ function compute() {
   var monoRow = document.getElementById('compare-mono-row');
   if (monoRow) monoRow.style.display = (currentType === 'elevator' || currentType === 'pilecap') ? '' : 'none';
   var seqRow = document.getElementById('compare-seq-row');
-  if (seqRow) seqRow.style.display = (currentType === 'elevator' || currentType === 'pilecap') ? '' : 'none';
+  if (seqRow) seqRow.style.display = (currentType === 'elevator' || currentType === 'pilecap' || currentType === 'slab') ? '' : 'none';
   var cmSync = document.getElementById('compare_mono');
   if (cmSync && cmSync.checked !== chk('mono_pour')) cmSync.checked = chk('mono_pour');
   updateCompareStory();
