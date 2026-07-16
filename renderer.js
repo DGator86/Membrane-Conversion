@@ -659,6 +659,44 @@
     return a;
   }
 
+  /* Hydrostatic mat slab — a wide foundation mat at the building edge.
+     Membrane must go in blindside against the shoring before the wall is
+     poured, plus a protection board and waterstops at every mat pour joint;
+     Penetron skips all of it. */
+  function stepsSlabMembrane() {
+    return [
+      S('Undisturbed ground — water table just below grade', 1, 'start', 'Site prep'),
+      S('Mass excavation to subgrade', 2, 'dug', 'Site prep'),
+      S('Well points — dewater the site', 3, 'dewater', 'Site prep'),
+      S('Mud slab — lean-concrete working surface', 1, 'mud', 'Site prep'),
+      S('Blindside membrane over the mud slab + up the shoring', 3, 'baseMemb', 'Blindside membrane'),
+      S('Membrane protection board', 1, 'protBoard', 'Blindside membrane'),
+      S('Set mat edge + wall forms', 1, 'matForms', 'Foundation mat'),
+      S('Set mat rebar — top &amp; bottom mats', 2, 'matRebar', 'Foundation mat'),
+      S('Pour the mat in sections — construction joints', 3, 'matPour', 'Foundation mat'),
+      S('PVC waterstops at the mat construction joints', 1, 'wstop1', 'Foundation mat'),
+      S('Set wall steel — dowels tied into the mat', 2, 'wallSteel', 'Foundation walls'),
+      S('Set wall forms', 1, 'wallForms', 'Foundation walls'),
+      S('Pour walls against the blindside membrane', 2, 'wallPour', 'Foundation walls')
+    ];
+  }
+
+  function stepsSlabPenetron() {
+    return [
+      S('Undisturbed ground — water table just below grade', 1, 'start', 'Site prep'),
+      S('Mass excavation to subgrade', 2, 'dug', 'Site prep'),
+      S('Well points — dewater the site', 3, 'dewater', 'Site prep'),
+      S('Mud slab — lean-concrete working surface', 1, 'mud', 'Site prep'),
+      S('Set mat edge + wall forms — no membrane needed', 1, 'matForms', 'Foundation mat'),
+      S('Set mat rebar — top &amp; bottom mats', 2, 'matRebar', 'Foundation mat'),
+      S('Pour treated mat in sections', 3, 'matPour', 'Foundation mat'),
+      S('Penebar® at the joints — peel &amp; stick, no chipping', 1, 'wstop1', 'Foundation mat'),
+      S('Set wall steel — dowels tied into the mat', 2, 'wallSteel', 'Foundation walls'),
+      S('Set wall forms', 1, 'wallForms', 'Foundation walls'),
+      S('Pour treated walls', 2, 'wallPour', 'Foundation walls')
+    ];
+  }
+
   function totalDays(steps) {
     var t = 0;
     for (var i = 0; i < steps.length; i++) t += steps[i].days;
@@ -1120,6 +1158,121 @@
     return s;
   }
 
+  /* one frame of the hydrostatic mat-slab build (building-edge cut) —
+     membrane or Penetron. Exterior soil retained left of the shoring;
+     the building side is excavated, dewatered, and built back up. */
+  function seqSlabFrame(mode, f, nf) {
+    var mem = mode === 'mem';
+    var fill = mem ? 'url(#s-conc)' : 'url(#s-crys)';
+    var s = defs('s');
+    var GRADE = 42, WT = 92;
+    var WALL_L = 118, WALL_R = 158;
+    var MAT_T = 252, MAT_B = 312, MUD_B = 324;
+    var EX_R = 480;
+    var open = !!f.dug;
+    var flooded = open && !f.dewater;
+    function IW(flag, chunk) { return flag === nf ? '<g class="seq-in">' + chunk + '</g>' : chunk; }
+
+    s += '<rect x="0" y="0" width="480" height="360" fill="' + C.sky + '"/>';
+
+    if (!open) {
+      // undisturbed ground across the full width
+      s += '<rect x="0" y="' + GRADE + '" width="480" height="' + (360 - GRADE) + '" fill="url(#s-soil)"/>';
+      s += '<rect x="0" y="' + WT + '" width="480" height="' + (360 - WT) + '" fill="' + C.waterWash + '"/>';
+      s += '<line x1="0" y1="' + GRADE + '" x2="480" y2="' + GRADE + '" stroke="#8fa0ba" stroke-width="2"/>';
+    } else {
+      // retained exterior soil left of the shoring
+      s += '<rect x="0" y="' + GRADE + '" width="' + WALL_L + '" height="' + (360 - GRADE) + '" fill="url(#s-soil)"/>';
+      s += '<rect x="0" y="' + WT + '" width="' + WALL_L + '" height="' + (360 - WT) + '" fill="' + C.waterWash + '"/>';
+      s += '<line x1="0" y1="' + GRADE + '" x2="' + WALL_L + '" y2="' + GRADE + '" stroke="#8fa0ba" stroke-width="2"/>';
+      // soil + aquifer below the excavation
+      s += '<rect x="' + WALL_L + '" y="' + MUD_B + '" width="' + (EX_R - WALL_L) + '" height="' + (360 - MUD_B) + '" fill="url(#s-soil)"/>';
+      s += '<rect x="' + WALL_L + '" y="' + MUD_B + '" width="' + (EX_R - WALL_L) + '" height="' + (360 - MUD_B) + '" fill="' + C.waterWash + '"/>';
+      // shoring wall (soldier piles) at the building edge
+      s += '<rect x="' + (WALL_L - 4) + '" y="' + (GRADE - 8) + '" width="5" height="' + (MUD_B - GRADE + 14) + '" fill="#7d8a9e"/>';
+      s += '<line x1="' + (WALL_L + 2) + '" y1="' + GRADE + '" x2="' + (WALL_L + 2) + '" y2="' + MUD_B + '" stroke="' + C.soilLine + '" stroke-width="1.4" stroke-dasharray="4,4"/>';
+      if (flooded) {
+        s += '<rect x="' + WALL_L + '" y="' + WT + '" width="' + (EX_R - WALL_L) + '" height="' + (MUD_B - WT) + '" fill="' + C.waterWash + '"/>';
+        s += '<line x1="' + WALL_L + '" y1="' + WT + '" x2="' + EX_R + '" y2="' + WT + '" stroke="' + C.waterLine + '" stroke-width="1.4" stroke-dasharray="7,4"/>';
+        s += txt(310, WT + 24, 'Groundwater floods the cut', C.waterLine, 'middle', 9, 700);
+      } else {
+        s += IW('dewater', '<path d="M' + WALL_L + ' ' + WT + ' Q260 ' + (MUD_B + 22) + ' ' + EX_R + ' ' + (MUD_B + 8) + '" fill="none" stroke="' + C.waterLine + '" stroke-width="1.4" stroke-dasharray="7,4" opacity=".8"/>');
+      }
+    }
+    s += waterTable(6, WALL_L - 6, WT, 14);
+    s += txt(60, WT - 12, 'Water table', C.waterLine, 'middle', 9);
+
+    // well points — riser pipes on the exterior, header along grade
+    if (f.dewater && open) {
+      s += IW('dewater',
+        '<rect x="' + (WALL_L - 26) + '" y="' + (GRADE - 5) + '" width="4" height="' + (WT - GRADE + 70) + '" fill="#98a3b5"/>'
+        + '<rect x="' + (WALL_L - 46) + '" y="' + (GRADE - 5) + '" width="4" height="' + (WT - GRADE + 58) + '" fill="#98a3b5"/>'
+        + '<line x1="' + (WALL_L - 54) + '" y1="' + (GRADE - 4) + '" x2="' + (WALL_L - 14) + '" y2="' + (GRADE - 4) + '" stroke="#7d8a9e" stroke-width="3"/>'
+        + txt(WALL_L - 34, GRADE - 10, 'Well points', C.label, 'middle', 8));
+    }
+
+    // mud slab (working surface)
+    if (f.mud) {
+      s += IW('mud', '<rect x="' + (WALL_L - 2) + '" y="' + MAT_B + '" width="' + (EX_R - WALL_L + 2) + '" height="12" fill="' + C.mud + '" stroke="#b9c0cc" stroke-width="1"/>');
+    }
+
+    // blindside membrane over the mud slab + up the shoring face (membrane only)
+    if (mem && f.baseMemb) {
+      s += IW('baseMemb', '<path d="M' + (WALL_L - 1) + ' ' + (GRADE + 2) + ' V' + (MAT_B + 1.5) + ' H' + EX_R + '" fill="none" stroke="' + C.membrane + '" stroke-width="3.5" stroke-linejoin="round"/>');
+    }
+    if (mem && f.protBoard) {
+      s += IW('protBoard', '<path d="M' + (WALL_L + 4) + ' ' + (GRADE + 4) + ' V' + (MAT_B - 3) + ' H' + EX_R + '" fill="none" stroke="' + C.board + '" stroke-width="2" stroke-dasharray="6,4"/>');
+    }
+
+    // mat edge form (right end) + wall form at the building edge
+    if (f.matForms && !f.matPour) s += IW('matForms', formBoard(EX_R - 6, MAT_T, MAT_B));
+    if (f.matRebar) {
+      var mr = steelH(WALL_L + 12, EX_R - 8, MAT_B - 12, -9) + steelDots(WALL_L + 26, EX_R - 20, MAT_B - 17, 28)
+        + steelH(WALL_L + 12, EX_R - 8, MAT_T + 12, 9) + steelDots(WALL_L + 26, EX_R - 20, MAT_T + 17, 28);
+      s += IW('matRebar', mr);
+    }
+
+    // the mat — poured in sections, construction joints between them
+    if (f.matPour) {
+      s += IW('matPour', '<rect x="' + WALL_L + '" y="' + MAT_T + '" width="' + (EX_R - WALL_L) + '" height="' + (MAT_B - MAT_T) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>');
+      if (!mem) s += crystalTint('<rect x="' + WALL_L + '" y="' + MAT_T + '" width="' + (EX_R - WALL_L) + '" height="' + (MAT_B - MAT_T) + '" fill="' + LIME + '"/>', nf === 'matPour');
+      s += IW('matPour', steelH(WALL_L + 12, EX_R - 8, MAT_B - 12, -9) + steelDots(WALL_L + 26, EX_R - 20, MAT_B - 17, 28)
+        + steelH(WALL_L + 12, EX_R - 8, MAT_T + 12, 9) + steelDots(WALL_L + 26, EX_R - 20, MAT_T + 17, 28));
+      // construction joints between pour sections
+      [232, 336].forEach(function (x) {
+        s += '<line x1="' + x + '" y1="' + MAT_T + '" x2="' + x + '" y2="' + MAT_B + '" stroke="' + (mem ? C.risk : C.edge) + '" stroke-width="1.4" stroke-dasharray="5,3"/>';
+      });
+      if (!f.wallPour) [WALL_L + 6, WALL_R - 6].forEach(function (x) { s += steelV(x, MAT_T - 28, MAT_T + 20, 0); });
+      s += txt(300, 200, 'BASEMENT / PARKING LEVEL', C.interior, 'middle', 10.5, 700);
+    }
+
+    // waterstops in the mat joints
+    if (f.wstop1) {
+      var wsFill = mem ? '#3a4354' : C.penebar;
+      var wsY = MAT_T - 3;
+      [232, 336].forEach(function (x) { s += IW('wstop1', '<rect x="' + (x - 7) + '" y="' + wsY + '" width="14" height="6" rx="2" fill="' + wsFill + '"/>'); });
+      // kicker joint at the wall base
+      s += IW('wstop1', '<rect x="' + (WALL_L + 6) + '" y="' + (MAT_T - 4) + '" width="' + (WALL_R - WALL_L - 12) + '" height="7" rx="3" fill="' + wsFill + '"/>');
+    }
+
+    // foundation wall at the building edge
+    if (f.wallSteel && !f.wallPour) {
+      s += IW('wallSteel', steelV(WALL_L + 6, GRADE + 6, MAT_T + 22, 9) + steelV(WALL_R - 6, GRADE + 6, MAT_T + 22, 9)
+        + steelDotsV((WALL_L + WALL_R) / 2, GRADE + 18, MAT_T - 8, 24));
+    }
+    if (f.wallForms && !f.wallPour) s += IW('wallForms', formBoard(WALL_R + 1, GRADE, MAT_T));
+    if (f.wallPour) {
+      s += IW('wallPour', '<rect x="' + WALL_L + '" y="' + GRADE + '" width="' + (WALL_R - WALL_L) + '" height="' + (MAT_T - GRADE) + '" fill="' + fill + '" stroke="' + C.edge + '" stroke-width="1.5"/>');
+      if (!mem) s += crystalTint('<rect x="' + WALL_L + '" y="' + GRADE + '" width="' + (WALL_R - WALL_L) + '" height="' + (MAT_T - GRADE) + '" fill="' + LIME + '"/>', nf === 'wallPour');
+      s += IW('wallPour', steelV(WALL_L + 6, GRADE + 6, MAT_T + 22, 9) + steelV(WALL_R - 6, GRADE + 6, MAT_T + 22, 9)
+        + steelDotsV((WALL_L + WALL_R) / 2, GRADE + 18, MAT_T - 8, 24));
+    }
+
+    // Penetron crystal popup, appearing with the first treated pour
+    if (!mem && f.matPour) s += crystalPopup(nf === 'matPour');
+    return s;
+  }
+
   /* ── playback engine ─────────────────────────────────── */
   var seqTimer = null, seqPlaying = false;
   var lastRender = null;
@@ -1136,7 +1289,7 @@
     var penHost = document.getElementById('diagram-penetron');
     if (!lastRender || !memHost || !penHost) return;
     var type = lastRender.type;
-    if (type !== 'elevator' && type !== 'pilecap') return;
+    if (type !== 'elevator' && type !== 'pilecap' && type !== 'slab') return;
 
     if (seqPlaying) {
       stopSequence();
@@ -1144,11 +1297,12 @@
       return;
     }
 
+    var isSlab = type === 'slab';
     var hasPiles = type === 'pilecap';
     var nPiles = hasPiles ? Math.max(3, cap(lastRender.d.piles, 5) || 3) : 0;
     var penMono = !!lastRender.monoOn;
-    var memSteps = stepsMembrane(hasPiles);
-    var penSteps = penMono ? stepsMonolithic(hasPiles) : stepsPenetron(hasPiles);
+    var memSteps = isSlab ? stepsSlabMembrane() : stepsMembrane(hasPiles);
+    var penSteps = isSlab ? stepsSlabPenetron() : (penMono ? stepsMonolithic(hasPiles) : stepsPenetron(hasPiles));
     var memTotal = totalDays(memSteps), penTotal = totalDays(penSteps);
     var maxTotal = Math.max(memTotal, penTotal);
 
@@ -1180,7 +1334,8 @@
       if (mk !== memKey) {
         memKey = mk;
         var mnf = mDay >= memTotal ? null : m.flag;
-        memHost.innerHTML = seqStagedFrame('mem', m.f, nPiles, mnf) + seqHud('mem', 'mem', mDay, memTotal, m.label, m.phase);
+        var memFrame = isSlab ? seqSlabFrame('mem', m.f, mnf) : seqStagedFrame('mem', m.f, nPiles, mnf);
+        memHost.innerHTML = memFrame + seqHud('mem', 'mem', mDay, memTotal, m.label, m.phase);
       } else {
         seqTickHud('mem', mDay, memTotal);
       }
@@ -1190,8 +1345,9 @@
       if (pk !== penKey) {
         penKey = pk;
         var pnf = pDay >= penTotal ? null : p.flag;
-        penHost.innerHTML = (penMono ? seqMonoFrame(p.f, nPiles, pnf) : seqStagedFrame('pen', p.f, nPiles, pnf))
-          + seqHud('pen', 'pen', pDay, penTotal, p.label, p.phase);
+        var penFrame = isSlab ? seqSlabFrame('pen', p.f, pnf)
+          : (penMono ? seqMonoFrame(p.f, nPiles, pnf) : seqStagedFrame('pen', p.f, nPiles, pnf));
+        penHost.innerHTML = penFrame + seqHud('pen', 'pen', pDay, penTotal, p.label, p.phase);
       } else {
         seqTickHud('pen', pDay, penTotal);
       }
