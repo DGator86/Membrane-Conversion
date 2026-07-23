@@ -41,6 +41,85 @@
   ══════════════════════════════════════ -->
   <section class="input-panel">
 
+    <!-- ── ACTION TOOLBAR ── -->
+    <div class="app-toolbar">
+      <div class="rep-badge" id="rep-badge" title="Signed-in rep">
+        <span class="rep-badge-icon">&#128100;</span>
+        <div class="rep-badge-text">
+          <span class="rep-badge-name" id="rep-badge-name">Not registered</span>
+          <span class="rep-badge-co" id="rep-badge-co">Register to begin</span>
+        </div>
+        <button class="rep-badge-edit" onclick="openLeadGate(true)" title="Edit your info">Edit</button>
+      </div>
+      <div class="toolbar-actions">
+        <button class="tb-btn" onclick="saveProject()" title="Save this project to this browser">
+          <span>&#128190;</span> Save
+        </button>
+        <button class="tb-btn" onclick="openProjectsModal()" title="Open a saved project">
+          <span>&#128194;</span> Load
+        </button>
+        <button class="tb-btn tb-btn-primary" onclick="printOnePager()" title="Print a one-page value summary">
+          <span>&#128424;</span> Print One-Pager
+        </button>
+      </div>
+    </div>
+
+    <!-- ── PROJECT INFORMATION ── -->
+    <details class="input-section" open>
+      <summary class="sec-header">
+        <span class="sec-title">Project Information</span>
+        <span class="sec-chevron">&#9660;</span>
+      </summary>
+      <div class="sec-body">
+        <div class="field">
+          <label>Project Name</label>
+          <div class="input-wrap">
+            <input type="text" id="proj_name" placeholder="e.g. Riverfront Tower — Phase 2" oninput="onProjectInfoInput()" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Project Address</label>
+          <div class="input-wrap">
+            <input type="text" id="proj_address" placeholder="e.g. 400 Biscayne Blvd, Miami, FL" oninput="onProjectInfoInput()" />
+          </div>
+        </div>
+        <div class="fields-row">
+          <div class="field">
+            <label>Owner / Developer</label>
+            <div class="input-wrap">
+              <input type="text" id="proj_owner" placeholder="e.g. Coastal Development LLC" oninput="onProjectInfoInput()" />
+            </div>
+          </div>
+          <div class="field">
+            <label>General Contractor</label>
+            <div class="input-wrap">
+              <input type="text" id="proj_gc" placeholder="e.g. Summit Builders" oninput="onProjectInfoInput()" />
+            </div>
+          </div>
+        </div>
+        <div class="fields-row">
+          <div class="field">
+            <label>Prepared By</label>
+            <div class="input-wrap">
+              <input type="text" id="proj_prepared_by" placeholder="auto-filled from your info" oninput="onProjectInfoInput()" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <div class="input-wrap">
+              <input type="date" id="proj_date" oninput="onProjectInfoInput()" />
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Notes <span class="hint">optional — appears on the one-pager</span></label>
+          <div class="input-wrap">
+            <input type="text" id="proj_notes" placeholder="e.g. High water table; deep mat slab" oninput="onProjectInfoInput()" />
+          </div>
+        </div>
+      </div>
+    </details>
+
     <!-- ── SCOPE ── -->
     <details class="input-section" open>
       <summary class="sec-header">
@@ -687,6 +766,89 @@
   Estimator for general contractors and preconstruction teams &nbsp;|&nbsp;
   Results are indicative estimates only — verify with Penetron representative
 </footer>
+
+<!-- ══════════════════════════════════════
+     LEAD-CAPTURE GATE (registration)
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="lead-gate" role="dialog" aria-modal="true" aria-labelledby="lead-gate-title">
+  <div class="modal modal-lead">
+    <div class="modal-lead-head">
+      <div class="modal-lead-brand">
+        <div class="brand-block">
+          <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 3 C15 3 6 10 6 17.5 A9 9 0 0 0 24 17.5 C24 10 15 3 15 3Z" fill="white" opacity="0.9"/>
+            <path d="M15 10 C15 10 10 14.5 10 17.5 A5 5 0 0 0 20 17.5 C20 14.5 15 10 15 10Z" fill="#F5901E"/>
+          </svg>
+        </div>
+        <span>PENETRON</span>
+      </div>
+      <h2 id="lead-gate-title">Unlock the Conversion Tool</h2>
+      <p>Tell us who you are so we can save your work and send your project summaries. Takes 15 seconds.</p>
+    </div>
+    <form class="modal-lead-body" id="lead-form" onsubmit="return submitLeadGate(event)">
+      <div class="fields-row">
+        <div class="field">
+          <label>Your Name <span class="req">*</span></label>
+          <div class="input-wrap"><input type="text" id="lead_name" required placeholder="Jane Contractor" /></div>
+        </div>
+        <div class="field">
+          <label>Company <span class="req">*</span></label>
+          <div class="input-wrap"><input type="text" id="lead_company" required placeholder="Summit Builders" /></div>
+        </div>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Work Email <span class="req">*</span></label>
+          <div class="input-wrap"><input type="email" id="lead_email" required placeholder="jane@summitbuilders.com" /></div>
+        </div>
+        <div class="field">
+          <label>Phone <span class="req">*</span></label>
+          <div class="input-wrap"><input type="tel" id="lead_phone" required placeholder="(305) 555-0142" /></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Role <span class="hint">optional</span></label>
+        <select id="lead_role" class="select-field">
+          <option value="">Select…</option>
+          <option>General Contractor</option>
+          <option>Preconstruction / Estimating</option>
+          <option>Project Manager</option>
+          <option>Owner / Developer</option>
+          <option>Architect / Engineer</option>
+          <option>Waterproofing Consultant</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="lead-error" id="lead-error"></div>
+      <label class="lead-consent">
+        <input type="checkbox" id="lead_consent" required />
+        <span>I agree to be contacted by a Penetron representative about this project.</span>
+      </label>
+      <button type="submit" class="lead-submit">Unlock Tool &amp; Start</button>
+      <p class="lead-privacy">Your information is stored on this device and shared only with Penetron so a rep can follow up on your conversions.</p>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SAVED PROJECTS
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="projects-modal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Saved Projects</h2>
+      <button class="modal-close" onclick="closeProjectsModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="projects-list" class="saved-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PRINT ONE-PAGER (screen-hidden)
+══════════════════════════════════════ -->
+<div id="print-doc" aria-hidden="true"></div>
 
 <script src="app.js"></script>
 </body>

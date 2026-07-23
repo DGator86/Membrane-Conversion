@@ -717,4 +717,396 @@ function compute() {
     + valueCase;
 }
 
-compute();
+/* ══════════════════════════════════════════════════════════════
+   PROJECT INFO · SAVED WORK · LEAD CAPTURE · PRINT ONE-PAGER
+   ══════════════════════════════════════════════════════════════ */
+
+// ── CONFIG ────────────────────────────────────────────────────
+// To route captured leads to your CRM / inbox, set this to a URL that
+// accepts a JSON POST (Formspree, Zapier/Make webhook, Google Apps
+// Script, a Supabase Edge Function, etc.). While empty, leads are still
+// captured in the browser (localStorage key "penetron_leads") so nothing
+// is lost — they simply are not transmitted yet.
+var LEAD_ENDPOINT = '';
+
+var REP_KEY      = 'penetron_rep';
+var STATE_KEY    = 'penetron_current_state';
+var PROJECTS_KEY = 'penetron_saved_projects';
+var LEADS_KEY    = 'penetron_leads';
+
+// ── storage + small helpers ──────────────────────────────────
+function getJSON(k) { try { var s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+function setJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function val(id) { var el = document.getElementById(id); return el ? (el.value || '') : ''; }
+function txt(id) { var el = document.getElementById(id); return el ? (el.textContent || '').trim() : ''; }
+function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+function toast(msg) {
+  var t = document.getElementById('__toast');
+  if (!t) { t = document.createElement('div'); t.id = '__toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t.__timer);
+  t.__timer = setTimeout(function () { t.classList.remove('show'); }, 2800);
+}
+
+// ── state serialize / restore ─────────────────────────────────
+function collectState() {
+  var fields = {};
+  document.querySelectorAll('.input-panel input, .input-panel select').forEach(function (el) {
+    if (!el.id) return;
+    fields[el.id] = (el.type === 'checkbox') ? el.checked : el.value;
+  });
+  return { fields: fields, currentType: currentType, slabDimMode: slabDimMode, sensitivityIdx: sensitivityIdx, ts: Date.now() };
+}
+
+function applyState(st) {
+  if (!st || !st.fields) { compute(); return; }
+  Object.keys(st.fields).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!st.fields[id];
+    else el.value = st.fields[id];
+  });
+  if (st.currentType) selectType(st.currentType);
+  if (st.slabDimMode) setSlabDimMode(st.slabDimMode);
+  if (typeof st.sensitivityIdx === 'number') setSensitivity(st.sensitivityIdx);
+  toggleMode();      // syncs Line/Packaged UI from the restored checkbox
+  compute();
+}
+
+var __saveTimer;
+function scheduleAutosave() {
+  clearTimeout(__saveTimer);
+  __saveTimer = setTimeout(function () { setJSON(STATE_KEY, collectState()); }, 400);
+}
+function onProjectInfoInput() { scheduleAutosave(); }
+
+// ── rep identity + lead gate ──────────────────────────────────
+function getRep() { return getJSON(REP_KEY); }
+
+function renderRepBadge() {
+  var rep = getRep();
+  var nameEl = document.getElementById('rep-badge-name');
+  var coEl   = document.getElementById('rep-badge-co');
+  if (rep) {
+    if (nameEl) nameEl.textContent = rep.name;
+    if (coEl)   coEl.textContent   = rep.company;
+  } else {
+    if (nameEl) nameEl.textContent = 'Not registered';
+    if (coEl)   coEl.textContent   = 'Register to begin';
+  }
+}
+
+function openLeadGate(edit) {
+  var rep = getRep();
+  if (rep) {
+    document.getElementById('lead_name').value    = rep.name || '';
+    document.getElementById('lead_company').value = rep.company || '';
+    document.getElementById('lead_email').value   = rep.email || '';
+    document.getElementById('lead_phone').value   = rep.phone || '';
+    document.getElementById('lead_role').value    = rep.role || '';
+    document.getElementById('lead_consent').checked = true;
+  }
+  leadError('');
+  document.getElementById('lead-gate').classList.add('open');
+  if (!rep) document.body.classList.add('locked');   // hard gate on first use
+}
+
+function leadError(msg) { var e = document.getElementById('lead-error'); if (e) e.textContent = msg || ''; }
+
+function submitLeadGate(e) {
+  e.preventDefault();
+  var name    = val('lead_name').trim();
+  var company = val('lead_company').trim();
+  var email   = val('lead_email').trim();
+  var phone   = val('lead_phone').trim();
+  if (!name || !company || !email || !phone) { leadError('Please complete all required fields.'); return false; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { leadError('Please enter a valid work email.'); return false; }
+  if (!document.getElementById('lead_consent').checked) { leadError('Please confirm you agree to be contacted.'); return false; }
+
+  var existing = getRep();
+  var rep = {
+    name: name, company: company, email: email, phone: phone,
+    role: val('lead_role'),
+    registeredAt: (existing && existing.registeredAt) ? existing.registeredAt : new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  setJSON(REP_KEY, rep);
+
+  document.getElementById('lead-gate').classList.remove('open');
+  document.body.classList.remove('locked');
+  renderRepBadge();
+
+  var pb = document.getElementById('proj_prepared_by');
+  if (pb && !pb.value) { pb.value = name; scheduleAutosave(); }
+
+  recordLead(existing ? 'update' : 'register');
+  toast('Welcome, ' + name.split(' ')[0] + ' — your work is now being saved.');
+  return false;
+}
+
+// ── lead recording + transmission ─────────────────────────────
+function projectInfo() {
+  return {
+    name: val('proj_name'), address: val('proj_address'), owner: val('proj_owner'),
+    gc: val('proj_gc'), preparedBy: val('proj_prepared_by'), date: val('proj_date'), notes: val('proj_notes')
+  };
+}
+
+function resultsSummary() {
+  return {
+    scopeType:      currentType,
+    concreteCY:     txt('d-cy'),
+    waterproofSF:   (function () { var b = txt('d-bottom'), w = txt('d-walls'); return b + ' / ' + w; })(),
+    projectValue:   txt('exec-project-value'),
+    criticalPath:   txt('exec-days-faster'),
+    scheduleValue:  txt('exec-schedule-value'),
+    risk:           txt('exec-risk-display'),
+    details:        txt('exec-details'),
+    detailsSub:     txt('exec-details-sub'),
+    coordination:   txt('exec-coordination'),
+    coordinationSub:txt('exec-coordination-sub'),
+    netCost:        txt('exec-net-cost'),
+    accelValue:     txt('exec-accel-value'),
+    riskValue:      txt('exec-risk-value'),
+    recommendation: txt('exec-recommendation')
+  };
+}
+
+function recordLead(event) {
+  var rep = getRep();
+  if (!rep) return;
+  var lead = { event: event, at: new Date().toISOString(), rep: rep, project: projectInfo(), results: resultsSummary() };
+  var leads = getJSON(LEADS_KEY) || [];
+  leads.push(lead);
+  // keep the local log from growing without bound
+  if (leads.length > 200) leads = leads.slice(leads.length - 200);
+  setJSON(LEADS_KEY, leads);
+  sendLead(lead);
+}
+
+function sendLead(lead) {
+  if (!LEAD_ENDPOINT) return;
+  try {
+    fetch(LEAD_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lead)
+    }).catch(function () {});
+  } catch (e) {}
+}
+
+// ── saved projects ────────────────────────────────────────────
+function saveProject() {
+  if (!getRep()) { openLeadGate(); return; }
+  var pi = projectInfo();
+  var defName = pi.name || ('Project ' + new Date().toLocaleDateString());
+  var name = window.prompt('Save this project as:', defName);
+  if (name === null) return;
+  name = name.trim() || defName;
+
+  var projects = getJSON(PROJECTS_KEY) || [];
+  var snap = {
+    id: 'p_' + Date.now(),
+    name: name,
+    savedAt: new Date().toISOString(),
+    state: collectState(),
+    summary: resultsSummary(),
+    project: pi
+  };
+  projects.push(snap);
+  setJSON(PROJECTS_KEY, projects);
+  setJSON(STATE_KEY, snap.state);
+  recordLead('save');
+  toast('Saved "' + name + '"');
+}
+
+function openProjectsModal() {
+  renderProjects();
+  document.getElementById('projects-modal').classList.add('open');
+}
+function closeProjectsModal() { document.getElementById('projects-modal').classList.remove('open'); }
+
+function renderProjects() {
+  var list = document.getElementById('projects-list');
+  var projects = getJSON(PROJECTS_KEY) || [];
+  if (!projects.length) {
+    list.innerHTML = '<div class="saved-empty">No saved projects yet. Fill in a project and press <strong>Save</strong>.</div>';
+    return;
+  }
+  var html = '';
+  for (var i = projects.length - 1; i >= 0; i--) {
+    var p = projects[i];
+    var when = new Date(p.savedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    var value = (p.summary && p.summary.projectValue && p.summary.projectValue !== '—') ? ' · ' + esc(p.summary.projectValue) + ' value' : '';
+    html += '<div class="saved-item">'
+      + '<div class="saved-item-info">'
+      + '<div class="saved-item-name">' + esc(p.name) + '</div>'
+      + '<div class="saved-item-meta">' + when + value + '</div>'
+      + '</div>'
+      + '<div class="saved-item-actions">'
+      + '<button class="saved-load-btn" onclick="loadProject(\'' + p.id + '\')">Load</button>'
+      + '<button class="saved-del-btn" onclick="deleteProject(\'' + p.id + '\')">Delete</button>'
+      + '</div>'
+      + '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function loadProject(id) {
+  var projects = getJSON(PROJECTS_KEY) || [];
+  var snap = null;
+  for (var i = 0; i < projects.length; i++) if (projects[i].id === id) { snap = projects[i]; break; }
+  if (!snap) return;
+  applyState(snap.state);
+  setJSON(STATE_KEY, snap.state);
+  closeProjectsModal();
+  toast('Loaded "' + snap.name + '"');
+}
+
+function deleteProject(id) {
+  var projects = getJSON(PROJECTS_KEY) || [];
+  projects = projects.filter(function (p) { return p.id !== id; });
+  setJSON(PROJECTS_KEY, projects);
+  renderProjects();
+}
+
+// ── print one-pager ───────────────────────────────────────────
+var PENETRON_SVG = '<svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">'
+  + '<path d="M15 3 C15 3 6 10 6 17.5 A9 9 0 0 0 24 17.5 C24 10 15 3 15 3Z" fill="white" opacity="0.9"/>'
+  + '<path d="M15 10 C15 10 10 14.5 10 17.5 A5 5 0 0 0 20 17.5 C20 14.5 15 10 15 10Z" fill="#F5901E"/></svg>';
+
+function printOnePager() {
+  if (!getRep()) { openLeadGate(); return; }
+  buildPrintDoc();
+  recordLead('print');
+  setTimeout(function () { window.print(); }, 60);
+}
+
+function pdRow(k, v) {
+  if (!v) return '';
+  return '<div class="pd-proj-row"><span class="k">' + esc(k) + '</span><span class="val">' + esc(v) + '</span></div>';
+}
+
+function buildPrintDoc() {
+  var pi  = projectInfo();
+  var r   = resultsSummary();
+  var rep = getRep() || {};
+
+  var dateStr = pi.date
+    ? new Date(pi.date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // metric cards mirror the on-screen Executive View
+  var riskTarget = r.risk && r.risk.indexOf('Low Risk') !== -1 ? 'Low Risk' : (r.risk || '—');
+  var metrics = ''
+    + '<div class="pd-metric"><div class="pd-metric-label">Critical Path</div><div class="pd-metric-value">' + esc(r.criticalPath || '—') + '</div><div class="pd-metric-sub">' + esc(r.scheduleValue || '') + '</div></div>'
+    + '<div class="pd-metric"><div class="pd-metric-label">Waterproofing Risk</div><div class="pd-metric-value">' + esc(riskTarget) + '</div><div class="pd-metric-sub">' + esc(r.risk || 'Rework exposure managed') + '</div></div>'
+    + '<div class="pd-metric"><div class="pd-metric-label">Details Eliminated</div><div class="pd-metric-value">' + esc(r.details || '—') + '</div><div class="pd-metric-sub">' + esc(r.detailsSub || '') + '</div></div>'
+    + '<div class="pd-metric"><div class="pd-metric-label">Trade Coordination</div><div class="pd-metric-value">' + esc(r.coordination || '—') + '</div><div class="pd-metric-sub">' + esc(r.coordinationSub || '') + '</div></div>';
+
+  // "Why switch" — dynamic lead-ins from the live analysis + evergreen advantages
+  var why = '';
+  if (r.projectValue && r.projectValue !== '—')
+    why += '<li>Delivers an estimated <strong>' + esc(r.projectValue) + '</strong> in project value versus a hydrostatic membrane system.</li>';
+  if (r.criticalPath && /Faster/i.test(r.criticalPath))
+    why += '<li>Takes waterproofing off the critical path — <strong>' + esc(r.criticalPath) + '</strong> to structural completion.</li>';
+  if (r.details && r.details !== '—' && r.details !== '0')
+    why += '<li>Eliminates <strong>' + esc(r.details) + '</strong> high-risk details at joints, penetrations, and pile heads — the exact points where membranes fail.</li>';
+  why += ''
+    + '<li><strong>Integral &amp; permanent</strong> — becomes part of the concrete itself; it cannot be punctured, delaminate, or be damaged by backfill or follow-on trades.</li>'
+    + '<li><strong>Self-seals</strong> hairline cracks through ongoing crystalline growth and reactivates whenever water returns — for the life of the structure.</li>'
+    + '<li><strong>No dedicated waterproofing trade or inspection hold</strong> — dosed at the ready-mix plant, so the slab pours on schedule.</li>'
+    + '<li><strong>Removes membrane callback exposure</strong> — no chasing a leak from the dry side or tearing out finished space to remediate.</li>'
+    + '<li>Proven and warrantable against <strong>hydrostatic pressure</strong> in below-grade construction.</li>';
+
+  var econ = ''
+    + '<div class="pd-econ-row"><span>Net Cost Advantage</span><span class="amt">' + esc(r.netCost || '—') + '</span></div>'
+    + '<div class="pd-econ-row"><span>Schedule Acceleration Value</span><span class="amt">' + esc(r.accelValue || '—') + '</span></div>'
+    + '<div class="pd-econ-row"><span>Rework Exposure Reduction</span><span class="amt">' + esc(r.riskValue || '—') + '</span></div>'
+    + '<div class="pd-econ-row total"><span>Project Value Created</span><span class="amt">' + esc(r.projectValue || '—') + '</span></div>';
+
+  var projBlock = ''
+    + pdRow('Project', pi.name)
+    + pdRow('Address', pi.address)
+    + pdRow('Owner', pi.owner)
+    + pdRow('Contractor', pi.gc)
+    + pdRow('Prepared by', pi.preparedBy || rep.name)
+    + pdRow('Date', dateStr);
+  if (!projBlock) projBlock = '<div class="pd-proj-row"><span class="val">Below-Grade Waterproofing Value Analysis</span></div>';
+
+  var recBlock = (r.recommendation && r.recommendation.indexOf('Complete the inputs') === -1)
+    ? '<div class="pd-rec"><div class="pd-rec-label">Recommendation</div><p>' + esc(r.recommendation) + '</p></div>'
+    : '';
+
+  var notesBlock = pi.notes
+    ? '<div class="pd-notes"><strong>Project notes:</strong> ' + esc(pi.notes) + '</div>'
+    : '';
+
+  var contact = '';
+  if (rep.name) {
+    contact = '<div class="pd-contact">'
+      + '<div class="nm">' + esc(rep.name) + '</div>'
+      + (rep.company ? '<div>' + esc(rep.company) + '</div>' : '')
+      + (rep.email ? '<div>' + esc(rep.email) + '</div>' : '')
+      + (rep.phone ? '<div>' + esc(rep.phone) + '</div>' : '')
+      + '</div>';
+  }
+
+  document.getElementById('print-doc').innerHTML =
+    '<div class="pd-wrap">'
+    + '<div class="pd-header">'
+    + '<div class="pd-logo">' + PENETRON_SVG + '</div>'
+    + '<div><div class="pd-brand-name">PENETRON</div><div class="pd-brand-tag">Total Concrete Protection</div></div>'
+    + '<div class="pd-header-title"><h1>Below-Grade Waterproofing Value Analysis</h1><p>Crystalline admixture vs. hydrostatic membrane</p></div>'
+    + '</div>'
+    + '<div class="pd-proj">' + projBlock + '</div>'
+    + '<div class="pd-hero"><div class="pd-hero-label">Project Value Created</div>'
+    + '<div class="pd-hero-value">' + esc(r.projectValue || '—') + '</div>'
+    + '<div class="pd-hero-sub">Compared with a hydrostatic membrane system</div></div>'
+    + '<div class="pd-metrics">' + metrics + '</div>'
+    + '<div class="pd-cols">'
+    + '<div><div class="pd-section-title">Why Switch to Penetron</div><ul class="pd-why">' + why + '</ul></div>'
+    + '<div><div class="pd-section-title">Economic Picture</div>' + econ + '</div>'
+    + '</div>'
+    + recBlock
+    + notesBlock
+    + '<div class="pd-footer">'
+    + (contact || '<div class="pd-contact"><div class="nm">Penetron</div></div>')
+    + '<div class="pd-disclaimer">Figures are indicative estimates generated from the inputs provided in the Below-Grade Waterproofing Conversion Tool. Verify quantities and pricing with your Penetron representative before use in a bid.</div>'
+    + '</div>'
+    + '</div>';
+}
+
+// ── init ──────────────────────────────────────────────────────
+function initApp() {
+  var dEl = document.getElementById('proj_date');
+  if (dEl && !dEl.value) dEl.value = new Date().toISOString().slice(0, 10);
+
+  var st = getJSON(STATE_KEY);
+  if (st) applyState(st); else compute();
+
+  renderRepBadge();
+  var rep = getRep();
+  if (rep) {
+    var pb = document.getElementById('proj_prepared_by');
+    if (pb && !pb.value) pb.value = rep.name;
+  } else {
+    openLeadGate();
+  }
+
+  var panel = document.querySelector('.input-panel');
+  if (panel) {
+    panel.addEventListener('input', scheduleAutosave);
+    panel.addEventListener('change', scheduleAutosave);
+  }
+
+  // clicking the dim backdrop closes the gate only after registration (edit mode)
+  var gate = document.getElementById('lead-gate');
+  if (gate) gate.addEventListener('mousedown', function (e) { if (e.target === this && getRep()) this.classList.remove('open'); });
+  var pm = document.getElementById('projects-modal');
+  if (pm) pm.addEventListener('mousedown', function (e) { if (e.target === this) closeProjectsModal(); });
+}
+
+initApp();
