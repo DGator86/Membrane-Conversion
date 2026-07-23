@@ -266,11 +266,20 @@ header { background: var(--p-navy-dk); border-bottom: 4px solid var(--p-orange);
 .field { margin-bottom: 12px; }
 label { display: flex; justify-content: space-between; align-items: baseline; font-size: .76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
 label .hint { font-size: .66rem; font-weight: 400; color: #94a3b8; text-transform: none; letter-spacing: 0; }
+/* required marker sits next to the label text, not pushed to the far edge */
+label:has(.req) { justify-content: flex-start; }
+label .req { margin-left: 4px; }
 .input-wrap { position: relative; }
 .input-wrap .unit { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: .76rem; color: var(--text-muted); pointer-events: none; }
-input[type="number"] { width: 100%; padding: 8px 44px 8px 11px; border: 1.5px solid var(--gray-border); border-radius: 7px; font-size: .93rem; color: var(--text); background: #fafbfd; transition: border-color .15s; }
-input[type="number"]:focus { outline: none; border-color: var(--p-orange); background: #fff; box-shadow: 0 0 0 3px rgba(245,144,30,.15); }
-input[type="number"]::placeholder { color: #b0bac8; }
+input[type="number"], input[type="text"], input[type="email"], input[type="tel"], input[type="date"] {
+  width: 100%; padding: 8px 11px; border: 1.5px solid var(--gray-border); border-radius: 7px;
+  font-size: .93rem; color: var(--text); background: #fafbfd; transition: border-color .15s; font-family: inherit;
+}
+input[type="number"] { padding-right: 44px; }  /* room for the unit label */
+input[type="number"]:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, input[type="date"]:focus {
+  outline: none; border-color: var(--p-orange); background: #fff; box-shadow: 0 0 0 3px rgba(245,144,30,.15);
+}
+input::placeholder { color: #b0bac8; }
 .fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .check-row input[type="checkbox"] { width: auto; padding: 0; border: none; background: none; }
