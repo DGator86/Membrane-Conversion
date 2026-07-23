@@ -31,6 +31,11 @@
       <h1>Below-Grade Waterproofing Conversion Tool</h1>
       <p>Compare membrane cost, schedule impact &amp; high-risk detailing against integral crystalline waterproofing</p>
     </div>
+    <div class="header-actions">
+      <button class="hdr-btn" onclick="saveProject()" title="Save this project to this browser"><span>&#128190;</span> Save</button>
+      <button class="hdr-btn" onclick="openProjectsModal()" title="Reopen a saved project"><span>&#128194;</span> Load</button>
+      <button class="hdr-btn hdr-btn-primary" onclick="printOnePager()" title="Print the one-page summary"><span>&#128424;</span> Print</button>
+    </div>
   </div>
 </header>
 
@@ -41,7 +46,7 @@
   ══════════════════════════════════════ -->
   <section class="input-panel">
 
-    <!-- ── ACTION TOOLBAR ── -->
+    <!-- ── REP BADGE ── -->
     <div class="app-toolbar">
       <div class="rep-badge" id="rep-badge" title="Signed-in rep">
         <span class="rep-badge-icon">&#128100;</span>
@@ -50,17 +55,6 @@
           <span class="rep-badge-co" id="rep-badge-co">Register to begin</span>
         </div>
         <button class="rep-badge-edit" onclick="openLeadGate(true)" title="Edit your info">Edit</button>
-      </div>
-      <div class="toolbar-actions">
-        <button class="tb-btn" onclick="saveProject()" title="Save this project to this browser">
-          <span>&#128190;</span> Save
-        </button>
-        <button class="tb-btn" onclick="openProjectsModal()" title="Open a saved project">
-          <span>&#128194;</span> Load
-        </button>
-        <button class="tb-btn tb-btn-primary" onclick="printOnePager()" title="Print a one-page value summary">
-          <span>&#128424;</span> Print One-Pager
-        </button>
       </div>
     </div>
 
@@ -686,6 +680,15 @@
        RIGHT: Executive Panel
   ══════════════════════════════════════ -->
   <aside class="results-panel">
+
+    <div class="exec-actions">
+      <div class="exec-actions-label">Ready to share this analysis?</div>
+      <div class="exec-actions-btns">
+        <button class="ea-btn" onclick="saveProject()"><span>&#128190;</span> Save Project</button>
+        <button class="ea-btn ea-btn-primary" onclick="printOnePager()"><span>&#128424;</span> Print One-Pager</button>
+      </div>
+    </div>
+
     <div class="exec-card">
 
       <div class="exec-eyebrow">Executive View</div>
