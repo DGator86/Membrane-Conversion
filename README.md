@@ -76,13 +76,37 @@ sumpFactor   = 1.25 if sump pit included, else 1.0
 
 ---
 
+## Project Workflow Features
+
+Beyond the calculator, the tool captures who is using it, remembers their work, and produces a leave-behind:
+
+- **Project Information** — a card at the top of the input panel for project name, address, owner, GC, prepared-by, date, and notes. These feed the printed one-pager.
+- **Registration gate** — on first visit the tool is locked behind a short form (name, company, work email, phone, role, consent). This identifies the contractor using the tool so a Penetron rep can follow up. The registration is remembered in the browser, so it only appears once (use **Edit** on the rep badge to change it).
+- **Save & Load** — the current inputs auto-save to the browser on every change and are restored on the next visit. **Save** stores a named snapshot; **Load** reopens any saved project. Nothing is lost between sessions.
+- **Print One-Pager** — generates a single-page, print-ready value summary (branded header, project info, "Project Value Created", the four Executive-View metrics, the economic breakdown, the recommendation narrative, and the rep's contact details) designed to convince an owner/GC to convert from membrane to Penetron.
+
+### Where captured leads go
+
+Every registration, save, and print is recorded as a **lead** — the rep's contact info plus the project details and computed results. Leads are always stored locally in the browser (`localStorage` key `penetron_leads`).
+
+To also route leads to a CRM or inbox, set one constant near the top of `app.js`:
+
+```js
+var LEAD_ENDPOINT = ''; // e.g. 'https://formspree.io/f/xxxx' or a Zapier/Make webhook,
+                        // Google Apps Script URL, or a Supabase Edge Function
+```
+
+When set, each lead is `POST`ed as JSON to that URL (fire-and-forget; failures fall back to the local store). No backend is required for the local capture to work.
+
+---
+
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `index.html` | HTML structure only |
-| `styles.css` | All styling — Penetron brand palette (navy `#1A4B8C`, orange `#F5901E`) |
-| `app.js` | All calculator logic — `calcDerived()` and `compute()` |
+| `index.html` | HTML structure — calculator, project-info card, action toolbar, registration gate + saved-projects modals, print-doc container |
+| `styles.css` | All styling — Penetron brand palette (navy `#1A4B8C`, orange `#F5901E`), modals, toolbar, and print stylesheet |
+| `app.js` | Calculator logic (`calcDerived()`, `compute()`) plus project save/restore, lead capture, and one-pager generation |
 
 ---
 
